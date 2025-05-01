@@ -20,7 +20,7 @@ function App() {
         <Route path="/" element={<MainPage />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/rank" element={<RankingPage />} />
-        <Route path="/rank-result" element={<RankingResultPage />} />
+        <Route path="/ranking-results" element={<RankingResultPage />} />
         <Route path="/dm" element={<DmPage />} />
         <Route path="/social" element={<SocialPage />} />
       </Routes>

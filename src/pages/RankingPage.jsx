@@ -332,18 +332,41 @@ const RankingPage = () => {
   };
   
   // 닉네임 검색 처리
-  const handleSearchChange = (e) => {
+  const handleSearchChange = async (e) => {
     const value = e.target.value;
     setSearchTerm(value);
     
     if (value.trim().length > 0) {
-      // 입력된 검색어로 현재 랭킹 목록에서 필터링
-      const filteredResults = rankings.filter(ranking => 
-        ranking.nickname.toLowerCase().includes(value.toLowerCase())
-      );
-      
-      setSearchResults(filteredResults);
-      setShowSearchResults(true);
+      try {
+        // API를 사용하여 검색 결과 가져오기
+        const response = await axios.get('http://localhost:8080/api/specs', {
+          params: {
+            type: 'search',
+            'nickname-keyword': value,
+            limit: 5 // 드롭다운에 표시할 최대 결과 수
+          }
+        });
+        
+        console.log('검색 API 응답:', response.data);
+        
+        if (response.data.success) {
+          if (response.data.data && response.data.data.results) {
+            setSearchResults(response.data.data.results);
+            setShowSearchResults(true);
+          } else {
+            setSearchResults([]);
+            setShowSearchResults(true);
+          }
+        } else {
+          console.error('검색 API 에러:', response.data.message);
+          setSearchResults([]);
+          setShowSearchResults(false);
+        }
+      } catch (err) {
+        console.error('검색 중 오류 발생:', err);
+        setSearchResults([]);
+        setShowSearchResults(false);
+      }
     } else {
       setShowSearchResults(false);
     }
@@ -354,6 +377,15 @@ const RankingPage = () => {
     setSearchTerm('');
     setShowSearchResults(false);
     navigateToUserProfile(userId);
+  };
+
+  // 엔터 키 처리 - 검색 결과 페이지로 이동
+  const handleSearchSubmit = (e) => {
+    e.preventDefault(); // 기본 폼 제출 동작 방지
+    
+    if (searchTerm.trim().length > 0) {
+      navigate(`/ranking-results?keyword=${encodeURIComponent(searchTerm)}`);
+    }
   };
   
   return (
@@ -370,20 +402,22 @@ const RankingPage = () => {
         
         {/* 검색창 */}
         <div className="px-4 py-2 border-b border-gray-200 relative">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+          <form onSubmit={handleSearchSubmit}>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="닉네임으로 검색"
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
             </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="닉네임으로 검색"
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
+          </form>
           
           {/* 검색 결과 드롭다운 */}
           {showSearchResults && (
