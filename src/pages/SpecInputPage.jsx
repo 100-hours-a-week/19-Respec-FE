@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import TopBar from "../components/TopBar";
 import BottomNavBar from "../components/BottomNavBar";
 
 const SpecInputPage = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: '젤리', // 사용자 닉네임(수정 불가)
     currentEducation: {
@@ -98,17 +105,161 @@ const SpecInputPage = () => {
             }
           }));
         } else {
-          alert('파일 크기는 10MB 이하여야 합니다.');
+          setError('파일 크기는 10MB 이하여야 합니다.');
+          setTimeout(() => setError(null), 3000);
         }
       } else {
-        alert('PDF 파일만 업로드 가능합니다.');
+        setError('PDF 파일만 업로드 가능합니다.');
+        setTimeout(() => setError(null), 3000);
       }
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    // 여기에 제출 로직 추가
+  // 폼 데이터 유효성 검사
+  const validateForm = () => {
+    if (!formData.currentEducation.level || !formData.currentEducation.status) {
+      setError('최종 학력 정보를 입력해주세요.');
+      return false;
+    }
+
+    if (!formData.desiredPosition) {
+      setError('지원 분야를 선택해주세요.');
+      return false;
+    }
+
+    return true;
+  };
+
+  // 백엔드에 전송할 데이터 형식으로 변환
+  const formatDataForSubmission = () => {
+    // API 명세에 맞게 데이터 변환
+    const formattedData = {
+      finalEducation: {
+        level: formData.currentEducation.level,
+        status: formData.currentEducation.status
+      },
+      educations: formData.academicBackgrounds.map(edu => ({
+        schoolName: edu.school,
+        degree: edu.degree,
+        major: edu.major,
+        gpa: parseFloat(edu.gpa),
+        maxGpa: parseFloat(edu.maxGpa)
+      })),
+      workExperience: formData.careers.map(career => ({
+        company: career.company,
+        position: career.position,
+        period: parseInt(career.duration) || 0
+      })),
+      certifications: formData.certifications.map(cert => ({
+        name: cert.name,
+      })),
+      languageSkills: formData.languages.map(lang => ({
+        name: lang.test,
+        score: lang.score
+      })),
+      activities: formData.activities.map(activity => ({
+        name: activity.name,
+        role: activity.role,
+        award: activity.award || ''
+      })),
+      portfolioFileUrl: formData.portfolio.fileName ? 'portfolioURL' : '',
+      jobField: formData.desiredPosition
+    };
+
+    return formattedData;
+  };
+
+  // 제출 처리
+  const handleSubmit = async () => {
+    // 폼 유효성 검사
+    if (!validateForm()) {
+      return;
+    }
+
+    // 로딩 상태 시작
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 데이터 형식 변환
+      const submissionData = formatDataForSubmission();
+      console.log('Submitting data:', submissionData);
+
+      // FormData 생성
+      const formDataToSend = new FormData();
+      
+      // 백엔드 API 형식에 맞게 데이터 구성
+      // 1. 파일이 있는 경우, 파일 먼저 추가 (키 이름이 'portfolio'가 맞는지 확인)
+      if (formData.portfolio.file !== null) {
+        console.log('Adding file to FormData:', formData.portfolio.file.name);
+        formDataToSend.append('portfolio', formData.portfolio.file);
+      }
+      
+      // 2. spec 데이터를 문자열로 직렬화하여 추가
+      const specJson = JSON.stringify(submissionData);
+      console.log('Adding spec JSON to FormData:', specJson);
+      
+      // blob으로 변환하여 추가 - application/json 타입으로 명시
+      const specBlob = new Blob([specJson], { type: 'application/json' });
+      formDataToSend.append('spec', specBlob);
+      
+      // FormData 내용 디버깅
+      for (let pair of formDataToSend.entries()) {
+        console.log('FormData contains:', pair[0], pair[1] instanceof File ? pair[1].name : pair[1]);
+      }
+      
+      // 요청 전송 - axios가 자동으로 Content-Type을 설정하도록 함
+      console.log('Sending request to: http://localhost:8080/api/specs');
+      const response = await axios.post('http://localhost:8080/api/specs', formDataToSend);
+      
+      console.log('Response:', response);
+      
+      // 성공 처리
+      if (response.status === 201) {
+        setSuccess(true);
+        // 3초 후 리디렉트
+        setTimeout(() => {
+          navigate('/mypage');
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('Error submitting spec data:', err);
+      
+      // 요청 및 응답 상세 정보 출력
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response headers:', err.response.headers);
+        console.error('Response data:', err.response.data);
+      } else if (err.request) {
+        console.error('Request sent but no response received');
+      } else {
+        console.error('Error setting up request:', err.message);
+      }
+      
+      // 에러 메시지 처리
+      if (err.response) {
+        // 서버에서 응답이 온 경우
+        if (err.response.status === 400) {
+          setError(err.response.data.message || '잘못된 요청');
+        } else if (err.response.status === 401) {
+          setError('인증 실패');
+        } else if (err.response.status === 415) {
+          setError('지원되지 않는 미디어 타입');
+        } else if (err.response.status === 500) {
+          setError('서버 오류');
+        } else {
+          setError(`오류가 발생했습니다 (${err.response.status}). 다시 시도해주세요.`);
+        }
+      } else if (err.request) {
+        // 요청은 보냈지만 응답이 없는 경우
+        setError('서버에 연결할 수 없습니다.');
+      } else {
+        // 요청 설정 중 오류
+        setError('요청 전송 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 추가/삭제 버튼 컴포넌트
@@ -141,6 +292,19 @@ const SpecInputPage = () => {
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
         <TopBar title="스펙 입력" />
+        
+        {/* 토스트 메시지 */}
+        {error && (
+          <div className="fixed top-16 left-0 right-0 z-50 mx-auto max-w-md bg-red-500 text-white py-2 px-4 rounded shadow-lg">
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="fixed top-16 left-0 right-0 z-50 mx-auto max-w-md bg-green-500 text-white py-2 px-4 rounded shadow-lg">
+            스펙 정보가 성공적으로 저장되었습니다. 마이페이지로 이동합니다.
+          </div>
+        )}
         
         <div className="flex-1 p-4 overflow-y-auto pb-20">
           <h2 className="text-lg font-medium mb-4 text-center text-blue-600">당신의 스펙을 입력해주세요!</h2>
@@ -495,19 +659,29 @@ const SpecInputPage = () => {
             <div className="flex gap-4 mt-6">
               <button
                 type="button"
-                className="flex-1 bg-blue-500 text-white px-4 py-3 rounded-md hover:bg-blue-600 flex items-center justify-center"
+                className={`flex-1 ${loading ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-600'} text-white px-4 py-3 rounded-md flex items-center justify-center`}
                 onClick={handleSubmit}
+                disabled={loading}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                  <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-                저장
+                {loading ? (
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                )}
+                {loading ? "저장 중..." : "저장"}
               </button>
               <button
                 type="button"
                 className="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-300 flex items-center justify-center"
+                onClick={() => navigate(-1)}
+                disabled={loading}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
