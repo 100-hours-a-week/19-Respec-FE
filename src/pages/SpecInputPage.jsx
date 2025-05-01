@@ -214,13 +214,19 @@ const SpecInputPage = () => {
       
       console.log('Response:', response);
       
-      // 성공 처리
-      if (response.status === 201) {
+      // 성공 처리 - 상태 코드 200 또는 201 모두 성공으로 처리
+      if (response.status === 200 || response.status === 201) {
+        console.log('Spec data saved successfully, redirecting to mypage...');
         setSuccess(true);
-        // 3초 후 리디렉트
+        
+        // React Router navigate 대신 강제 리다이렉트 사용
+        console.log('About to redirect to /mypage');
+        
+        // 0.3초 후 강제 리다이렉트 (성공 메시지를 잠깐 보여주기 위함)
         setTimeout(() => {
-          navigate('/mypage');
-        }, 3000);
+          console.log('Executing redirect now');
+          window.location.href = '/mypage';
+        }, 300);
       }
     } catch (err) {
       console.error('Error submitting spec data:', err);
