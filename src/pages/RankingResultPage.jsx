@@ -18,7 +18,7 @@ const SearchResultItem = ({ result }) => {
       <div className="flex items-center">
         {/* 랭킹 순위 */}
         <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center mr-4 font-bold text-lg">
-          {result.rank}
+          {result.totalRank}
         </div>
         
         {/* 프로필 이미지 */}
@@ -42,33 +42,16 @@ const SearchResultItem = ({ result }) => {
         <div className="flex-1">
           <h3 className="font-medium text-lg">{result.nickname}</h3>
           <div className="flex items-center text-sm text-gray-600">
-            <span className="mr-2">{result.jobField}</span>
+            <span className="mr-2">{result.jobField.replace(/_/g, ' ')}</span>
             <span className="mx-2">•</span>
-            <span>평균 점수: <span className="font-semibold text-blue-600">{result.averageScore}</span></span>
+            <span>점수: <span className="font-semibold text-blue-600">{result.score.toFixed(1)}</span></span>
           </div>
         </div>
         
-        {/* 북마크 및 랭킹 정보 */}
-        <div className="flex flex-col items-end">
-          <div className="flex items-center mb-1">
-            <span className="text-sm text-gray-500 mr-1">
-              직무 내 {result.rankByJobField}위 / {result.totalUsersCountByJobField}명
-            </span>
-          </div>
-          <div className="flex items-center">
-            <button className={`flex items-center ${result.isBookmarked ? 'text-yellow-500' : 'text-gray-400'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill={result.isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-              <span className="ml-1 text-xs">{result.bookmarksCount}</span>
-            </button>
-            <span className="mx-2 text-gray-300">|</span>
-            <div className="flex items-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-              </svg>
-              <span className="ml-1 text-xs">{result.commentsCount}</span>
-            </div>
+        {/* 랭킹 정보 */}
+        <div className="text-right">
+          <div className="text-sm text-gray-500">
+            직무 내 {result.rankByJobField}위 / {result.totalUsersCountByJobField}명
           </div>
         </div>
       </div>
@@ -123,6 +106,8 @@ const RankingResultPage = () => {
     setError(null);
     
     try {
+      console.log('검색 결과 요청 중...', { type: 'search', 'nickname-keyword': keyword, limit: 10 });
+      
       const response = await axios.get('http://localhost:8080/api/specs', {
         params: {
           type: 'search',
@@ -133,7 +118,7 @@ const RankingResultPage = () => {
       
       console.log('검색 결과 API 응답:', response.data);
       
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         if (response.data.data && response.data.data.results) {
           // 중복 제거를 위해 Map 사용 (userId를 키로 사용)
           const uniqueResults = removeDuplicateResults(response.data.data.results);
@@ -162,8 +147,7 @@ const RankingResultPage = () => {
     
     // userId를 키로 사용하여 중복 제거
     results.forEach(result => {
-      const uniqueKey = `${result.userId}_${result.rank}`;
-      uniqueMap.set(uniqueKey, result);
+      uniqueMap.set(result.userId, result);
     });
     
     return Array.from(uniqueMap.values());
@@ -171,11 +155,18 @@ const RankingResultPage = () => {
   
   // 추가 검색 결과 로드 (무한 스크롤)
   const fetchMoreResults = async () => {
-    if (!hasMore || loading || !nextCursor) return;
+    if (!hasMore || loading) return;
     
     setLoading(true);
     
     try {
+      console.log('추가 검색 결과 요청 중...', { 
+        type: 'search', 
+        'nickname-keyword': keyword, 
+        cursor: nextCursor, 
+        limit: 10 
+      });
+      
       const response = await axios.get('http://localhost:8080/api/specs', {
         params: {
           type: 'search',
@@ -187,23 +178,24 @@ const RankingResultPage = () => {
       
       console.log('추가 검색 결과 API 응답:', response.data);
       
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         if (response.data.data && response.data.data.results) {
           // 새로 받은 데이터
           const newResults = response.data.data.results;
           
           // 기존 데이터와 새 데이터 모두 포함하여 중복 제거
-          const combinedResults = [...searchResults, ...newResults];
-          const uniqueResults = removeDuplicateResults(combinedResults);
+          setSearchResults(prev => {
+            const combinedResults = [...prev, ...newResults];
+            return removeDuplicateResults(combinedResults);
+          });
           
-          setSearchResults(uniqueResults);
           setHasMore(response.data.data.hasNext);
           setNextCursor(response.data.data.nextCursor);
         } else {
           setHasMore(false);
         }
       } else {
-        setError(response.data.message || '추가 결과를 불러오는 중 오류가 발생했습니다.');
+        console.error('추가 검색 결과 로드 실패:', response.data.message);
       }
     } catch (err) {
       console.error('추가 검색 결과 로드 중 오류 발생:', err);
@@ -225,11 +217,6 @@ const RankingResultPage = () => {
     }
   };
   
-  // 유저 프로필 페이지로 이동
-  const navigateToUserProfile = (userId) => {
-    navigate(`/profile/${userId}`);
-  };
-  
   // 컴포넌트 마운트 시 초기 데이터 로드
   useEffect(() => {
     if (keyword) {
@@ -238,79 +225,73 @@ const RankingResultPage = () => {
   }, [keyword]);
   
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
-        <TopBar title="검색 결과" />
-        
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      <TopBar title="검색 결과" showBackButton={true} />
+      
+      <div className="w-full max-w-md mx-auto flex-1 bg-white p-4 pb-16">
         {/* 검색창 */}
-        <div className="px-4 py-2 border-b border-gray-200">
-          <form onSubmit={handleSearchSubmit}>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="닉네임으로 검색"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+        <div className="mb-4">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="사용자 검색..."
+              className="w-full p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
           </form>
         </div>
         
-        {/* 검색 요약 */}
-        <div className="px-4 py-3 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-800">
-            "{keyword}" 검색 결과
+        {/* 검색 키워드 */}
+        <div className="mb-4">
+          <h2 className="text-lg font-medium">
+            <span className="text-blue-600">"{keyword}"</span> 검색 결과
           </h2>
         </div>
         
-        {/* 에러 메시지 */}
-        {error && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mx-4 my-2">
+        {/* 검색 결과 리스트 */}
+        {error ? (
+          <div className="p-4 bg-red-100 text-red-800 rounded-lg">
             <p>{error}</p>
           </div>
+        ) : (
+          <>
+            {searchResults.length === 0 && !loading ? (
+              <div className="p-8 text-center text-gray-500">
+                <p>검색 결과가 없습니다.</p>
+                <p className="mt-2 text-sm">다른 검색어로 다시 시도해보세요.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {searchResults.map((result, index) => (
+                  <div 
+                    key={`${result.userId}_${index}`} 
+                    ref={index === searchResults.length - 1 ? lastResultElementRef : null}
+                  >
+                    <SearchResultItem result={result} />
+                  </div>
+                ))}
+                {loading && <LoadingIndicator />}
+                {!hasMore && searchResults.length > 0 && (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    모든 검색 결과를 불러왔습니다.
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
-        
-        {/* 검색 결과 목록 */}
-        <div className="flex-1 p-4 overflow-y-auto pb-20">
-          {searchResults.length === 0 && !loading ? (
-            <div className="text-center py-10 text-gray-500">
-              <p>검색 결과가 없습니다.</p>
-              <p className="text-sm mt-2">다른 키워드로 검색해보세요.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {searchResults.map((result, index) => (
-                <div 
-                  key={`${result.userId}_${result.rank}_${index}`} 
-                  ref={index === searchResults.length - 1 ? lastResultElementRef : null}
-                  onClick={() => navigateToUserProfile(result.userId)}
-                  className="cursor-pointer"
-                >
-                  <SearchResultItem result={result} />
-                </div>
-              ))}
-              
-              {/* 로딩 인디케이터 */}
-              {loading && <LoadingIndicator />}
-              
-              {/* 더 이상 불러올 데이터가 없을 때 */}
-              {!hasMore && searchResults.length > 0 && (
-                <div className="text-center py-4 text-gray-500 text-sm">
-                  모든 검색 결과를 불러왔습니다.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        
-        <BottomNavBar />
       </div>
+      
+      <BottomNavBar />
     </div>
   );
 };
