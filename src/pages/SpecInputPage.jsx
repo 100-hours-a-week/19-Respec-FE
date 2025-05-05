@@ -4,6 +4,90 @@ import axios from 'axios';
 import TopBar from "../components/TopBar";
 import BottomNavBar from "../components/BottomNavBar";
 
+// 상수 데이터 정의
+const JOB_FIELDS = [
+  '경영_사무',
+  '마케팅_광고_홍보',
+  '무역_유통',
+  '인터넷_IT',
+  '생산_제조',
+  '영업_고객상담',
+  '건설',
+  '금융',
+  '연구개발_설계',
+  '디자인',
+  '미디어',
+  '전문직_특수직'
+];
+
+const INSTITUTES = [
+  '중학교',
+  '고등학교',
+  '2_3년 대학교',
+  '대학교',
+  '대학원'
+];
+
+const EDUCATION_STATUS = [
+  '졸업',
+  '수료',
+  '중퇴',
+  '휴학',
+  '재학'
+];
+
+const DEGREE_TYPES = [
+  '박사',
+  '석사',
+  '학사',
+  '전문학사',
+  '수료'
+];
+
+const GPA_SCALE = [
+  '4.3',
+  '4.5',
+  '4.0'
+];
+
+const POSITIONS = [
+  '대표',
+  '정규직',
+  '인턴'
+];
+
+const LANGUAGE_TESTS = [
+  { value: 'TOEIC_ENGLISH', label: 'TOEIC(영어)' },
+  { value: 'TOEFL_ENGLISH', label: 'TOEFL(영어)' },
+  { value: 'TEPS_ENGLISH', label: 'TEPS(영어)' },
+  { value: 'G_TELP_ENGLISH', label: 'G-TELP(영어)' },
+  { value: 'TOEIC_SPEAKING_ENGLISH', label: 'TOEIC Speaking(영어)' },
+  { value: 'TEPS_SPEAKING_ENGLISH', label: 'TEPS Speaking(영어)' },
+  { value: 'G_TELP_SPEAKING_ENGLISH', label: 'G-TELP Speaking(영어)' },
+  { value: 'IELTS_ENGLISH', label: 'IELTS(영어)' },
+  { value: 'SNULT_GERMAN', label: 'SNULT(독일어)' },
+  { value: 'SNULT_FRENCH', label: 'SNULT(프랑스어)' },
+  { value: 'SNULT_RUSSIAN', label: 'SNULT(러시아어)' },
+  { value: 'SNULT_CHINESE', label: 'SNULT(중국어)' },
+  { value: 'SNULT_JAPANESE', label: 'SNULT(일본어)' },
+  { value: 'SNULT_SPANISH', label: 'SNULT(스페인어)' },
+  { value: 'NEW_HSK_CHINESE', label: 'HSK(중국어)' },
+  { value: 'JPT_JAPANESE', label: 'JPT(일본어)' },
+  { value: 'FLEX_ENGLISH', label: 'FLEX(영어)' },
+  { value: 'FLEX_GERMAN', label: 'FLEX(독일어)' },
+  { value: 'FLEX_FRENCH', label: 'FLEX(프랑스어)' },
+  { value: 'FLEX_SPANISH', label: 'FLEX(스페인어)' },
+  { value: 'FLEX_RUSSIAN', label: 'FLEX(러시아어)' },
+  { value: 'FLEX_JAPANESE', label: 'FLEX(일본어)' },
+  { value: 'FLEX_CHINESE', label: 'FLEX(중국어)' },
+  { value: 'OPIC_ENGLISH', label: 'OPIC(영어)' },
+  { value: 'OPIC_CHINESE', label: 'OPIC(중국어)' },
+  { value: 'OPIC_RUSSIAN', label: 'OPIC(러시아어)' },
+  { value: 'OPIC_SPANISH', label: 'OPIC(스페인어)' },
+  { value: 'OPIC_JAPANESE', label: 'OPIC(일본어)' },
+  { value: 'OPIC_VIETNAMESE', label: 'OPIC(베트남어)' }
+];
+
 const SpecInputPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -12,20 +96,16 @@ const SpecInputPage = () => {
   
   const [formData, setFormData] = useState({
     name: '젤리', // 사용자 닉네임(수정 불가)
-    currentEducation: {
-      level: '고등학교',
+    finalEducation: {
+      institute: '대학교',
       status: '졸업'
     },
-    academicBackgrounds: [], // 초기에 빈 배열로 시작 - 학교, 전공, 학위, 학점 정보
-    careers: [], // 초기에 빈 배열로 시작
+    educationDetails: [], // 초기에 빈 배열로 시작 - 학교, 전공, 학위, 학점 정보
+    workExperiences: [], // 초기에 빈 배열로 시작
     certifications: [], // 초기에 빈 배열로 시작
-    languages: [], // 초기에 빈 배열로 시작
+    languageSkills: [], // 초기에 빈 배열로 시작
     activities: [], // 초기에 빈 배열로 시작 - 활동/네트워킹
-    portfolio: {
-      fileName: '',
-      file: null
-    },
-    desiredPosition: '인터넷.IT'
+    jobField: '인터넷_IT'
   });
 
   const handleInputChange = (field, value) => {
@@ -90,39 +170,14 @@ const SpecInputPage = () => {
     });
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // PDF 파일 타입 확인
-      if (file.type === 'application/pdf') {
-        // 파일 크기 확인 (10MB 제한)
-        if (file.size <= 10 * 1024 * 1024) {
-          setFormData(prev => ({
-            ...prev,
-            portfolio: {
-              fileName: file.name,
-              file: file
-            }
-          }));
-        } else {
-          setError('파일 크기는 10MB 이하여야 합니다.');
-          setTimeout(() => setError(null), 3000);
-        }
-      } else {
-        setError('PDF 파일만 업로드 가능합니다.');
-        setTimeout(() => setError(null), 3000);
-      }
-    }
-  };
-
   // 폼 데이터 유효성 검사
   const validateForm = () => {
-    if (!formData.currentEducation.level || !formData.currentEducation.status) {
+    if (!formData.finalEducation.institute || !formData.finalEducation.status) {
       setError('최종 학력 정보를 입력해주세요.');
       return false;
     }
 
-    if (!formData.desiredPosition) {
+    if (!formData.jobField) {
       setError('지원 분야를 선택해주세요.');
       return false;
     }
@@ -135,26 +190,26 @@ const SpecInputPage = () => {
     // API 명세에 맞게 데이터 변환
     const formattedData = {
       finalEducation: {
-        level: formData.currentEducation.level,
-        status: formData.currentEducation.status
+        institute: formData.finalEducation.institute,
+        status: formData.finalEducation.status
       },
-      educations: formData.academicBackgrounds.map(edu => ({
-        schoolName: edu.school,
+      educationDetails: formData.educationDetails.map(edu => ({
+        schoolName: edu.schoolName,
         degree: edu.degree,
         major: edu.major,
         gpa: parseFloat(edu.gpa),
         maxGpa: parseFloat(edu.maxGpa)
       })),
-      workExperience: formData.careers.map(career => ({
-        company: career.company,
-        position: career.position,
-        period: parseInt(career.duration) || 0
+      workExperiences: formData.workExperiences.map(exp => ({
+        companyName: exp.companyName,
+        position: exp.position,
+        period: parseInt(exp.period) || 0
       })),
       certifications: formData.certifications.map(cert => ({
         name: cert.name,
       })),
-      languageSkills: formData.languages.map(lang => ({
-        name: lang.test,
+      languageSkills: formData.languageSkills.map(lang => ({
+        languageTest: lang.languageTest,
         score: lang.score
       })),
       activities: formData.activities.map(activity => ({
@@ -162,11 +217,76 @@ const SpecInputPage = () => {
         role: activity.role,
         award: activity.award || ''
       })),
-      portfolioFileUrl: formData.portfolio.fileName ? 'portfolioURL' : '',
-      jobField: formData.desiredPosition
+      jobField: formData.jobField
     };
 
     return formattedData;
+  };
+
+  // Add a validation function for GPA input
+  const validateGpaInput = (value, maxGpa) => {
+    // Remove any non-numeric characters except the decimal point
+    let input = value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = input.split('.');
+    if (parts.length > 2) {
+      input = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Limit to 2 decimal places
+    if (parts.length === 2 && parts[1].length > 2) {
+      input = parts[0] + '.' + parts[1].slice(0, 2);
+    }
+    
+    // Ensure it doesn't exceed maxGpa
+    const numValue = parseFloat(input);
+    if (!isNaN(numValue) && numValue > parseFloat(maxGpa)) {
+      input = maxGpa;
+    }
+    
+    // Ensure it's not negative
+    if (!isNaN(numValue) && numValue < 0) {
+      input = '0';
+    }
+    
+    return input;
+  };
+  
+  // Add a validation function for work period input
+  const validatePeriodInput = (value) => {
+    // Remove any non-numeric characters
+    let input = value.replace(/[^0-9]/g, '');
+    
+    // Limit to 3 digits
+    if (input.length > 3) {
+      input = input.slice(0, 3);
+    }
+    
+    return input;
+  };
+
+  // Create a specific handler for maxGpa changes
+  const handleMaxGpaChange = (field, index, value) => {
+    const newArray = [...formData[field]];
+    
+    if (index >= 0 && index < newArray.length) {
+      // Update maxGpa
+      newArray[index] = {
+        ...newArray[index],
+        maxGpa: value
+      };
+      
+      // Also adjust gpa if it exceeds the new maxGpa
+      if (parseFloat(newArray[index].gpa) > parseFloat(value)) {
+        newArray[index].gpa = value;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [field]: newArray
+      }));
+    }
   };
 
   // 제출 처리
@@ -185,32 +305,19 @@ const SpecInputPage = () => {
       const submissionData = formatDataForSubmission();
       console.log('Submitting data:', submissionData);
 
-      // FormData 생성
-      const formDataToSend = new FormData();
+      // FormData 객체 생성
+      const formData = new FormData();
       
-      // 백엔드 API 형식에 맞게 데이터 구성
-      // 1. 파일이 있는 경우, 파일 먼저 추가 (키 이름이 'portfolio'가 맞는지 확인)
-      if (formData.portfolio.file !== null) {
-        console.log('Adding file to FormData:', formData.portfolio.file.name);
-        formDataToSend.append('portfolio', formData.portfolio.file);
-      }
+      // JSON 데이터를 Blob으로 변환하여 "spec" 필드에 추가 (Content-Type: application/json 설정)
+      const specBlob = new Blob([JSON.stringify(submissionData)], { type: 'application/json' });
+      formData.append('spec', specBlob);
       
-      // 2. spec 데이터를 문자열로 직렬화하여 추가
-      const specJson = JSON.stringify(submissionData);
-      console.log('Adding spec JSON to FormData:', specJson);
-      
-      // blob으로 변환하여 추가 - application/json 타입으로 명시
-      const specBlob = new Blob([specJson], { type: 'application/json' });
-      formDataToSend.append('spec', specBlob);
-      
-      // FormData 내용 디버깅
-      for (let pair of formDataToSend.entries()) {
-        console.log('FormData contains:', pair[0], pair[1] instanceof File ? pair[1].name : pair[1]);
-      }
-      
-      // 요청 전송 - axios가 자동으로 Content-Type을 설정하도록 함
       console.log('Sending request to: http://localhost:8080/api/specs');
-      const response = await axios.post('http://localhost:8080/api/specs', formDataToSend);
+      const response = await axios.post('http://localhost:8080/api/specs', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
       console.log('Response:', response);
       
@@ -340,22 +447,21 @@ const SpecInputPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <select
                   className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={formData.currentEducation.level}
-                  onChange={(e) => handleNestedInputChange('currentEducation', 'level', e.target.value)}
+                  value={formData.finalEducation.institute}
+                  onChange={(e) => handleNestedInputChange('finalEducation', 'institute', e.target.value)}
                 >
-                  <option value="고등학교">고등학교</option>
-                  <option value="전문대학교">전문대학교</option>
-                  <option value="대학교">대학교</option>
-                  <option value="대학원">대학원</option>
+                  {INSTITUTES.map((institute, index) => (
+                    <option key={index} value={institute}>{institute}</option>
+                  ))}
                 </select>
                 <select
                   className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={formData.currentEducation.status}
-                  onChange={(e) => handleNestedInputChange('currentEducation', 'status', e.target.value)}
+                  value={formData.finalEducation.status}
+                  onChange={(e) => handleNestedInputChange('finalEducation', 'status', e.target.value)}
                 >
-                  <option value="졸업">졸업</option>
-                  <option value="재학중">재학중</option>
-                  <option value="휴학중">휴학중</option>
+                  {EDUCATION_STATUS.map((status, index) => (
+                    <option key={index} value={status}>{status}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -366,10 +472,10 @@ const SpecInputPage = () => {
                 <h3 className="text-lg font-medium">학력</h3>
                 <span className="text-xs text-gray-500 ml-2">(국내 대학 한정입니다)</span>
               </div>
-              <AddButton onClick={() => addArrayItem('academicBackgrounds', { school: '', major: '', degree: '학사', gpa: '', maxGpa: '4.3' })} />
+              <AddButton onClick={() => addArrayItem('educationDetails', { schoolName: '', major: '', degree: '학사', gpa: '', maxGpa: '4.5' })} />
             </div>
-            {Array.isArray(formData.academicBackgrounds) && formData.academicBackgrounds.length > 0 ? (
-              formData.academicBackgrounds.map((academicBackground, index) => (
+            {Array.isArray(formData.educationDetails) && formData.educationDetails.length > 0 ? (
+              formData.educationDetails.map((education, index) => (
                 <div key={`academic-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4">
@@ -378,22 +484,22 @@ const SpecInputPage = () => {
                         <p className="text-xs text-gray-500 mb-1">전체 이름을 입력하세요</p>
                         <input
                           type="text"
+                          maxLength="30"
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={academicBackground.school}
-                          onChange={(e) => handleArrayInputChange('academicBackgrounds', index, 'school', e.target.value)}
+                          value={education.schoolName}
+                          onChange={(e) => handleArrayInputChange('educationDetails', index, 'schoolName', e.target.value)}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">학위</label>
                         <select
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 mt-6"
-                          value={academicBackground.degree}
-                          onChange={(e) => handleArrayInputChange('academicBackgrounds', index, 'degree', e.target.value)}
+                          value={education.degree}
+                          onChange={(e) => handleArrayInputChange('educationDetails', index, 'degree', e.target.value)}
                         >
-                          <option value="학사">학사</option>
-                          <option value="석사">석사</option>
-                          <option value="박사">박사</option>
-                          <option value="전문학사">전문학사</option>
+                          {DEGREE_TYPES.map((degree, idx) => (
+                            <option key={idx} value={degree}>{degree}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -402,9 +508,10 @@ const SpecInputPage = () => {
                         <label className="block text-sm font-medium text-gray-600 mb-1">전공</label>
                         <input
                           type="text"
+                          maxLength="20"
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={academicBackground.major}
-                          onChange={(e) => handleArrayInputChange('academicBackgrounds', index, 'major', e.target.value)}
+                          value={education.major}
+                          onChange={(e) => handleArrayInputChange('educationDetails', index, 'major', e.target.value)}
                         />
                       </div>
                       <div>
@@ -415,29 +522,33 @@ const SpecInputPage = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">학점</label>
                         <input
-                          type="number"
-                          step="0.1"
+                          type="text"
+                          inputMode="decimal"
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={academicBackground.gpa}
-                          onChange={(e) => handleArrayInputChange('academicBackgrounds', index, 'gpa', e.target.value)}
+                          value={education.gpa}
+                          onChange={(e) => {
+                            const validatedValue = validateGpaInput(e.target.value, education.maxGpa);
+                            handleArrayInputChange('educationDetails', index, 'gpa', validatedValue);
+                          }}
+                          placeholder="예: 3.75"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">최대 학점</label>
                         <select
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={academicBackground.maxGpa}
-                          onChange={(e) => handleArrayInputChange('academicBackgrounds', index, 'maxGpa', e.target.value)}
+                          value={education.maxGpa}
+                          onChange={(e) => handleMaxGpaChange('educationDetails', index, e.target.value)}
                         >
-                          <option value="4.3">4.3</option>
-                          <option value="4.5">4.5</option>
-                          <option value="4.0">4.0</option>
+                          {GPA_SCALE.map((scale, idx) => (
+                            <option key={idx} value={scale}>{scale}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
                   </div>
                   <div className="absolute right-2 top-2">
-                    <RemoveButton onClick={() => removeArrayItem('academicBackgrounds', index)} />
+                    <RemoveButton onClick={() => removeArrayItem('educationDetails', index)} />
                   </div>
                 </div>
               ))
@@ -446,10 +557,10 @@ const SpecInputPage = () => {
             {/* 직무경험 섹션 */}
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">직무경험</h3>
-              <AddButton onClick={() => addArrayItem('careers', { company: '', position: '인턴', duration: '' })} />
+              <AddButton onClick={() => addArrayItem('workExperiences', { companyName: '', position: '인턴', period: '' })} />
             </div>
-            {Array.isArray(formData.careers) && formData.careers.length > 0 ? (
-              formData.careers.map((career, index) => (
+            {Array.isArray(formData.workExperiences) && formData.workExperiences.length > 0 ? (
+              formData.workExperiences.map((experience, index) => (
                 <div key={`career-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4">
@@ -457,23 +568,23 @@ const SpecInputPage = () => {
                         <label className="block text-sm font-medium text-gray-600 mb-1">회사명</label>
                         <input
                           type="text"
+                          maxLength="20"
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
                           placeholder="예: 삼성 SDS"
-                          value={career.company}
-                          onChange={(e) => handleArrayInputChange('careers', index, 'company', e.target.value)}
+                          value={experience.companyName}
+                          onChange={(e) => handleArrayInputChange('workExperiences', index, 'companyName', e.target.value)}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">직책</label>
                         <select
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={career.position}
-                          onChange={(e) => handleArrayInputChange('careers', index, 'position', e.target.value)}
+                          value={experience.position}
+                          onChange={(e) => handleArrayInputChange('workExperiences', index, 'position', e.target.value)}
                         >
-                          <option value="인턴">인턴</option>
-                          <option value="사원">사원</option>
-                          <option value="주임">주임</option>
-                          <option value="대리">대리</option>
+                          {POSITIONS.map((position, idx) => (
+                            <option key={idx} value={position}>{position}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -481,17 +592,22 @@ const SpecInputPage = () => {
                       <label className="block text-sm font-medium text-gray-600 mb-1">근무기간 (개월)</label>
                       <div className="flex items-center gap-2">
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={career.duration}
-                          onChange={(e) => handleArrayInputChange('careers', index, 'duration', e.target.value)}
+                          value={experience.period}
+                          onChange={(e) => {
+                            const validatedValue = validatePeriodInput(e.target.value);
+                            handleArrayInputChange('workExperiences', index, 'period', validatedValue);
+                          }}
+                          placeholder="예: 12"
                         />
                         <span className="text-xs text-gray-500">*최대 3자리까지만 입력 가능</span>
                       </div>
                     </div>
                   </div>
                   <div className="absolute right-2 top-2">
-                    <RemoveButton onClick={() => removeArrayItem('careers', index)} />
+                    <RemoveButton onClick={() => removeArrayItem('workExperiences', index)} />
                   </div>
                 </div>
               ))
@@ -500,7 +616,7 @@ const SpecInputPage = () => {
             {/* 자격증 섹션 */}
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">자격증</h3>
-              <AddButton onClick={() => addArrayItem('certifications', { name: '', type: '' })} />
+              <AddButton onClick={() => addArrayItem('certifications', { name: '' })} />
             </div>
             {Array.isArray(formData.certifications) && formData.certifications.length > 0 ? (
               formData.certifications.map((cert, index) => (
@@ -509,6 +625,7 @@ const SpecInputPage = () => {
                     <label className="block text-sm font-medium text-gray-600 mb-1">자격증명</label>
                     <input
                       type="text"
+                      maxLength="50"
                       className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       value={cert.name}
                       onChange={(e) => handleArrayInputChange('certifications', index, 'name', e.target.value)}
@@ -524,32 +641,32 @@ const SpecInputPage = () => {
             {/* 어학능력 섹션 */}
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">어학능력</h3>
-              <AddButton onClick={() => addArrayItem('languages', { test: 'TOEIC', score: '' })} />
+              <AddButton onClick={() => addArrayItem('languageSkills', { languageTest: 'TOEIC_ENGLISH', score: '' })} />
             </div>
-            {Array.isArray(formData.languages) && formData.languages.length > 0 ? (
-              formData.languages.map((lang, index) => (
+            {Array.isArray(formData.languageSkills) && formData.languageSkills.length > 0 ? (
+              formData.languageSkills.map((lang, index) => (
                 <div key={`lang-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
                   <div className="grid grid-cols-2 gap-4">
                     <select
                       className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      value={lang.test}
-                      onChange={(e) => handleArrayInputChange('languages', index, 'test', e.target.value)}
+                      value={lang.languageTest}
+                      onChange={(e) => handleArrayInputChange('languageSkills', index, 'languageTest', e.target.value)}
                     >
-                      <option value="TOEIC">TOEIC</option>
-                      <option value="OPIC">OPIC</option>
-                      <option value="TOEFL">TOEFL</option>
-                      <option value="IELTS">IELTS</option>
+                      {LANGUAGE_TESTS.map((test, idx) => (
+                        <option key={idx} value={test.value}>{test.label}</option>
+                      ))}
                     </select>
                     <input
                       type="text"
+                      maxLength="10"
                       className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       placeholder="점수/등급"
                       value={lang.score}
-                      onChange={(e) => handleArrayInputChange('languages', index, 'score', e.target.value)}
+                      onChange={(e) => handleArrayInputChange('languageSkills', index, 'score', e.target.value)}
                     />
                   </div>
                   <div className="absolute right-2 top-2">
-                    <RemoveButton onClick={() => removeArrayItem('languages', index)} />
+                    <RemoveButton onClick={() => removeArrayItem('languageSkills', index)} />
                   </div>
                 </div>
               ))
@@ -558,7 +675,7 @@ const SpecInputPage = () => {
             {/* 활동/네트워킹 섹션 */}
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">활동/네트워킹</h3>
-              <AddButton onClick={() => addArrayItem('activities', { name: '', role: '임원', award: '' })} />
+              <AddButton onClick={() => addArrayItem('activities', { name: '', role: '', award: '' })} />
             </div>
             {Array.isArray(formData.activities) && formData.activities.length > 0 ? (
               formData.activities.map((activity, index) => (
@@ -569,6 +686,7 @@ const SpecInputPage = () => {
                         <label className="block text-sm font-medium text-gray-600 mb-1">활동명</label>
                         <input
                           type="text"
+                          maxLength="20"
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
                           placeholder="예: 대학생 마케팅 동아리"
                           value={activity.name}
@@ -577,15 +695,14 @@ const SpecInputPage = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">역할</label>
-                        <select
+                        <input
+                          type="text"
+                          maxLength="15"
                           className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          placeholder="예: 팀장, 팀원 등"
                           value={activity.role}
                           onChange={(e) => handleArrayInputChange('activities', index, 'role', e.target.value)}
-                        >
-                          <option value="임원">임원</option>
-                          <option value="팀장">팀장</option>
-                          <option value="팀원">팀원</option>
-                        </select>
+                        />
                       </div>
                     </div>
                     <div>
@@ -593,6 +710,7 @@ const SpecInputPage = () => {
                       <textarea
                         className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         placeholder="수상 내역이 있으시면 입력하세요"
+                        maxLength="20"
                         value={activity.award || ''}
                         onChange={(e) => handleArrayInputChange('activities', index, 'award', e.target.value)}
                         rows={2}
@@ -606,41 +724,6 @@ const SpecInputPage = () => {
               ))
             ) : null}
 
-            {/* 포트폴리오 업로드 */}
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <h3 className="text-lg font-medium mb-4">포트폴리오 PDF 업로드</h3>
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <input
-                    type="text"
-                    className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    value={formData.portfolio.fileName}
-                    readOnly
-                    placeholder="파일을 선택해주세요"
-                  />
-                </div>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  id="portfolio-file"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
-                <label 
-                  htmlFor="portfolio-file"
-                  className="inline-block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 cursor-pointer text-center"
-                >
-                  파일 찾기
-                </label>
-                <p className="text-xs text-gray-500">
-                  *용량 주의: 10MB이하의 파일을 업로드해주세요
-                </p>
-                <p className="text-xs text-gray-500">
-                  *pdf파일이 아닐경우 pdf파일로 업로드해 주시기 바랍니다
-                </p>
-              </div>
-            </div>
-
             {/* 지원 분야 */}
             <div className="mb-2">
               <h3 className="text-lg font-medium">
@@ -650,14 +733,12 @@ const SpecInputPage = () => {
             <div className="bg-gray-100 p-4 rounded-lg">
               <select
                 className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={formData.desiredPosition}
-                onChange={(e) => handleInputChange('desiredPosition', e.target.value)}
+                value={formData.jobField}
+                onChange={(e) => handleInputChange('jobField', e.target.value)}
               >
-                <option value="인터넷.IT">인터넷.IT</option>
-                <option value="금융">금융</option>
-                <option value="제조">제조</option>
-                <option value="마케팅.광고.홍보">마케팅.광고.홍보</option>
-                <option value="유통.물류">유통.물류</option>
+                {JOB_FIELDS.map((field, index) => (
+                  <option key={index} value={field}>{field}</option>
+                ))}
               </select>
             </div>
 
