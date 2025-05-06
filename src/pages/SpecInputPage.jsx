@@ -94,6 +94,11 @@ const SpecInputPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   
+  // 에러 메시지를 닫는 함수 추가
+  const clearError = () => {
+    setError(null);
+  };
+  
   const [formData, setFormData] = useState({
     name: '젤리', // 사용자 닉네임(수정 불가)
     finalEducation: {
@@ -180,6 +185,61 @@ const SpecInputPage = () => {
     if (!formData.jobField) {
       setError('지원 분야를 선택해주세요.');
       return false;
+    }
+
+    // 학력 정보 검증
+    if (formData.educationDetails.length > 0) {
+      for (let i = 0; i < formData.educationDetails.length; i++) {
+        const edu = formData.educationDetails[i];
+        if (!edu.schoolName || !edu.major || !edu.gpa) {
+          setError(`${i+1}번째 학력 정보의 모든 필드를 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
+    // 직무경험 검증
+    if (formData.workExperiences.length > 0) {
+      for (let i = 0; i < formData.workExperiences.length; i++) {
+        const exp = formData.workExperiences[i];
+        if (!exp.companyName || !exp.period) {
+          setError(`${i+1}번째 직무경험의 모든 필드를 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
+    // 자격증 검증
+    if (formData.certifications.length > 0) {
+      for (let i = 0; i < formData.certifications.length; i++) {
+        const cert = formData.certifications[i];
+        if (!cert.name) {
+          setError(`${i+1}번째 자격증명을 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
+    // 어학능력 검증
+    if (formData.languageSkills.length > 0) {
+      for (let i = 0; i < formData.languageSkills.length; i++) {
+        const lang = formData.languageSkills[i];
+        if (!lang.score) {
+          setError(`${i+1}번째 어학능력의 점수를 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
+    // 활동/네트워킹 검증 (award는 선택 사항)
+    if (formData.activities.length > 0) {
+      for (let i = 0; i < formData.activities.length; i++) {
+        const activity = formData.activities[i];
+        if (!activity.name || !activity.role) {
+          setError(`${i+1}번째 활동/네트워킹의 활동명과 역할을 입력해주세요.`);
+          return false;
+        }
+      }
     }
 
     return true;
@@ -406,13 +466,7 @@ const SpecInputPage = () => {
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
         <TopBar title="스펙 입력" />
         
-        {/* 토스트 메시지 */}
-        {error && (
-          <div className="fixed top-16 left-0 right-0 z-50 mx-auto max-w-md bg-red-500 text-white py-2 px-4 rounded shadow-lg">
-            {error}
-          </div>
-        )}
-        
+        {/* 성공 메시지 */}
         {success && (
           <div className="fixed top-16 left-0 right-0 z-50 mx-auto max-w-md bg-green-500 text-white py-2 px-4 rounded shadow-lg">
             스펙 정보가 성공적으로 저장되었습니다. 마이페이지로 이동합니다.
@@ -741,6 +795,29 @@ const SpecInputPage = () => {
                 ))}
               </select>
             </div>
+
+            {/* Error message display */}
+            {error && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between bg-red-300 border border-red-400 text-gray-900 px-4 py-3 rounded-md mb-3 relative">
+                  <div className="flex items-center">
+                    <div className="mr-3 text-red-600 flex-shrink-0">
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="2" />
+                        <path d="M12 8L12 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <circle cx="12" cy="16" r="1" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium">{error}</span>
+                  </div>
+                  <button type="button" className="text-gray-500 hover:text-gray-700" onClick={clearError}>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* 제출 버튼 */}
             <div className="flex gap-4 mt-6">
