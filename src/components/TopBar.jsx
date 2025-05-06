@@ -1,13 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const TopBar = ({ title }) => {
+const TopBar = ({ title, onBack }) => {
   const navigate = useNavigate();
+
+  // Allow overriding the back behavior
+  const handleBack = () => {
+    if (onBack) onBack();
+    else navigate(-1);
+  };
 
   return (
     <div className="flex items-center h-14 px-4 border-b border-gray-200">
       <button 
-        onClick={() => navigate(-1)}
+        onClick={handleBack}
         className="p-2 -ml-2"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

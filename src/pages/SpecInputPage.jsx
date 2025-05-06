@@ -93,6 +93,12 @@ const SpecInputPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  // State for cancel confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // Handlers for cancel confirmation
+  const handleCancelAttempt = () => setShowConfirmModal(true);
+  const handleConfirmCancel = () => navigate('/mypage');
+  const handleCloseModal = () => setShowConfirmModal(false);
   
   // 에러 메시지를 닫는 함수 추가
   const clearError = () => {
@@ -464,7 +470,7 @@ const SpecInputPage = () => {
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
-        <TopBar title="스펙 입력" />
+        <TopBar title="스펙 입력" onBack={handleCancelAttempt} />
         
         {/* 성공 메시지 */}
         {success && (
@@ -844,7 +850,7 @@ const SpecInputPage = () => {
               <button
                 type="button"
                 className="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-300 flex items-center justify-center"
-                onClick={() => navigate(-1)}
+                onClick={handleCancelAttempt}
                 disabled={loading}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
@@ -858,6 +864,42 @@ const SpecInputPage = () => {
         </div>
         
         <BottomNavBar />
+        {showConfirmModal && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
+            <div className="bg-white rounded-lg shadow-lg w-11/12 max-w-sm p-6">
+              <div className="flex justify-end">
+                <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="bg-red-100 rounded-full p-4 mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M12 2a10 10 0 11-0 20 10 10 0 010-20z" />
+                  </svg>
+                </div>
+                <p className="text-lg font-semibold text-gray-800 mb-6">스펙 입력을 그만하시겠습니까?</p>
+                <p className="text-sm text-gray-500 mb-6">입력 중인 내용은 저장되지 않습니다.</p>
+                <div className="flex space-x-4 w-full">
+                  <button
+                    onClick={handleConfirmCancel}
+                    className="flex-1 bg-red-500 text-white py-3 rounded-lg text-center"
+                  >
+                    예
+                  </button>
+                  <button
+                    onClick={handleCloseModal}
+                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg text-center"
+                  >
+                    아니오
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
