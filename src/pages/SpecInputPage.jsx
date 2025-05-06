@@ -182,6 +182,61 @@ const SpecInputPage = () => {
       return false;
     }
 
+    // 학력 정보 검증
+    if (formData.educationDetails.length > 0) {
+      for (let i = 0; i < formData.educationDetails.length; i++) {
+        const edu = formData.educationDetails[i];
+        if (!edu.schoolName || !edu.major || !edu.gpa) {
+          setError(`${i+1}번째 학력 정보의 모든 필드를 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
+    // 직무경험 검증
+    if (formData.workExperiences.length > 0) {
+      for (let i = 0; i < formData.workExperiences.length; i++) {
+        const exp = formData.workExperiences[i];
+        if (!exp.companyName || !exp.period) {
+          setError(`${i+1}번째 직무경험의 모든 필드를 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
+    // 자격증 검증
+    if (formData.certifications.length > 0) {
+      for (let i = 0; i < formData.certifications.length; i++) {
+        const cert = formData.certifications[i];
+        if (!cert.name) {
+          setError(`${i+1}번째 자격증명을 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
+    // 어학능력 검증
+    if (formData.languageSkills.length > 0) {
+      for (let i = 0; i < formData.languageSkills.length; i++) {
+        const lang = formData.languageSkills[i];
+        if (!lang.score) {
+          setError(`${i+1}번째 어학능력의 점수를 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
+    // 활동/네트워킹 검증 (award는 선택 사항)
+    if (formData.activities.length > 0) {
+      for (let i = 0; i < formData.activities.length; i++) {
+        const activity = formData.activities[i];
+        if (!activity.name || !activity.role) {
+          setError(`${i+1}번째 활동/네트워킹의 활동명과 역할을 입력해주세요.`);
+          return false;
+        }
+      }
+    }
+
     return true;
   };
 
@@ -474,6 +529,9 @@ const SpecInputPage = () => {
               </div>
               <AddButton onClick={() => addArrayItem('educationDetails', { schoolName: '', major: '', degree: '학사', gpa: '', maxGpa: '4.5' })} />
             </div>
+            {formData.educationDetails.length > 0 && (
+              <p className="text-xs text-gray-500 mb-2">모든 학력 정보의 필드를 입력해야 합니다.</p>
+            )}
             {Array.isArray(formData.educationDetails) && formData.educationDetails.length > 0 ? (
               formData.educationDetails.map((education, index) => (
                 <div key={`academic-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
@@ -559,6 +617,9 @@ const SpecInputPage = () => {
               <h3 className="text-lg font-medium">직무경험</h3>
               <AddButton onClick={() => addArrayItem('workExperiences', { companyName: '', position: '인턴', period: '' })} />
             </div>
+            {formData.workExperiences.length > 0 && (
+              <p className="text-xs text-gray-500 mb-2">모든 직무경험의 필드를 입력해야 합니다.</p>
+            )}
             {Array.isArray(formData.workExperiences) && formData.workExperiences.length > 0 ? (
               formData.workExperiences.map((experience, index) => (
                 <div key={`career-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
@@ -618,6 +679,9 @@ const SpecInputPage = () => {
               <h3 className="text-lg font-medium">자격증</h3>
               <AddButton onClick={() => addArrayItem('certifications', { name: '' })} />
             </div>
+            {formData.certifications.length > 0 && (
+              <p className="text-xs text-gray-500 mb-2">모든 자격증명을 입력해야 합니다.</p>
+            )}
             {Array.isArray(formData.certifications) && formData.certifications.length > 0 ? (
               formData.certifications.map((cert, index) => (
                 <div key={`cert-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
@@ -643,6 +707,9 @@ const SpecInputPage = () => {
               <h3 className="text-lg font-medium">어학능력</h3>
               <AddButton onClick={() => addArrayItem('languageSkills', { languageTest: 'TOEIC_ENGLISH', score: '' })} />
             </div>
+            {formData.languageSkills.length > 0 && (
+              <p className="text-xs text-gray-500 mb-2">모든 어학능력의 점수를 입력해야 합니다.</p>
+            )}
             {Array.isArray(formData.languageSkills) && formData.languageSkills.length > 0 ? (
               formData.languageSkills.map((lang, index) => (
                 <div key={`lang-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
@@ -677,6 +744,9 @@ const SpecInputPage = () => {
               <h3 className="text-lg font-medium">활동/네트워킹</h3>
               <AddButton onClick={() => addArrayItem('activities', { name: '', role: '', award: '' })} />
             </div>
+            {formData.activities.length > 0 && (
+              <p className="text-xs text-gray-500 mb-2">모든 활동/네트워킹의 활동명과 역할을 입력해야 합니다. (수상내역은 선택사항)</p>
+            )}
             {Array.isArray(formData.activities) && formData.activities.length > 0 ? (
               formData.activities.map((activity, index) => (
                 <div key={`activity-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
