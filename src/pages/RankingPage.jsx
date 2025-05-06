@@ -436,146 +436,146 @@ const RankingPage = () => {
   }, []);
   
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      {/* 상단 바 */}
-      <TopBar title="랭킹" />
-      
-      {/* 메인 컨텐츠 */}
-      <div className="w-full max-w-md mx-auto flex-1 p-4 pb-16 bg-white">
-        {/* 검색 바 */}
-        <div className="mb-4">
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              placeholder="사용자 검색..."
-              className="w-full p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-            
-            {/* 검색 결과 드롭다운 */}
-            {showSearchResults && searchResults.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 overflow-y-auto">
-                {searchResults.map(user => (
-                  <div 
-                    key={user.userId}
-                    className="p-3 flex items-center border-b border-gray-100 last:border-b-0"
-                  >
-                    <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3 font-bold text-sm relative">
-                      {user.profileImageUrl ? (
-                        <img 
-                          src={user.profileImageUrl} 
-                          alt={user.nickname} 
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
+    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
+      <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
+        <TopBar title="랭킹" />
+        
+        <div className="flex-1 p-4 overflow-y-auto pb-20">
+          {/* 검색 바 */}
+          <div className="mb-4">
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="사용자 검색..."
+                className="w-full p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              
+              {/* 검색 결과 드롭다운 */}
+              {showSearchResults && searchResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 overflow-y-auto">
+                  {searchResults.map(user => (
+                    <div 
+                      key={user.userId}
+                      className="p-3 flex items-center border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3 font-bold text-sm relative">
+                        {user.profileImageUrl ? (
+                          <img 
+                            src={user.profileImageUrl} 
+                            alt={user.nickname} 
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                        )}
+                        <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {user.totalRank}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800">{highlightText(user.nickname, searchTerm)}</p>
+                        <div className="flex items-center text-xs text-gray-500">
+                          <span>{highlightText(user.jobField.replace(/_/g, ' '), searchTerm)}</span>
+                          <span className="mx-1">•</span>
+                          <span>점수: <span className="font-semibold text-blue-600">{user.score.toFixed(1)}</span></span>
                         </div>
-                      )}
-                      <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {user.totalRank}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">{highlightText(user.nickname, searchTerm)}</p>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <span>{highlightText(user.jobField.replace(/_/g, ' '), searchTerm)}</span>
-                        <span className="mx-1">•</span>
-                        <span>점수: <span className="font-semibold text-blue-600">{user.score.toFixed(1)}</span></span>
+                      </div>
+                      <div className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                        {user.rankByJobField}위/{typeof user.totalUsersCountByJobField === 'number' ? user.totalUsersCountByJobField : '-'}명
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                      {user.rankByJobField}위/{typeof user.totalUsersCountByJobField === 'number' ? user.totalUsersCountByJobField : '-'}명
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
+            </form>
+          </div>
+          
+          {/* 직무 분야 필터 */}
+          <div className="mb-4 overflow-x-auto hide-scrollbar">
+            <div className="flex space-x-2 pb-2 whitespace-nowrap">
+              {jobFieldOptions.map(option => (
+                <button
+                  key={option.code}
+                  className={`py-2 px-4 rounded-full text-sm flex-shrink-0 ${
+                    selectedJobField === option.code
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
+                  }`}
+                  onClick={() => handleJobFieldChange(option.code)}
+                >
+                  {option.name.replace(/_/g, ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* 메타 데이터 (총 사용자 수, 평균 점수) */}
+          <div className="mb-6">
+            <div className="flex bg-blue-50 rounded-lg">
+              <div className="flex-1 text-center p-4">
+                <div className="text-sm text-gray-500 mb-1">총 사용자</div>
+                <div className="text-xl font-bold text-blue-600">{metaData.totalUserCount}명</div>
               </div>
-            )}
-          </form>
-        </div>
-        
-        {/* 직무 분야 필터 */}
-        <div className="mb-4 overflow-x-auto hide-scrollbar">
-          <div className="flex space-x-2 pb-2 whitespace-nowrap">
-            {jobFieldOptions.map(option => (
-              <button
-                key={option.code}
-                className={`py-2 px-4 rounded-full text-sm flex-shrink-0 ${
-                  selectedJobField === option.code
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-                }`}
-                onClick={() => handleJobFieldChange(option.code)}
+              <div className="w-4 bg-white"></div>
+              <div className="flex-1 text-center p-4">
+                <div className="text-sm text-gray-500 mb-1">평균 점수</div>
+                <div className="text-xl font-bold text-blue-600">{metaData.averageScore}점</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 랭킹 목록 */}
+          {error ? (
+            <div className="p-4 bg-red-100 text-red-800 rounded-lg">
+              <p>{error}</p>
+              <button 
+                className="mt-2 text-blue-500 underline"
+                onClick={() => fetchRankings(selectedJobField)}
               >
-                {option.name.replace(/_/g, ' ')}
+                다시 시도
               </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* 메타 데이터 (총 사용자 수, 평균 점수) */}
-        <div className="mb-6">
-          <div className="flex bg-blue-50 rounded-lg">
-            <div className="flex-1 text-center p-4">
-              <div className="text-sm text-gray-500 mb-1">총 사용자</div>
-              <div className="text-xl font-bold text-blue-600">{metaData.totalUserCount}명</div>
             </div>
-            <div className="w-4 bg-white"></div>
-            <div className="flex-1 text-center p-4">
-              <div className="text-sm text-gray-500 mb-1">평균 점수</div>
-              <div className="text-xl font-bold text-blue-600">{metaData.averageScore}점</div>
-            </div>
-          </div>
+          ) : (
+            <>
+              {rankings.length === 0 && !loading ? (
+                <div className="p-8 text-center text-gray-500">
+                  <p>랭킹 데이터가 없습니다.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {rankings.map((ranking, index) => (
+                    <div 
+                      key={`${ranking.userId}_${index}`} 
+                      ref={index === rankings.length - 1 ? lastRankingElementRef : null}
+                    >
+                      <RankingCard ranking={ranking} index={index} />
+                    </div>
+                  ))}
+                  {loading && <LoadingIndicator />}
+                  {!hasMore && rankings.length > 0 && (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      모든 랭킹을 불러왔습니다.
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
-        
-        {/* 랭킹 목록 */}
-        {error ? (
-          <div className="p-4 bg-red-100 text-red-800 rounded-lg">
-            <p>{error}</p>
-            <button 
-              className="mt-2 text-blue-500 underline"
-              onClick={() => fetchRankings(selectedJobField)}
-            >
-              다시 시도
-            </button>
-          </div>
-        ) : (
-          <>
-            {rankings.length === 0 && !loading ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>랭킹 데이터가 없습니다.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {rankings.map((ranking, index) => (
-                  <div 
-                    key={`${ranking.userId}_${index}`} 
-                    ref={index === rankings.length - 1 ? lastRankingElementRef : null}
-                  >
-                    <RankingCard ranking={ranking} index={index} />
-                  </div>
-                ))}
-                {loading && <LoadingIndicator />}
-                {!hasMore && rankings.length > 0 && (
-                  <div className="text-center py-4 text-gray-500 text-sm">
-                    모든 랭킹을 불러왔습니다.
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
       </div>
       
       {/* 하단 내비게이션 바 */}
