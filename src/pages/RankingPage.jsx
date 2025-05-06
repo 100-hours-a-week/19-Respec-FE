@@ -449,6 +449,7 @@ const RankingPage = () => {
                 value={searchTerm}
                 onChange={handleSearchChange}
                 placeholder="사용자 검색..."
+                maxLength={20}
                 className="w-full p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
