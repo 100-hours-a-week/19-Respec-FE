@@ -73,7 +73,6 @@ const RankingResultPage = () => {
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(keyword);
   
   // 참조용 변수들
   const observer = useRef();
@@ -205,18 +204,6 @@ const RankingResultPage = () => {
     }
   };
   
-  // 검색 폼 제출 처리
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    
-    if (searchTerm.trim() !== '') {
-      // URL 업데이트 (페이지 새로고침 없이)
-      navigate(`/ranking-results?keyword=${encodeURIComponent(searchTerm)}`);
-      // 검색 결과 다시 로드
-      fetchSearchResults(searchTerm);
-    }
-  };
-  
   // 컴포넌트 마운트 시 초기 데이터 로드
   useEffect(() => {
     if (keyword) {
@@ -229,27 +216,6 @@ const RankingResultPage = () => {
       <TopBar title="검색 결과" showBackButton={true} />
       
       <div className="w-full max-w-md mx-auto flex-1 bg-white p-4 pb-16">
-        {/* 검색창 */}
-        <div className="mb-4">
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="사용자 검색..."
-              className="w-full p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-          </form>
-        </div>
-        
         {/* 검색 키워드 */}
         <div className="mb-4">
           <h2 className="text-lg font-medium">
