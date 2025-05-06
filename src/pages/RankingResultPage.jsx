@@ -212,49 +212,51 @@ const RankingResultPage = () => {
   }, [keyword]);
   
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      <TopBar title="검색 결과" showBackButton={true} />
-      
-      <div className="w-full max-w-md mx-auto flex-1 bg-white p-4 pb-16">
-        {/* 검색 키워드 */}
-        <div className="mb-4">
-          <h2 className="text-lg font-medium">
-            <span className="text-blue-600">"{keyword}"</span> 검색 결과
-          </h2>
-        </div>
+    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
+      <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
+        <TopBar title="검색 결과" showBackButton={true} />
         
-        {/* 검색 결과 리스트 */}
-        {error ? (
-          <div className="p-4 bg-red-100 text-red-800 rounded-lg">
-            <p>{error}</p>
+        <div className="flex-1 p-4 overflow-y-auto pb-20">
+          {/* 검색 키워드 */}
+          <div className="mb-4">
+            <h2 className="text-lg font-medium">
+              <span className="text-blue-600">"{keyword}"</span> 검색 결과
+            </h2>
           </div>
-        ) : (
-          <>
-            {searchResults.length === 0 && !loading ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>검색 결과가 없습니다.</p>
-                <p className="mt-2 text-sm">다른 검색어로 다시 시도해보세요.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {searchResults.map((result, index) => (
-                  <div 
-                    key={`${result.userId}_${index}`} 
-                    ref={index === searchResults.length - 1 ? lastResultElementRef : null}
-                  >
-                    <SearchResultItem result={result} />
-                  </div>
-                ))}
-                {loading && <LoadingIndicator />}
-                {!hasMore && searchResults.length > 0 && (
-                  <div className="text-center py-4 text-gray-500 text-sm">
-                    모든 검색 결과를 불러왔습니다.
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
+          
+          {/* 검색 결과 리스트 */}
+          {error ? (
+            <div className="p-4 bg-red-100 text-red-800 rounded-lg">
+              <p>{error}</p>
+            </div>
+          ) : (
+            <>
+              {searchResults.length === 0 && !loading ? (
+                <div className="p-8 text-center text-gray-500">
+                  <p>검색 결과가 없습니다.</p>
+                  <p className="mt-2 text-sm">다른 검색어로 다시 시도해보세요.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {searchResults.map((result, index) => (
+                    <div 
+                      key={`${result.userId}_${index}`} 
+                      ref={index === searchResults.length - 1 ? lastResultElementRef : null}
+                    >
+                      <SearchResultItem result={result} />
+                    </div>
+                  ))}
+                  {loading && <LoadingIndicator />}
+                  {!hasMore && searchResults.length > 0 && (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      모든 검색 결과를 불러왔습니다.
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
       
       <BottomNavBar />
