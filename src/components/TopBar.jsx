@@ -3,13 +3,13 @@ import { ArrowLeft } from 'lucide-react';
 
 const TopBar = ({ title, backLink = "/" }) => {
   return (
-    <div className="h-14 w-full bg-white flex items-center px-4 border-b border-gray-100">
-      <div className="w-10 flex justify-start">
+    <div className="flex items-center w-full px-4 bg-white border-b border-gray-100 h-14">
+      <div className="flex justify-start w-10">
         <a href={backLink} className="mr-4">
           <ArrowLeft size={20} color="#333" />
         </a>
       </div>
-      <h1 className="font-medium text-center flex-1 text-lg">{title}</h1>
+      <h1 className="flex-1 text-lg font-medium text-center">{title}</h1>
       <div className="w-10" />
     </div>
   );

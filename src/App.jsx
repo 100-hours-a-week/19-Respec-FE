@@ -6,6 +6,11 @@ import LoginPage from './pages/LoginPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import MyPage from './pages/MyPage';
+import SpecInputPage from './pages/SpecInputPage';
+import RankingPage from './pages/RankingPage';
+import RankingResultPage from './pages/RankingResultPage';
+import DmPage from './pages/DmPage';
+import SocialPage from './pages/SocialPage';
 import TopBar from './components/TopBar';
 import BottomNavBar from './components/BottomNavBar';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -39,7 +44,9 @@ const Layout = ({ children }) => {
       case '/': return '스펙랭킹';
       case '/login': return '로그인';
       case '/profile-setup': return '회원가입';
+      case '/spec-input': return '스펙 입력';
       case '/rank': return '랭킹';
+      case '/ranking-results': return '랭킹 검색 결과';
       case '/dm': return '메시지';
       case '/social': return '소셜';
       case '/my': return '마이페이지';
@@ -50,11 +57,11 @@ const Layout = ({ children }) => {
   // 현재 활성화된 메뉴 아이템 결정
   const getActiveMenu = () => {
     if (path === '/') return 'home';
-    if (path === '/rank') return 'rank';
+    if (path === '/rank' || path === 'ranking-results') return 'rank';
     if (path === '/dm') return 'dm';
     if (path === '/social') return 'social';
-    if (path === '/my') return 'my';
-    if (path === '/login') return isLoggedIn ? 'my' : 'login';
+    if (path === '/my' || path === '/spec-input') return 'my';
+    if (path === '/login' || path === '/profile-setup') return isLoggedIn ? 'my' : 'login';
     return '';
   };
   
@@ -81,9 +88,11 @@ function App() {
           <Route path="/login" element={<Layout><LoginPage /></Layout>} />
           <Route path="/profile-setup" element={<Layout><ProfileSetupPage /></Layout>} />
           <Route path="/oauth2/callback" element={<OAuthCallbackPage />} />
-          <Route path="/rank" element={<Layout><div className="p-4">랭킹 페이지</div></Layout>} />
-          <Route path="/dm" element={<Layout><div className="p-4">메시지 페이지</div></Layout>} />
-          <Route path="/social" element={<Layout><div className="p-4">소셜 페이지</div></Layout>} />
+          <Route path="/spec-input" element={<Layout><SpecInputPage /></Layout>} />
+          <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
+          <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
+          <Route path="/dm" element={<Layout><DmPage /></Layout>} />
+          <Route path="/social" element={<Layout><SocialPage /></Layout>} />
           <Route path="/my" element={
             <ProtectedRoute>
               <Layout><MyPage /></Layout>
