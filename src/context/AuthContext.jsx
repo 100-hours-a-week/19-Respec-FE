@@ -6,7 +6,6 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const [oauthInfo, setOauthInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // 사용자 인증 상태 확인
@@ -15,16 +14,8 @@ export const AuthProvider = ({ children }) => {
       try {
         const response = await axios.get('/api/users/me');
         
-        if (response.data) {
-          setUser(response.data);
-
-          // OAuth 정보만 따로 저장
-          setOauthInfo({
-            loginId: response.data.loginId,
-            provider: response.data.provider,
-            providerId: response.data.providerId
-          });
-
+        if (response.data?.data?.user) {
+          setUser(response.data.data.user);
           setIsLoggedIn(true);
         }
       } catch (error) {
@@ -42,8 +33,6 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    // checkAuthStatus();
-
     if (window.location.pathname !== "/profile-setup") {
       checkAuthStatus();
     } else {
@@ -53,9 +42,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // 로그인 함수
-  const login = (userData, oauthData) => {
+  const login = (userData) => {
     setUser(userData);
-    setOauthInfo(oauthData);
     setIsLoggedIn(true);
   };
 
@@ -65,7 +53,6 @@ export const AuthProvider = ({ children }) => {
       await axios.delete('/api/auth/token');
       axios.defaults.headers.common['Authorization'] = undefined;
       setUser(null);
-      setOauthInfo(null);
       setIsLoggedIn(false);
     } catch (error) {
       console.error('Logout failed', error);
@@ -73,7 +60,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, oauthInfo, loading, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
