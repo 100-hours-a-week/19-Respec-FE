@@ -171,7 +171,10 @@ const MyPage = () => {
           </div>
           
           {/* 스펙 정보 관리 */}
-          <div className="flex items-center justify-between p-4 border-b">
+          <div 
+            className="flex items-center justify-between p-4 border-b cursor-pointer"
+            onClick={() => navigate('/spec-input')}
+          >
             <div className="flex items-center">
               <div className="flex items-center justify-center w-8 h-8 mr-3 bg-blue-100 rounded-full">
                 <ScrollText size={18} className="text-blue-500" />

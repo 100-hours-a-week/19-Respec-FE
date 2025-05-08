@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -35,6 +35,7 @@ const ProtectedRoute = ({ children }) => {
 // 레이아웃 컴포넌트
 const Layout = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const path = location.pathname;
   const { isLoggedIn } = useAuth();
   
@@ -47,11 +48,27 @@ const Layout = ({ children }) => {
       case '/spec-input': return '스펙 입력';
       case '/rank': return '랭킹';
       case '/ranking-results': return '랭킹 검색 결과';
-      case '/dm': return '메시지';
+      case '/dm': return '채팅';
       case '/social': return '소셜';
       case '/my': return '마이페이지';
       default: return '스펙랭킹';
     }
+  };
+
+  // 뒤로가기 버튼 표시 여부 및 이동 경로 결정
+  const getBackButtonConfig = () => {
+    // 뒤로가기 버튼이 보이지 않아야 하는 페이지들
+    if (['/', '/login', '/rank', '/dm', '/social', '/my'].includes(path)) {
+      return null;
+    }
+    
+    // 특정 페이지로 이동해야 하는 경우
+    if (path === '/profile-setup') return '/login';
+    if (path === '/spec-input') return '/my';
+    if (path === '/ranking-results') return '/rank';
+    
+    // 그 외 페이지는 브라우저 히스토리 기반 이전 페이지로 이동
+    return () => navigate(-1);
   };
 
   // 현재 활성화된 메뉴 아이템 결정
@@ -70,7 +87,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
-      {shouldShowNavigation && <TopBar title={getTitleByPath()} backLink={path !== '/' ? '/' : null} />}
+      {shouldShowNavigation && <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />}
       <main className="pt-5 pb-5">
         {children}
       </main>

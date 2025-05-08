@@ -16,7 +16,7 @@ const LoginPage = () => {
               
               <h2 className="text-xl font-semibold text-indigo-700">스펙랭킹</h2>
               <p className="mt-2 text-sm text-gray-600">
-                취업 준비의 모든 것, 당신의 커리어를 한 단계 더 높이세요
+                취업 준비의 모든 것,<br/>당신의 커리어를 한 단계 더 높이세요
               </p>
             </div>
             
@@ -33,7 +33,7 @@ const LoginPage = () => {
               </a>
               
               <p className="mt-8 text-sm text-center text-gray-600">
-                아직 회원이 아니신가요? 로그인 시 자동 회원가입됩니다.
+                아직 회원이 아니신가요?<br/>로그인 시 자동 회원가입됩니다.
               </p>
             </div>
           </div>

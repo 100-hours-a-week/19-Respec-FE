@@ -1,37 +1,36 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import RankingItem from '../components/RankingItem';
 import axios from 'axios';
-import TopBar from '../components/TopBar';
-import BottomNavBar from '../components/BottomNavBar';
 
 // 로딩 인디케이터 컴포넌트
 const LoadingIndicator = () => (
-  <div className="flex justify-center items-center py-4">
-    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+  <div className="flex items-center justify-center py-4">
+    <div className="w-8 h-8 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
   </div>
 );
 
 // 검색 결과 항목 컴포넌트
 const SearchResultItem = ({ result }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-4 border border-gray-200 hover:border-blue-300 transition-all">
+    <div className="p-4 mb-4 transition-all bg-white border border-gray-200 rounded-lg shadow-md hover:border-blue-300">
       <div className="flex items-center">
         {/* 랭킹 순위 */}
-        <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center mr-4 font-bold text-lg">
+        <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-4 text-lg font-bold text-white bg-blue-500 rounded-full">
           {result.totalRank}
         </div>
         
         {/* 프로필 이미지 */}
-        <div className="w-12 h-12 bg-gray-200 rounded-full mr-4 overflow-hidden">
+        <div className="w-12 h-12 mr-4 overflow-hidden bg-gray-200 rounded-full">
           {result.profileImageUrl ? (
             <img 
               src={result.profileImageUrl} 
               alt={`${result.nickname}의 프로필`} 
-              className="w-full h-full object-cover"
+              className="object-cover w-full h-full"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center justify-center w-full h-full text-gray-600 bg-gray-300">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
@@ -40,7 +39,7 @@ const SearchResultItem = ({ result }) => {
         
         {/* 사용자 정보 */}
         <div className="flex-1">
-          <h3 className="font-medium text-lg">{result.nickname}</h3>
+          <h3 className="text-lg font-medium">{result.nickname}</h3>
           <div className="flex items-center text-sm text-gray-600">
             <span className="mr-2">{result.jobField.replace(/_/g, ' ')}</span>
             <span className="mx-2">•</span>
@@ -63,7 +62,6 @@ const SearchResultItem = ({ result }) => {
 const RankingResultPage = () => {
   // URL 쿼리 파라미터에서 검색어 추출
   const location = useLocation();
-  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const keyword = queryParams.get('keyword') || '';
   
@@ -212,11 +210,9 @@ const RankingResultPage = () => {
   }, [keyword]);
   
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
-        <TopBar title="검색 결과" showBackButton={true} />
-        
-        <div className="flex-1 p-4 overflow-y-auto pb-20">
+    <div className="flex flex-col w-full min-h-screen bg-gray-50">
+      <div className="relative flex flex-col flex-1 w-full max-w-md pb-16 mx-auto bg-white">
+        <div className="flex-1 p-4 pb-20 overflow-y-auto">
           {/* 검색 키워드 */}
           <div className="mb-4">
             <h2 className="text-lg font-medium">
@@ -226,7 +222,7 @@ const RankingResultPage = () => {
           
           {/* 검색 결과 리스트 */}
           {error ? (
-            <div className="p-4 bg-red-100 text-red-800 rounded-lg">
+            <div className="p-4 text-red-800 bg-red-100 rounded-lg">
               <p>{error}</p>
             </div>
           ) : (
@@ -238,17 +234,33 @@ const RankingResultPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {searchResults.map((result, index) => (
-                    <div 
-                      key={`${result.userId}_${index}`} 
-                      ref={index === searchResults.length - 1 ? lastResultElementRef : null}
-                    >
-                      <SearchResultItem result={result} />
-                    </div>
-                  ))}
+                  {searchResults.map((result, index) => {
+                    // <div 
+                    //   key={`${result.userId}_${index}`} 
+                    //   ref={index === searchResults.length - 1 ? lastResultElementRef : null}
+                    // >
+                    //   <SearchResultItem result={result} />
+                    // </div>
+                    const percentage = ((result.rankByJobField / result.totalUsersCountByJobField) * 100).toFixed(2);
+                    return (
+                      <div 
+                        key={`${result.userId}_${index}`} 
+                        ref={index === searchResults.length - 1 ? lastResultElementRef : null}
+                      >
+                        <RankingItem 
+                          rank={result.totalRank}
+                          user={result.nickname}
+                          score={result.score}
+                          category={result.jobField}
+                          percentage={percentage}
+                          profileImageUrl={result.profileImageUrl}
+                        />
+                      </div>
+                    );
+                  })}
                   {loading && <LoadingIndicator />}
                   {!hasMore && searchResults.length > 0 && (
-                    <div className="text-center py-4 text-gray-500 text-sm">
+                    <div className="py-4 text-sm text-center text-gray-500">
                       모든 검색 결과를 불러왔습니다.
                     </div>
                   )}
@@ -258,8 +270,6 @@ const RankingResultPage = () => {
           )}
         </div>
       </div>
-      
-      <BottomNavBar />
     </div>
   );
 };

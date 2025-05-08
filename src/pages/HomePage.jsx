@@ -1,23 +1,37 @@
-import React, {useState} from "react";
+import React, { useState, useEffect} from "react";
 import ProfileCard from "../components/ProfileCard";
 import ServiceIntro from "../components/ServiceIntro";
 import RankingFilters from "../components/RankingFilters";
 import RankingItem from "../components/RankingItem";
+import axios from "axios";
 
 const HomePage = () => {
     const [selectedFilter, setSelectedFilter] = useState('전체');
+    const [rankingData, setRankingData] = useState([]);
     
-    const rankingData = [
-      { rank: 1, user: 'jelly.song', score: 89, category: '인터넷.IT', percentage: '0.01', isFavorite: false },
-      { rank: 2, user: 'jenna.lee', score: 86, category: '경영.사무', percentage: '0.02', isFavorite: true },
-      { rank: 3, user: 'elton.park', score: 80, category: '마케팅.광고', percentage: '0.03', isFavorite: false },
-      { rank: 4, user: 'tony.kim', score: 79, category: '인터넷.IT', percentage: '0.04', isFavorite: false },
-    ];
+    useEffect(() => {
+      const fetchRankings = async () => {
+        try {
+          const response = await axios.get('/api/specs', {
+            params: {
+              type: 'ranking',
+              jobField: selectedFilter,
+              limit: 4
+            }
+          });
+
+          setRankingData(response.data.data.rankings);
+        } catch (error) {
+          console.error("랭킹 데이터를 불러오는 데 실패했습니다.", error);
+        }
+      };
+  
+      fetchRankings();
+    }, [selectedFilter]);
     
     return (
         <div className="p-4">
           <ProfileCard />
-          {/* <SpecSummary /> */}
           <ServiceIntro />
           
           <h3 className="mt-6 mb-2 text-lg font-bold">상위 랭킹 TOP 4</h3>
@@ -27,17 +41,20 @@ const HomePage = () => {
           />
           
           <div className="bg-white rounded-lg shadow">
-            {rankingData.map((item) => (
-              <RankingItem 
-                key={item.rank}
-                rank={item.rank}
-                user={item.user}
+            {rankingData.map((item) => {
+              const percentage = ((item.rankByJobField / item.usersCountByJobField) * 100).toFixed(2);
+              return (
+                <RankingItem 
+                key={item.userId}
+                rank={item.rankByJobField}
+                user={item.nickname}
                 score={item.score}
-                category={item.category}
-                percentage={item.percentage}
-                isFavorite={item.isFavorite}
+                category={item.jobField}
+                percentage={percentage}
+                profileImageUrl={item.profileImageUrl}
               />
-            ))}
+              );
+            })}
           </div>
         </div>
     );
