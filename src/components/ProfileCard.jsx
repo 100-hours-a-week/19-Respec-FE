@@ -77,8 +77,6 @@ const ProfileCard = () => {
           <div className="relative w-20 h-20">
             <svg viewBox="0 0 100 100" className="w-full h-full">
               <circle cx="50" cy="50" r="45" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="2" />
-              {/* <text x="50" y="50" textAnchor="middle" dominantBaseline="middle" fontSize="16" fontWeight="bold" fill="#3b82f6">스펙</text> */}
-              {/* <text x="50" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="#94a3b8">입력</text> */}
               <MessageCircleQuestion x={30} y={30} size={38}/>
             </svg>
             
@@ -122,13 +120,10 @@ const ProfileCard = () => {
         <div className="ml-4">
           <h2 className="text-lg font-bold">지금 {user?.nickname} 님은</h2>
           <h2 className="text-lg font-bold">인터넷.IT 기준 상위 22%입니다</h2>
-          {/* <h2 className="text-lg font-bold">{specData.jobField} 기준 상위 {rankPercentage}%입니다</h2> */}
           <div className="w-full h-2 mt-2 bg-gray-200 rounded-full">
             <div className="h-2 bg-blue-500 rounded-full" style={{ width: '78%' }}></div>
-            {/* <div className="h-2 bg-blue-500 rounded-full" style={{ width: `${scorePercentage}%` }}></div> */}
           </div>
           <p className="mt-1 text-sm text-gray-500">점수: 78/100</p>
-          {/* <p className="mt-1 text-sm text-gray-500">점수: {specData.score}/100</p> */}
         </div>
       </div>
     </div>

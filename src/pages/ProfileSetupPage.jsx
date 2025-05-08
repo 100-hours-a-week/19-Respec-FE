@@ -49,10 +49,21 @@ const ProfileSetupPage = () => {
         profileUrl = imageResponse.data.url;
       }
       
+      // 쿠키에서 loginId 읽기
+      const getCookie = (name) =>
+        document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
+
+      let loginId = getCookie("TempLoginId");
+
+      if (loginId) {
+        loginId = loginId.replace('_', ' ');
+      }
+
       // 사용자 정보 업데이트 - 쿠키는 자동으로 전송됨
       const response = await axios.post('/api/users', {
         nickname,
-        userProfileUrl: profileUrl
+        userProfileUrl: profileUrl,
+        loginId
       }, {
         headers: {
           'Content-Type': 'application/json'
@@ -64,6 +75,7 @@ const ProfileSetupPage = () => {
       navigate('/');
       
     } catch (error) {
+      console.error(error);
       if (error.response && error.response.data) {
         setError(error.response.data.message || '회원가입 중 오류가 발생했습니다.');
       } else {

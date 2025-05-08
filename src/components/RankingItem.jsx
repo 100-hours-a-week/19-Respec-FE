@@ -28,15 +28,6 @@ const RankingItem = ({ rank, user, score, category, percentage, isFavorite }) =>
   return (
     <div className="flex items-center py-3 border-b">
       <Medal rank={rank} />
-      {/* <div className="w-6 font-semibold text-center">
-        {rank <= 3 ? (
-          <span className="text-yellow-500">
-            {rank}
-          </span>
-        ) : (
-          <span>{rank}</span>
-        )}
-      </div> */}
       <div className="w-10 h-10 mx-2 bg-gray-200"></div>
       <div className="flex-1">
         <p className="font-semibold">{user}</p>
