@@ -6,28 +6,39 @@ import axios from 'axios';
 
 const ProfileCard = () => {
   const { isLoggedIn, user } = useAuth();
-  const [specData, setSpecData] = useState(null);
+  const [profileData, setProfileData] = useState(null);
+  const [score, setScore] = useState(null);
+  const [rankPercent, setRankPercent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // 로그인 상태일 때만 스펙 정보를 가져옴
     if (isLoggedIn) {
-      const fetchSpecData = async () => {
+      const fetchProfile = async () => {
         try {
           setLoading(true);
-          // 사용자 스펙 정보 조회 API 호출
-          const response = await axios.get('/api/users/me');
-          setSpecData(response.data);
+
+          const userResponse = await axios.get('/api/users/me');
+          const userData = userResponse.data.data.user;
+          setProfileData(userData);
+
+          if (userData.spec?.hasActiveSpec && userData.spec.activeSpec) {
+            const specResponse = await axios.get(`/api/specs/${userData.spec.activeSpec}`);
+            const detail = specResponse.data.data.rankings.details;
+            const percent = ((detail.jobFieldRank / detail.jobFieldUserCount) * 100).toFixed(2);
+
+            setScore(detail.score);
+            setRankPercent(percent);
+          }
         } catch (err) {
-          console.error('스펙 정보 조회 실패:', err);
+          console.error('프로필 불러오기 실패:', err);
           setError(err);
         } finally {
           setLoading(false);
         }
       };
 
-      fetchSpecData();
+      fetchProfile();
     }
   }, [isLoggedIn]);
 
@@ -70,7 +81,7 @@ const ProfileCard = () => {
   }
 
   // 스펙 정보가 없을 때 표시
-  if (!specData || !specData.jobField) {
+  if (!profileData || !profileData.spec) {
     return (
       <div className="p-4 mb-4 bg-white rounded-lg shadow">
         <div className="flex items-center mb-3">
@@ -85,7 +96,7 @@ const ProfileCard = () => {
             <h2 className="text-lg font-bold">안녕하세요, {user?.nickname}님</h2>
             <p className="text-gray-700">스펙 정보를 입력하고 나의 순위를 확인해보세요!</p>
             <Link 
-              to="/spec/edit" 
+              to="/spec-input" 
               className="inline-block px-4 py-2 mt-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600"
             >
               스펙 입력하기
@@ -95,10 +106,6 @@ const ProfileCard = () => {
       </div>
     );
   }
-
-  // 스펙 정보가 있을 때 표시
-  const rankPercentage = Math.round((specData.jobFieldRank / specData.jobFieldUserCount) * 100);
-  const scorePercentage = (specData.score / 100) * 100;
   
   return (
     <div className="p-4 mb-4 bg-white rounded-lg shadow">
@@ -118,12 +125,12 @@ const ProfileCard = () => {
           </svg>
         </div>
         <div className="ml-4">
-          <h2 className="text-lg font-bold">지금 {user?.nickname} 님은</h2>
-          <h2 className="text-lg font-bold">인터넷.IT 기준 상위 22%입니다</h2>
+          <h2 className="text-lg font-bold">지금 {profileData.nickname} 님은</h2>
+          <h2 className="text-lg font-bold">{profileData.jobField} 기준 상위 {rankPercent}%입니다</h2>
           <div className="w-full h-2 mt-2 bg-gray-200 rounded-full">
-            <div className="h-2 bg-blue-500 rounded-full" style={{ width: '78%' }}></div>
+            <div className="h-2 bg-blue-500 rounded-full" style={{ width: `${score}%` }}></div>
           </div>
-          <p className="mt-1 text-sm text-gray-500">점수: 78/100</p>
+          <p className="mt-1 text-sm text-gray-500">점수: {score} / 100</p>
         </div>
       </div>
     </div>

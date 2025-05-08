@@ -26,10 +26,16 @@ const BottomNavBar = ({ active }) => {
       {navItems.map((item) => (
         <a 
           key={item.name}
-          href={item.path}
+          href={item.name === 'DM' || item.name === 'SOCIAL' ? '#' : item.path}
           className={`flex flex-col items-center justify-center w-16 h-full ${
             active === item.name.toLowerCase() ? 'text-blue-500' : 'text-gray-500'
           }`}
+          onClick={(e) => {
+            if (item.name === 'DM' || item.name === 'SOCIAL') {
+              e.preventDefault();
+              alert('준비 중인 기능입니다.');
+            }
+          }}        
         >
           <item.icon size={20} />
           <span className="mt-1 text-xs">{item.name}</span>

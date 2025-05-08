@@ -1,10 +1,13 @@
 import React from "react";
 
 const RankingFilters = ({ selectedFilter, setSelectedFilter }) => {
-    const filters = ['전체', '경영.사무', '마케팅.광고', '연구개발.설계', '인터넷.IT'];
+    const filters = [
+      "전체", "인터넷_IT", "금융", "생산_제조", "영업_고객상담", 
+      "전문직_특수직", "연구개발_설계", "무역_유통", "건설", "미디어", "경영_사무"
+    ];
     
     return (
-      <div className="flex py-2 mb-2 overflow-x-auto">
+      <div className="flex py-2 mb-2 overflow-x-auto hide-scrollbar">
         {filters.map((filter) => (
           <button
             key={filter}
@@ -18,6 +21,16 @@ const RankingFilters = ({ selectedFilter, setSelectedFilter }) => {
             {filter}
           </button>
         ))}
+
+        <style jsx>{`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
       </div>
     );
   };
