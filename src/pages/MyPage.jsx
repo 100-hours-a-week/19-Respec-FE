@@ -1,154 +1,263 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import BottomNavBar from '../components/BottomNavBar';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { ChevronRight, Star, Shield, LogOut, X, UserRoundPen, ScrollText } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const MyPage = () => {
-  const userInfo = {
-    name: '임슬',
-    rank: '상위 12%',
-    totalUsers: '5280명',
-    position: 'IT.인터넷',
-    ranking: '342위',
-    totalInPosition: '78명',
-    joinDate: '2025년 5월 1일'
+  const [user, setUser] = useState({
+    nickname: '',
+    userProfileUrl: '',
+    createdAt: '',
+    jobField: '',
+    hasActiveSpec: false,
+    activeSpec: 0
+  });
+  
+  const [isPublic, setIsPublic] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    // 사용자 정보 가져오기
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get('/api/users/me');
+        console.log(response);
+        if (response.data.isSuccess) {
+          console.log(response);
+          const userData = response.data.data.user;
+
+          // 날짜 형식 변환
+          const createdAt = new Date(userData.createdAt);
+          const formattedDate = `${createdAt.getFullYear()}년 ${createdAt.getMonth() + 1}월 ${createdAt.getDate()}일`;
+          
+          setUser({
+            nickname: userData.nickname || '',
+            userProfileUrl: userData.userProfileUrl || '',
+            createdAt: formattedDate,
+            jobField: userData.jobField || '',
+            hasActiveSpec: userData.spec?.hasActiveSpec || false,
+            activeSpec: userData.spec?.activeSpec || 0
+          });
+
+          // 공개 설정 상태 가져오기
+          setIsPublic(userData.isPublic || false);
+        }
+      } catch (error) {
+        console.error('사용자 정보 조회 실패:', error);
+        // 인증 오류 시 로그인 페이지로 리다이렉트
+        if (error.response && error.response.status === 401) {
+          navigate('/login');
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  const handleTogglePublic = async () => {
+    try {
+      // 토글 상태 변경 API 호출
+      await axios.put('/api/users/me/visibility', {
+        isPublic: !isPublic
+      });
+      setIsPublic(!isPublic);
+    } catch (error) {
+      console.error('공개 설정 변경 실패:', error);
+    }
   };
 
-  const menuItems = [
-    {
-      id: 'profile',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      ),
-      title: '회원정보 관리',
-      description: '닉네임, 프로필 이미지 등 계정정보를 관리합니다',
-      link: '/profile'
-    },
-    {
-      id: 'spec',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-      ),
-      title: '스펙 정보 관리',
-      description: '나의 스펙 정보를 생성 및 수정합니다',
-      link: '/spec-input'
-    },
-    {
-      id: 'bookmark',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-        </svg>
-      ),
-      title: '즐겨찾기',
-      description: '저장된 다른 사용자들의 스펙 정보를 확인합니다',
-      link: '/bookmarks'
-    },
-    {
-      id: 'visibility',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-      ),
-      title: '스펙/공개',
-      description: '소셜 페이지 공개 여부를 결정합니다',
-      link: '/visibility',
-      toggle: true
-    },
-    {
-      id: 'withdraw',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-      ),
-      title: '회원 탈퇴',
-      description: '계정을 영구적으로 삭제합니다',
-      link: '/withdraw'
+  const handleWithdraw = async () => {
+    try {
+      // 회원탈퇴 API 호출
+      await axios.delete('/api/users/me');
+      
+      // 로그아웃 처리
+      logout();
+      
+      // 로그인 페이지로 이동
+      navigate('/login');
+    } catch (error) {
+      console.error('회원탈퇴 실패:', error);
     }
-  ];
+  };
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <div className="w-full max-w-[390px] mx-auto flex flex-col flex-1 bg-white">
-        <div className="flex items-center p-4">
-          <img src="/logo.svg" alt="스펙랭킹" className="h-8" />
-        </div>
-
-        {/* User Profile Section */}
-        <div className="px-4 py-3 border-b border-gray-100">
-          <div className="flex items-start space-x-3">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">{userInfo.name}</h2>
-                <div className="flex items-center space-x-2 text-sm">
-                  <span className="text-yellow-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                    </svg>
-                  </span>
-                  <span className="text-blue-500">{userInfo.rank}</span>
-                  <span className="text-gray-500">총점 {userInfo.totalInPosition}명</span>
-                </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* 상단 프로필 섹션 */}
+      <div className="p-4">
+        <div className="flex items-center">
+          {/* 프로필 이미지 */}
+          <div className="w-20 h-20 mr-4 bg-gray-200">
+            {user.userProfileUrl ? (
+              <img src={user.userProfileUrl} alt="Profile" className="object-cover w-20 h-20" />
+            ) : (
+              <div className="flex items-center justify-center w-20 h-20 bg-gray-200">
+                <span className="text-gray-400">X</span>
               </div>
-              <p className="text-sm text-gray-500 mt-1">
-                지원분야: {userInfo.position} / {userInfo.ranking} / {userInfo.totalUsers}
-              </p>
-              <p className="text-sm text-gray-400 mt-1">가입일: {userInfo.joinDate}</p>
+            )}
+          </div>
+          
+          <div className="flex-1">
+            <h2 className="mb-1 text-xl font-bold">{user.nickname}</h2>
+            <div className="flex items-center">
+              <span className="mr-2 text-yellow-500">상위 12%</span>
+              <span className="text-blue-500">총점 78점</span>
+            </div>
+            <div className="mt-1 text-sm text-gray-500">
+              342위 / 5280명
             </div>
           </div>
         </div>
-
-        {/* Menu Items */}
-        <div className="flex-1 px-4 py-2">
-          {menuItems.map((item) => (
-            <Link
-              key={item.id}
-              to={item.link}
-              className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500">
-                  {item.icon}
+        
+        {/* 가입일 */}
+        <div className="flex items-center justify-between p-4 mt-3 bg-white rounded-lg shadow-sm">
+          <span className="text-gray-600">가입일</span>
+          <span className="text-gray-800">{user.createdAt}</span>
+        </div>
+      </div>
+      
+      {/* 메뉴 리스트 */}
+      {/* 스펙 정보 공개 설정 */}
+      <div className="p-4">
+        <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
+            <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 mr-3 bg-blue-100 rounded-full">
+                    <Shield size={18} className="text-blue-500" />
                 </div>
                 <div>
-                  <h3 className="font-medium">{item.title}</h3>
-                  <p className="text-sm text-gray-500">{item.description}</p>
+                    <span className="font-medium text-gray-800">스펙 정보 공개 설정</span>
+                    <p className="text-xs text-gray-500">나의 스펙 정보를 다른 사용자에게 공개할지 설정합니다.</p>
+                </div>
+            </div>
+            <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+                <input
+                    type="checkbox"
+                    id="toggle"
+                    className="w-0 h-0 opacity-0"
+                    checked={isPublic}
+                    onChange={handleTogglePublic}
+                />
+                <label
+                    htmlFor="toggle"
+                    className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full ${
+                        isPublic ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                >
+                    <span
+                        className={`absolute left-1 bottom-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${
+                        isPublic ? 'transform translate-x-6' : ''
+                        }`}
+                    ></span>
+                </label>
+            </div>
+        </div>
+      </div>
+      
+      {/* 회원정보, 스펙 정보, 즐겨찾기 그룹 */}
+      <div className="px-4">
+        <div className="overflow-hidden bg-white rounded-lg shadow-sm">
+          {/* 회원정보 관리 */}
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-8 h-8 mr-3 bg-blue-100 rounded-full">
+                <UserRoundPen size={18} className="text-blue-500" />
+              </div>
+              <span className="text-gray-800">회원정보 관리</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+          
+          {/* 스펙 정보 관리 */}
+          <div 
+            className="flex items-center justify-between p-4 border-b cursor-pointer"
+            onClick={() => navigate('/spec-input')}
+          >
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-8 h-8 mr-3 bg-blue-100 rounded-full">
+                <ScrollText size={18} className="text-blue-500" />
+              </div>
+              <span className="text-gray-800">스펙 정보 관리</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+          
+          {/* 즐겨찾기 */}
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-8 h-8 mr-3 bg-blue-100 rounded-full">
+                <Star size={18} className='text-blue-500' />
+              </div>
+              <span className="text-gray-800">즐겨찾기</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+        </div>
+      </div>
+      
+      {/* 회원 탈퇴 */}
+      <div className="px-4 mt-4">
+        <div 
+          className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm cursor-pointer"
+          onClick={() => setShowModal(true)}
+        >
+          <div className="flex items-center">
+            <div className="flex items-center justify-center w-8 h-8 mr-3 bg-red-100 rounded-full">
+              <LogOut size={18} className='text-red-500'/>
+            </div>
+            <span className="text-gray-800">회원 탈퇴</span>
+          </div>
+          <ChevronRight size={20} className="text-gray-400" />
+        </div>
+      </div>
+      
+      {/* 회원 탈퇴 확인 모달 */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white w-[300px] rounded-lg overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-bold">회원 탈퇴</h3>
+              <button onClick={() => setShowModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex items-center justify-center w-10 h-10 mr-4 bg-red-100 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-bold">정말 탈퇴하시겠습니까?</h4>
                 </div>
               </div>
-              {item.toggle ? (
-                <div className="relative inline-block w-12 h-6 rounded-full bg-gray-200">
-                  <div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
-                </div>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              )}
-            </Link>
-          ))}
+              
+              <p className="mb-6 text-sm text-gray-600">
+                회원 탈퇴 시 모든 개인정보와 활동 내역이 삭제되며, 이 작업은 되돌릴 수 없습니다.
+              </p>
+              
+              <div className="flex space-x-2">
+                <button 
+                  className="flex-1 py-2 text-white bg-red-500 rounded-md"
+                  onClick={handleWithdraw}
+                >
+                  예, 탈퇴합니다
+                </button>
+                <button 
+                  className="flex-1 py-2 text-gray-800 bg-gray-200 rounded-md"
+                  onClick={() => setShowModal(false)}
+                >
+                  아니오
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <BottomNavBar />
-      </div>
+      )}
     </div>
   );
 };

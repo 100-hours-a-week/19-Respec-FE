@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TopBar from "../components/TopBar";
@@ -106,7 +106,7 @@ const SpecInputPage = () => {
   };
   
   const [formData, setFormData] = useState({
-    name: '젤리', // 사용자 닉네임(수정 불가)
+    name: '', // 사용자 닉네임(수정 불가)
     finalEducation: {
       institute: '대학교',
       status: '졸업'
@@ -118,6 +118,113 @@ const SpecInputPage = () => {
     activities: [], // 초기에 빈 배열로 시작 - 활동/네트워킹
     jobField: '인터넷_IT'
   });
+
+  // 컴포넌트 마운트 시 유저 정보와 스펙 정보 가져오기
+  useEffect(() => {
+    const fetchUserAndSpecData = async () => {
+      try {
+        setLoading(true);
+        
+        // Authorization 헤더에서 토큰 가져오기 (예제에서 주어진 형식)
+        const token = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsImxvZ2luSWQiOiJrYWthbyA0MjUyMTg3ODI2IiwiaWF0IjoxNzQ2NzEzMzYwLCJleHAiOjE3NDY3MTY5NjB9.OFvm371M-r-_edv6iCxIlZeTeXWy7dfIbpzWQLjMbwk";
+        let userId;
+        
+        try {
+          // JWT 토큰 디코딩 (Base64)
+          const payload = token.split('.')[1];
+          const decodedPayload = JSON.parse(atob(payload));
+          userId = decodedPayload.userId;
+          console.log("Decoded userId from token:", userId);
+        } catch (e) {
+          console.error('Failed to decode token:', e);
+        }
+        
+        if (!userId) {
+          setError('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+          setLoading(false);
+          return;
+        }
+        
+        // 유저 정보 가져오기
+        const userResponse = await axios.get(`/api/users/${userId}`, {
+          headers: {
+            'Authorization': token
+          }
+        });
+        
+        if (userResponse.data.isSuccess) {
+          const userData = userResponse.data.data.user;
+          
+          // 사용자 이름을 폼 데이터에 설정
+          setFormData(prev => ({
+            ...prev,
+            name: userData.nickname,
+            jobField: userData.jobField || '인터넷_IT'
+          }));
+          
+          // 활성화된 스펙이 있는지 확인
+          if (userData.spec && userData.spec.hasActiveSpec) {
+            setIsEditMode(true);
+            setActiveSpecId(userData.spec.activeSpec);
+            
+            // 활성화된 스펙 정보 가져오기
+            const specResponse = await axios.get(`/api/specs/${userData.spec.activeSpec}`, {
+              headers: {
+                'Authorization': token
+              }
+            });
+            
+            if (specResponse.data.isSuccess) {
+              const specData = specResponse.data.specDetailData;
+              
+              // 가져온 스펙 정보로 폼 데이터 업데이트
+              setFormData(prev => ({
+                ...prev,
+                name: userData.nickname,
+                finalEducation: {
+                  institute: specData.finalEducation.institute,
+                  status: specData.finalEducation.status || specData.finalEducation.finalStatus // status 또는 finalStatus 필드 사용
+                },
+                educationDetails: specData.educationDetails.map(edu => ({
+                  schoolName: edu.schoolName,
+                  degree: edu.degree,
+                  major: edu.major,
+                  gpa: edu.gpa.toString(),
+                  maxGpa: edu.maxGpa.toString()
+                })),
+                workExperiences: specData.workExperiences.map(exp => ({
+                  companyName: exp.companyName || exp.company, // companyName 또는 company 필드 사용
+                  position: exp.position,
+                  period: exp.period.toString()
+                })),
+                certifications: specData.certifications.map(cert => ({
+                  name: cert.name
+                })),
+                languageSkills: specData.languageSkills.map(lang => ({
+                  languageTest: lang.languageTest || lang.name, // languageTest 또는 name 필드 사용
+                  score: lang.score
+                })),
+                activities: specData.activities.map(activity => ({
+                  name: activity.name,
+                  role: activity.role,
+                  award: activity.award || ''
+                })),
+                jobField: specData.jobField || userData.jobField || '인터넷_IT'
+              }));
+            }
+          }
+        }
+        setInitialDataLoaded(true);
+      } catch (err) {
+        console.error('Error fetching user/spec data:', err);
+        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserAndSpecData();
+  }, []);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -257,7 +364,7 @@ const SpecInputPage = () => {
     const formattedData = {
       finalEducation: {
         institute: formData.finalEducation.institute,
-        status: formData.finalEducation.status
+        status: formData.finalEducation.status  // finalStatus가 아닌 status로 사용
       },
       educationDetails: formData.educationDetails.map(edu => ({
         schoolName: edu.schoolName,
@@ -267,7 +374,7 @@ const SpecInputPage = () => {
         maxGpa: parseFloat(edu.maxGpa)
       })),
       workExperiences: formData.workExperiences.map(exp => ({
-        companyName: exp.companyName,
+        companyName: exp.companyName,  // company가 아닌 companyName으로 사용
         position: exp.position,
         period: parseInt(exp.period) || 0
       })),
@@ -275,7 +382,7 @@ const SpecInputPage = () => {
         name: cert.name,
       })),
       languageSkills: formData.languageSkills.map(lang => ({
-        languageTest: lang.languageTest,
+        languageTest: lang.languageTest,  // name이 아닌 languageTest로 사용
         score: lang.score
       })),
       activities: formData.activities.map(activity => ({
@@ -367,6 +474,9 @@ const SpecInputPage = () => {
     setError(null);
 
     try {
+      // Authorization 헤더에서 토큰 가져오기
+      const token = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsImxvZ2luSWQiOiJrYWthbyA0MjUyMTg3ODI2IiwiaWF0IjoxNzQ2NzEzMzYwLCJleHAiOjE3NDY3MTY5NjB9.OFvm371M-r-_edv6iCxIlZeTeXWy7dfIbpzWQLjMbwk";
+      
       // 데이터 형식 변환
       const submissionData = formatDataForSubmission();
       console.log('Submitting data:', submissionData);
@@ -378,12 +488,27 @@ const SpecInputPage = () => {
       const specBlob = new Blob([JSON.stringify(submissionData)], { type: 'application/json' });
       formData.append('spec', specBlob);
       
-      console.log('Sending request to: http://localhost:8080/api/specs');
-      const response = await axios.post('http://localhost:8080/api/specs', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      let response;
+      
+      if (isEditMode && activeSpecId) {
+        // 수정 모드인 경우 PUT 요청 보내기
+        console.log(`Sending PUT request to: /api/specs/${activeSpecId}`);
+        response = await axios.put(`/api/specs/${activeSpecId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': token
+          }
+        });
+      } else {
+        // 신규 등록인 경우 POST 요청 보내기
+        console.log('Sending POST request to: /api/specs');
+        response = await axios.post('/api/specs', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': token
+          }
+        });
+      }
       
       console.log('Response:', response);
       
@@ -393,12 +518,12 @@ const SpecInputPage = () => {
         setSuccess(true);
         
         // React Router navigate 대신 강제 리다이렉트 사용
-        console.log('About to redirect to /mypage');
+        console.log('About to redirect to /my');
         
         // 0.3초 후 강제 리다이렉트 (성공 메시지를 잠깐 보여주기 위함)
         setTimeout(() => {
           console.log('Executing redirect now');
-          window.location.href = '/mypage';
+          window.location.href = '/my';
         }, 300);
       }
     } catch (err) {
@@ -475,12 +600,14 @@ const SpecInputPage = () => {
         {/* 성공 메시지 */}
         {success && (
           <div className="fixed top-16 left-0 right-0 z-50 mx-auto max-w-md bg-green-500 text-white py-2 px-4 rounded shadow-lg">
-            스펙 정보가 성공적으로 저장되었습니다. 마이페이지로 이동합니다.
+            스펙 정보가 성공적으로 {isEditMode ? '수정' : '저장'}되었습니다. 마이페이지로 이동합니다.
           </div>
         )}
         
         <div className="flex-1 p-4 overflow-y-auto pb-20">
-          <h2 className="text-lg font-medium mb-4 text-center text-blue-600">당신의 스펙을 입력해주세요!</h2>
+          <h2 className="text-lg font-medium mb-4 text-center text-blue-600">
+            {initialDataLoaded ? (isEditMode ? '스펙 정보를 수정해주세요!' : '당신의 스펙을 입력해주세요!') : '데이터를 불러오는 중...'}
+          </h2>
           <div className="space-y-4">
             {/* 기본 정보 섹션 */}
             <div className="mb-2">
@@ -845,7 +972,7 @@ const SpecInputPage = () => {
                     <polyline points="7 3 7 8 15 8"></polyline>
                   </svg>
                 )}
-                {loading ? "저장 중..." : "저장"}
+                {loading ? "처리 중..." : (isEditMode ? "수정" : "저장")}
               </button>
               <button
                 type="button"

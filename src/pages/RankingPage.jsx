@@ -1,30 +1,30 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import TopBar from '../components/TopBar';
-import BottomNavBar from '../components/BottomNavBar';
+import RankingFilters from '../components/RankingFilters';
+import RankingItem from '../components/RankingItem';
 
 // 랭킹 카드 컴포넌트 - 각 사용자의 랭킹 정보를 표시
 const RankingCard = ({ ranking, index }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-4 border border-gray-200 hover:border-blue-300 transition-all">
+    <div className="p-4 mb-4 transition-all bg-white border border-gray-200 rounded-lg shadow-md hover:border-blue-300">
       <div className="flex items-center">
         {/* 랭킹 순위 */}
-        <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center mr-4 font-bold text-lg">
+        <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-4 text-lg font-bold text-white bg-blue-500 rounded-full">
           {ranking.totalRank}
         </div>
         
         {/* 프로필 이미지 */}
-        <div className="w-12 h-12 bg-gray-200 rounded-full mr-4 overflow-hidden">
+        <div className="w-12 h-12 mr-4 overflow-hidden bg-gray-200 rounded-full">
           {ranking.profileImageUrl ? (
             <img 
               src={ranking.profileImageUrl} 
               alt={`${ranking.nickname}의 프로필`} 
-              className="w-full h-full object-cover"
+              className="object-cover w-full h-full"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center justify-center w-full h-full text-gray-600 bg-gray-300">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
@@ -33,7 +33,7 @@ const RankingCard = ({ ranking, index }) => {
         
         {/* 사용자 정보 */}
         <div className="flex-1">
-          <h3 className="font-medium text-lg">{ranking.nickname}</h3>
+          <h3 className="text-lg font-medium">{ranking.nickname}</h3>
           <div className="flex items-center text-sm text-gray-600">
             <span className="mr-2">{ranking.jobField.replace(/_/g, ' ')}</span>
             <span className="mx-2">•</span>
@@ -54,8 +54,8 @@ const RankingCard = ({ ranking, index }) => {
 
 // 로딩 인디케이터 컴포넌트
 const LoadingIndicator = () => (
-  <div className="flex justify-center items-center py-4">
-    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+  <div className="flex items-center justify-center py-4">
+    <div className="w-8 h-8 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
   </div>
 );
 
@@ -436,11 +436,9 @@ const RankingPage = () => {
   }, []);
   
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
-        <TopBar title="랭킹" />
-        
-        <div className="flex-1 p-4 overflow-y-auto pb-20">
+    <div className="flex flex-col w-full min-h-screen bg-gray-50">
+      <div className="relative flex flex-col flex-1 w-full max-w-md pb-16 mx-auto bg-white">
+        <div className="flex-1 p-4 pb-20 overflow-y-auto">
           {/* 검색 바 */}
           <div className="mb-4">
             <form onSubmit={handleSearchSubmit} className="relative">
@@ -449,40 +447,41 @@ const RankingPage = () => {
                 value={searchTerm}
                 onChange={handleSearchChange}
                 placeholder="사용자 검색..."
-                className="w-full p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxLength={20}
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="submit"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                className="absolute text-gray-500 transform -translate-y-1/2 right-3 top-1/2"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
               
               {/* 검색 결과 드롭다운 */}
               {showSearchResults && searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-72">
                   {searchResults.map(user => (
                     <div 
                       key={user.userId}
-                      className="p-3 flex items-center border-b border-gray-100 last:border-b-0"
+                      className="flex items-center p-3 border-b border-gray-100 last:border-b-0"
                     >
-                      <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3 font-bold text-sm relative">
+                      <div className="relative flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-white bg-blue-500 rounded-full">
                         {user.profileImageUrl ? (
                           <img 
                             src={user.profileImageUrl} 
                             alt={user.nickname} 
-                            className="w-full h-full object-cover rounded-full"
+                            className="object-cover w-full h-full rounded-full"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="flex items-center justify-center w-full h-full text-gray-600 bg-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                           </div>
                         )}
-                        <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        <span className="absolute flex items-center justify-center w-5 h-5 text-xs text-white bg-blue-600 rounded-full -top-1 -right-1">
                           {user.totalRank}
                         </span>
                       </div>
@@ -494,7 +493,7 @@ const RankingPage = () => {
                           <span>점수: <span className="font-semibold text-blue-600">{user.score.toFixed(1)}</span></span>
                         </div>
                       </div>
-                      <div className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                      <div className="ml-2 text-xs text-gray-500 whitespace-nowrap">
                         {user.rankByJobField}위/{typeof user.totalUsersCountByJobField === 'number' ? user.totalUsersCountByJobField : '-'}명
                       </div>
                     </div>
@@ -505,8 +504,8 @@ const RankingPage = () => {
           </div>
           
           {/* 직무 분야 필터 */}
-          <div className="mb-4 overflow-x-auto hide-scrollbar">
-            <div className="flex space-x-2 pb-2 whitespace-nowrap">
+          {/* <div className="mb-4 overflow-x-auto hide-scrollbar">
+            <div className="flex pb-2 space-x-2 whitespace-nowrap">
               {jobFieldOptions.map(option => (
                 <button
                   key={option.code}
@@ -521,18 +520,25 @@ const RankingPage = () => {
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
+          <RankingFilters 
+            selectedFilter={selectedJobField === 'TOTAL' ? '전체' : jobFieldOptions.find(option => option.code === selectedJobField)?.name || '전체'}
+            setSelectedFilter={(filterName) => {
+              const codeOption = jobFieldOptions.find(option => option.name === filterName);
+              handleJobFieldChange(codeOption?.code || 'TOTAL');
+            }}
+          />
           
           {/* 메타 데이터 (총 사용자 수, 평균 점수) */}
           <div className="mb-6">
-            <div className="flex bg-blue-50 rounded-lg">
-              <div className="flex-1 text-center p-4">
-                <div className="text-sm text-gray-500 mb-1">총 사용자</div>
+            <div className="flex rounded-lg bg-blue-50">
+              <div className="flex-1 p-4 text-center">
+                <div className="mb-1 text-sm text-gray-500">총 사용자</div>
                 <div className="text-xl font-bold text-blue-600">{metaData.totalUserCount}명</div>
               </div>
               <div className="w-4 bg-white"></div>
-              <div className="flex-1 text-center p-4">
-                <div className="text-sm text-gray-500 mb-1">평균 점수</div>
+              <div className="flex-1 p-4 text-center">
+                <div className="mb-1 text-sm text-gray-500">평균 점수</div>
                 <div className="text-xl font-bold text-blue-600">{metaData.averageScore}점</div>
               </div>
             </div>
@@ -540,7 +546,7 @@ const RankingPage = () => {
           
           {/* 랭킹 목록 */}
           {error ? (
-            <div className="p-4 bg-red-100 text-red-800 rounded-lg">
+            <div className="p-4 text-red-800 bg-red-100 rounded-lg">
               <p>{error}</p>
               <button 
                 className="mt-2 text-blue-500 underline"
@@ -557,17 +563,33 @@ const RankingPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {rankings.map((ranking, index) => (
-                    <div 
-                      key={`${ranking.userId}_${index}`} 
-                      ref={index === rankings.length - 1 ? lastRankingElementRef : null}
-                    >
-                      <RankingCard ranking={ranking} index={index} />
-                    </div>
-                  ))}
+                  {rankings.map((ranking, index) => {
+                    // <div 
+                    //   key={`${ranking.userId}_${index}`} 
+                    //   ref={index === rankings.length - 1 ? lastRankingElementRef : null}
+                    // >
+                    //   <RankingCard ranking={ranking} index={index} />
+                    // </div>
+                    const percentage = ((ranking.rankByJobField / ranking.totalUsersCountByJobField) * 100).toFixed(2);
+                    return (
+                      <div 
+                        key={`${ranking.userId}_${index}`} 
+                        ref={index === rankings.length - 1 ? lastRankingElementRef : null}
+                      >
+                        <RankingItem 
+                          rank={ranking.totalRank}
+                          user={ranking.nickname}
+                          score={ranking.score}
+                          category={ranking.jobField}
+                          percentage={percentage}
+                          profileImageUrl={ranking.profileImageUrl}
+                        />
+                      </div>
+                    );
+                  })}
                   {loading && <LoadingIndicator />}
                   {!hasMore && rankings.length > 0 && (
-                    <div className="text-center py-4 text-gray-500 text-sm">
+                    <div className="py-4 text-sm text-center text-gray-500">
                       모든 랭킹을 불러왔습니다.
                     </div>
                   )}
@@ -577,9 +599,6 @@ const RankingPage = () => {
           )}
         </div>
       </div>
-      
-      {/* 하단 내비게이션 바 */}
-      <BottomNavBar />
       
       {/* 커스텀 스타일 */}
       <style jsx>{`

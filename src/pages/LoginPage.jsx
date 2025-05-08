@@ -1,127 +1,44 @@
-import React, { useState } from 'react';
-import TopBar from "../components/TopBar";
-import BottomNavBar from "../components/BottomNavBar";
+import React from 'react';
 
-
-const SignupPage = () => {
-    const [showPassword, setShowPassword] = useState(false);
-    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-  
+const LoginPage = () => {
     return (
-      <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-        {/* Container limited to 390px width */}
-        <div className="w-full max-w-[390px] mx-auto flex flex-col flex-1 bg-white relative">
-          <TopBar title="회원가입" />
-          
-          <div className="flex-1 p-5">
-            <div className="flex flex-col items-center mb-10">
-              <div className="w-32 h-32 bg-gray-100 flex items-center justify-center mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4v16m8-8H4" />
-                </svg>
+        <div className="flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-md p-8 my-8 space-y-8 bg-white rounded-lg shadow">
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <div className="flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full">
+                  <svg className="w-10 h-10 text-indigo-700" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L4 7v10l8 5 8-5V7l-8-5zm0 2.5L17 9v6l-5 3-5-3V9l5-3.5z" />
+                    <path d="M12 7l-1 5 3 2 3-4-5-3zm0 2l2 1-1 1-1-2z" />
+                  </svg>
+                </div>
               </div>
-              <p className="text-sm text-gray-700">프로필 이미지 선택 (선택사항)</p>
+              
+              <h2 className="text-xl font-semibold text-indigo-700">스펙랭킹</h2>
+              <p className="mt-2 text-sm text-gray-600">
+                취업 준비의 모든 것,<br/>당신의 커리어를 한 단계 더 높이세요
+              </p>
             </div>
             
-            <form className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  이메일 <span className="text-red-500">*</span>
-                </label>
-                <div className="flex">
-                  <input
-                    type="email"
-                    placeholder="이메일을 입력하세요"
-                    className="flex-1 border border-gray-300 rounded-l-md p-3 text-sm focus:outline-none"
-                  />
-                  <button 
-                    type="button" 
-                    className="bg-blue-500 text-white px-6 rounded-r-md text-sm font-medium"
-                  >
-                    인증
-                  </button>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  닉네임 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="다른 사용자에게 표시될 이름"
-                  className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  비밀번호 <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="8자 이상, 영문, 숫자, 특수문자 포함"
-                    className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none"
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  비밀번호 확인 <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPasswordConfirm ? "text" : "password"}
-                    placeholder="비밀번호 재입력"
-                    className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none"
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                    className="absolute right-3 top-3"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-              <button 
-                type="submit" 
-                className="bg-blue-500 text-white w-full py-3 rounded-md flex items-center justify-center mt-6"
+            <div className="mt-10">
+              <a
+                href="http://localhost:8080/oauth2/authorization/kakao"
+                className="flex items-center justify-center w-full px-4 py-3 text-black transition-colors bg-yellow-400 rounded-md hover:bg-yellow-500"
               >
-                가입하기
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3C6.48 3 2 6.48 2 12c0 5.51 4.48 10 10 10s10-4.49 10-10c0-5.52-4.48-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                  <path d="M13 7h-2v6h2V7zm0 8h-2v2h2v-2z"/>
                 </svg>
-              </button>
-            </form>
-            
-            <div className="text-center mt-4 mb-8">
-              <p className="text-sm text-gray-600">
-                이미 계정이 있으신가요? <a href="/login" className="text-blue-500">로그인</a>
+                카카오 계정으로 로그인
+              </a>
+              
+              <p className="mt-8 text-sm text-center text-gray-600">
+                아직 회원이 아니신가요?<br/>로그인 시 자동 회원가입됩니다.
               </p>
             </div>
           </div>
-          
-          <BottomNavBar active="login" />
         </div>
-      </div>
-    );
-  };
-  
-  export default SignupPage;
+      );
+};
+
+export default LoginPage;
