@@ -93,11 +93,15 @@ const SpecInputPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [activeSpecId, setActiveSpecId] = useState(null);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   // State for cancel confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  
   // Handlers for cancel confirmation
   const handleCancelAttempt = () => setShowConfirmModal(true);
-  const handleConfirmCancel = () => navigate('/mypage');
+  const handleConfirmCancel = () => navigate('/my');
   const handleCloseModal = () => setShowConfirmModal(false);
   
   // 에러 메시지를 닫는 함수 추가
@@ -595,7 +599,6 @@ const SpecInputPage = () => {
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
-        <TopBar title="스펙 입력" onBack={handleCancelAttempt} />
         
         {/* 성공 메시지 */}
         {success && (
