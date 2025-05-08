@@ -1,13 +1,24 @@
 import React from 'react';
-import { Home, BarChart2, MessageSquare, Users, User } from 'lucide-react';
+import { Home, BarChart2, MessageSquare, Users, CircleUserRound } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const BottomNavBar = ({ active }) => {
-  const navItems = [
+  const { isLoggedIn } = useAuth();
+  
+  // 기본 네비게이션 아이템
+  const baseNavItems = [
     { name: 'HOME', icon: Home, path: '/' },
     { name: 'RANK', icon: BarChart2, path: '/rank' },
     { name: 'DM', icon: MessageSquare, path: '/dm' },
     { name: 'SOCIAL', icon: Users, path: '/social' },
-    { name: 'LOGIN', icon: User, path: '/login' },
+  ];
+  
+  // 로그인 상태에 따라 마지막 아이템 추가
+  const navItems = [
+    ...baseNavItems,
+    isLoggedIn 
+      ? { name: 'MY', icon: CircleUserRound, path: '/my' }
+      : { name: 'LOGIN', icon: CircleUserRound, path: '/login' }
   ];
 
   return (
@@ -21,7 +32,7 @@ const BottomNavBar = ({ active }) => {
           }`}
         >
           <item.icon size={20} />
-          <span className="text-xs mt-1">{item.name}</span>
+          <span className="mt-1 text-xs">{item.name}</span>
         </a>
       ))}
     </div>
