@@ -1,20 +1,16 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
-const TopBar = ({ title }) => {
-  const navigate = useNavigate();
-
+const TopBar = ({ title, backLink = "/" }) => {
   return (
-    <div className="flex items-center h-14 px-4 border-b border-gray-200">
-      <button 
-        onClick={() => navigate(-1)}
-        className="p-2 -ml-2"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h1 className="flex-1 text-center text-lg font-medium mr-8">{title}</h1>
+    <div className="flex items-center w-full px-4 bg-white border-b border-gray-100 h-14">
+      <div className="flex justify-start w-10">
+        <a href={backLink} className="mr-4">
+          <ArrowLeft size={20} color="#333" />
+        </a>
+      </div>
+      <h1 className="flex-1 text-lg font-medium text-center">{title}</h1>
+      <div className="w-10" />
     </div>
   );
 };
