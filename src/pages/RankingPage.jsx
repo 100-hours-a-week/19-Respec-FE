@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import RankingFilters from '../components/RankingFilters';
 import RankingItem from '../components/RankingItem';
+import axiosInstance from '../utils/axiosInstance';
 
 // 랭킹 카드 컴포넌트 - 각 사용자의 랭킹 정보를 표시
 const RankingCard = ({ ranking, index }) => {
@@ -123,7 +123,7 @@ const RankingPage = () => {
       console.log('랭킹 데이터 요청 중...', { type: 'ranking', jobField: jobFieldName, limit: 10 });
       
       // 올바른 API 엔드포인트 및 파라미터로 요청
-      const response = await axios.get('http://localhost:8080/api/specs', {
+      const response = await axiosInstance.get('/api/specs', {
         params: {
           type: 'ranking',
           jobField: jobFieldName,
@@ -172,7 +172,7 @@ const RankingPage = () => {
   // 메타 데이터 가져오기 (총 사용자 수, 평균 점수)
   const fetchMetaData = async (jobFieldName) => {
     try {
-      const response = await axios.get('http://localhost:8080/api/specs', {
+      const response = await axiosInstance.get('/api/specs', {
         params: {
           type: 'meta',
           jobField: jobFieldName
@@ -312,7 +312,7 @@ const RankingPage = () => {
       
       console.log('추가 랭킹 데이터 요청 중...', { type: 'ranking', jobField: jobFieldName, cursor: nextCursor, limit: 10 });
       
-      const response = await axios.get('http://localhost:8080/api/specs', {
+      const response = await axiosInstance.get('/api/specs', {
         params: {
           type: 'ranking',
           jobField: jobFieldName,
@@ -384,7 +384,7 @@ const RankingPage = () => {
     if (value.trim().length >= 2) {
       try {
         // 올바른 검색 API 호출
-        const response = await axios.get('http://localhost:8080/api/specs', {
+        const response = await axiosInstance.get('/api/specs', {
           params: {
             type: 'search',
             'nickname-keyword': value.trim()

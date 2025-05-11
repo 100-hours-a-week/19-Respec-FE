@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 import { useAuth } from '../context/AuthContext';
 
 const ProfileSetupPage = () => {
@@ -40,7 +40,7 @@ const ProfileSetupPage = () => {
         formData.append('file', profileImage);
         
         // 쿠키는 자동으로 전송되므로 Authorization 헤더를 추가할 필요 없음
-        const imageResponse = await axios.post('/api/upload', formData, {
+        const imageResponse = await axiosInstance.post('/api/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -60,7 +60,7 @@ const ProfileSetupPage = () => {
       }
 
       // 사용자 정보 업데이트 - 쿠키는 자동으로 전송됨
-      const response = await axios.post('/api/users', {
+      const response = await axiosInstance.post('/api/users', {
         nickname,
         userProfileUrl: profileUrl,
         loginId

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 import { useAuth } from '../context/AuthContext';
 
 const OAuthCallbackPage = () => {
@@ -18,7 +18,7 @@ const OAuthCallbackPage = () => {
           return;
         }
 
-        const response = await axios.get('/api/users/me');
+        const response = await axiosInstance.get('/api/users/me');
         const userData = response.data?.data?.user;
         
         // 유효한 사용자인지 판단

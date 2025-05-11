@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 import { ChevronRight, Star, Shield, LogOut, X, UserRoundPen, ScrollText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -25,7 +25,7 @@ const MyPage = () => {
     // 사용자 정보 가져오기
     const fetchUserData = async () => {
       try {
-        const response = await axios.get('/api/users/me');
+        const response = await axiosInstance.get('/api/users/me');
 
         if (response.data.isSuccess) {
           const userData = response.data.data.user;
@@ -48,7 +48,7 @@ const MyPage = () => {
 
           // spec api 호출
           if (userData.spec?.hasActiveSpec) {
-            const specResponse = await axios.get(`/api/specs/${userData.spec.activeSpec}`);
+            const specResponse = await axiosInstance.get(`/api/specs/${userData.spec.activeSpec}`);
             if (specResponse.data.isSuccess) {
               const { totalScore, rank, jobFieldUserCount, jobFieldRank } = specResponse.data.data;
 
@@ -78,7 +78,7 @@ const MyPage = () => {
   const handleTogglePublic = async () => {
     try {
       // 토글 상태 변경 API 호출
-      await axios.put('/api/users/me/visibility', {
+      await axiosInstance.put('/api/users/me/visibility', {
         isPublic: !isPublic
       });
       setIsPublic(!isPublic);
@@ -90,7 +90,7 @@ const MyPage = () => {
   const handleWithdraw = async () => {
     try {
       // 회원탈퇴 API 호출
-      await axios.delete('/api/users/me');
+      await axiosInstance.delete('/api/users/me');
       
       // 로그아웃 처리
       logout();
