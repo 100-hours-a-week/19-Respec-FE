@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import TopBar from "../components/TopBar";
-import BottomNavBar from "../components/BottomNavBar";
+import { useAuth } from '../context/AuthContext';
 
 // 상수 데이터 정의
 const JOB_FIELDS = [
@@ -90,6 +89,7 @@ const LANGUAGE_TESTS = [
 
 const SpecInputPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -100,7 +100,7 @@ const SpecInputPage = () => {
   };
   
   const [formData, setFormData] = useState({
-    name: '젤리', // 사용자 닉네임(수정 불가)
+    name: '', // 사용자 닉네임(수정 불가)
     finalEducation: {
       institute: '대학교',
       status: '졸업'
@@ -112,6 +112,16 @@ const SpecInputPage = () => {
     activities: [], // 초기에 빈 배열로 시작 - 활동/네트워킹
     jobField: '인터넷_IT'
   });
+
+  // 로그인 사용자 닉네임으로 초기화
+  useEffect(() => {
+    if (user?.nickname) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.nickname
+      }));
+    }
+  }, [user]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -439,7 +449,7 @@ const SpecInputPage = () => {
   const AddButton = ({ onClick }) => (
     <button 
       type="button"
-      className="flex items-center justify-center w-6 h-6 bg-red-500 text-white rounded-lg" 
+      className="flex items-center justify-center w-6 h-6 text-white bg-red-500 rounded-lg" 
       onClick={onClick}
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -452,7 +462,7 @@ const SpecInputPage = () => {
   const RemoveButton = ({ onClick }) => (
     <button 
       type="button"
-      className="flex items-center justify-center w-6 h-6 bg-red-500 text-white rounded-lg" 
+      className="flex items-center justify-center w-6 h-6 text-white bg-red-500 rounded-lg" 
       onClick={onClick}
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -462,30 +472,29 @@ const SpecInputPage = () => {
   );
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-white relative pb-16">
-        <TopBar title="스펙 입력" />
+    <div className="flex flex-col w-full min-h-screen bg-gray-50">
+      <div className="relative flex flex-col flex-1 w-full max-w-md pb-16 mx-auto bg-white">
         
         {/* 성공 메시지 */}
         {success && (
-          <div className="fixed top-16 left-0 right-0 z-50 mx-auto max-w-md bg-green-500 text-white py-2 px-4 rounded shadow-lg">
+          <div className="fixed left-0 right-0 z-50 max-w-md px-4 py-2 mx-auto text-white bg-green-500 rounded shadow-lg top-16">
             스펙 정보가 성공적으로 저장되었습니다. 마이페이지로 이동합니다.
           </div>
         )}
         
-        <div className="flex-1 p-4 overflow-y-auto pb-20">
-          <h2 className="text-lg font-medium mb-4 text-center text-blue-600">당신의 스펙을 입력해주세요!</h2>
+        <div className="flex-1 p-4 pb-20 overflow-y-auto">
+          <h2 className="mb-4 text-lg font-medium text-center text-blue-600">당신의 스펙을 입력해주세요!</h2>
           <div className="space-y-4">
             {/* 기본 정보 섹션 */}
             <div className="mb-2">
               <label className="block text-lg font-medium">
-                닉네임 <span className="text-red-500">*</span><span className="text-xs text-gray-500 ml-1">(필수)</span>
+                닉네임 <span className="text-red-500">*</span><span className="ml-1 text-xs text-gray-500">(필수)</span>
               </label>
             </div>
-            <div className="bg-gray-100 p-4 rounded-lg">
+            <div className="p-4 bg-gray-100 rounded-lg">
               <input
                 type="text"
-                className="block w-full rounded-md border border-gray-300 py-2 px-3 bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="block w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={formData.name}
                 readOnly
               />
@@ -494,13 +503,13 @@ const SpecInputPage = () => {
             {/* 최종 학력 섹션 */}
             <div className="mb-2">
               <h3 className="text-lg font-medium">
-                최종 학력 <span className="text-red-500">*</span><span className="text-xs text-gray-500 ml-1">(필수)</span>
+                최종 학력 <span className="text-red-500">*</span><span className="ml-1 text-xs text-gray-500">(필수)</span>
               </h3>
             </div>
-            <div className="bg-gray-100 p-4 rounded-lg">
+            <div className="p-4 bg-gray-100 rounded-lg">
               <div className="grid grid-cols-2 gap-4">
                 <select
-                  className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                   value={formData.finalEducation.institute}
                   onChange={(e) => handleNestedInputChange('finalEducation', 'institute', e.target.value)}
                 >
@@ -509,7 +518,7 @@ const SpecInputPage = () => {
                   ))}
                 </select>
                 <select
-                  className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                   value={formData.finalEducation.status}
                   onChange={(e) => handleNestedInputChange('finalEducation', 'status', e.target.value)}
                 >
@@ -521,33 +530,33 @@ const SpecInputPage = () => {
             </div>
             
             {/* 학력 정보 섹션 */}
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <h3 className="text-lg font-medium">학력</h3>
-                <span className="text-xs text-gray-500 ml-2">(국내 대학 한정입니다)</span>
+                <span className="ml-2 text-xs text-gray-500">(국내 대학 한정입니다)</span>
               </div>
               <AddButton onClick={() => addArrayItem('educationDetails', { schoolName: '', major: '', degree: '학사', gpa: '', maxGpa: '4.5' })} />
             </div>
             {Array.isArray(formData.educationDetails) && formData.educationDetails.length > 0 ? (
               formData.educationDetails.map((education, index) => (
-                <div key={`academic-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
+                <div key={`academic-${index}`} className="relative p-4 mb-4 bg-gray-100 rounded-lg">
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">학교명</label>
-                        <p className="text-xs text-gray-500 mb-1">전체 이름을 입력하세요</p>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">학교명</label>
+                        <p className="mb-1 text-xs text-gray-500">전체 이름을 입력하세요</p>
                         <input
                           type="text"
                           maxLength="30"
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           value={education.schoolName}
                           onChange={(e) => handleArrayInputChange('educationDetails', index, 'schoolName', e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">학위</label>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">학위</label>
                         <select
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 mt-6"
+                          className="block w-full px-3 py-2 mt-6 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           value={education.degree}
                           onChange={(e) => handleArrayInputChange('educationDetails', index, 'degree', e.target.value)}
                         >
@@ -559,11 +568,11 @@ const SpecInputPage = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">전공</label>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">전공</label>
                         <input
                           type="text"
                           maxLength="20"
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           value={education.major}
                           onChange={(e) => handleArrayInputChange('educationDetails', index, 'major', e.target.value)}
                         />
@@ -574,11 +583,11 @@ const SpecInputPage = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">학점</label>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">학점</label>
                         <input
                           type="text"
                           inputMode="decimal"
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           value={education.gpa}
                           onChange={(e) => {
                             const validatedValue = validateGpaInput(e.target.value, education.maxGpa);
@@ -588,9 +597,9 @@ const SpecInputPage = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">최대 학점</label>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">최대 학점</label>
                         <select
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           value={education.maxGpa}
                           onChange={(e) => handleMaxGpaChange('educationDetails', index, e.target.value)}
                         >
@@ -609,30 +618,30 @@ const SpecInputPage = () => {
             ) : null}
 
             {/* 직무경험 섹션 */}
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">직무경험</h3>
               <AddButton onClick={() => addArrayItem('workExperiences', { companyName: '', position: '인턴', period: '' })} />
             </div>
             {Array.isArray(formData.workExperiences) && formData.workExperiences.length > 0 ? (
               formData.workExperiences.map((experience, index) => (
-                <div key={`career-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
+                <div key={`career-${index}`} className="relative p-4 mb-4 bg-gray-100 rounded-lg">
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">회사명</label>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">회사명</label>
                         <input
                           type="text"
                           maxLength="20"
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           placeholder="예: 삼성 SDS"
                           value={experience.companyName}
                           onChange={(e) => handleArrayInputChange('workExperiences', index, 'companyName', e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">직책</label>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">직책</label>
                         <select
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           value={experience.position}
                           onChange={(e) => handleArrayInputChange('workExperiences', index, 'position', e.target.value)}
                         >
@@ -643,12 +652,12 @@ const SpecInputPage = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">근무기간 (개월)</label>
+                      <label className="block mb-1 text-sm font-medium text-gray-600">근무기간 (개월)</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="text"
                           inputMode="numeric"
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           value={experience.period}
                           onChange={(e) => {
                             const validatedValue = validatePeriodInput(e.target.value);
@@ -668,19 +677,19 @@ const SpecInputPage = () => {
             ) : null}
 
             {/* 자격증 섹션 */}
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">자격증</h3>
               <AddButton onClick={() => addArrayItem('certifications', { name: '' })} />
             </div>
             {Array.isArray(formData.certifications) && formData.certifications.length > 0 ? (
               formData.certifications.map((cert, index) => (
-                <div key={`cert-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
+                <div key={`cert-${index}`} className="relative p-4 mb-4 bg-gray-100 rounded-lg">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">자격증명</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-600">자격증명</label>
                     <input
                       type="text"
                       maxLength="50"
-                      className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                       value={cert.name}
                       onChange={(e) => handleArrayInputChange('certifications', index, 'name', e.target.value)}
                     />
@@ -693,16 +702,16 @@ const SpecInputPage = () => {
             ) : null}
 
             {/* 어학능력 섹션 */}
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">어학능력</h3>
               <AddButton onClick={() => addArrayItem('languageSkills', { languageTest: 'TOEIC_ENGLISH', score: '' })} />
             </div>
             {Array.isArray(formData.languageSkills) && formData.languageSkills.length > 0 ? (
               formData.languageSkills.map((lang, index) => (
-                <div key={`lang-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
+                <div key={`lang-${index}`} className="relative p-4 mb-4 bg-gray-100 rounded-lg">
                   <div className="grid grid-cols-2 gap-4">
                     <select
-                      className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                       value={lang.languageTest}
                       onChange={(e) => handleArrayInputChange('languageSkills', index, 'languageTest', e.target.value)}
                     >
@@ -713,7 +722,7 @@ const SpecInputPage = () => {
                     <input
                       type="text"
                       maxLength="10"
-                      className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                       placeholder="점수/등급"
                       value={lang.score}
                       onChange={(e) => handleArrayInputChange('languageSkills', index, 'score', e.target.value)}
@@ -727,32 +736,32 @@ const SpecInputPage = () => {
             ) : null}
 
             {/* 활동/네트워킹 섹션 */}
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">활동/네트워킹</h3>
               <AddButton onClick={() => addArrayItem('activities', { name: '', role: '', award: '' })} />
             </div>
             {Array.isArray(formData.activities) && formData.activities.length > 0 ? (
               formData.activities.map((activity, index) => (
-                <div key={`activity-${index}`} className="bg-gray-100 p-4 rounded-lg relative mb-4">
+                <div key={`activity-${index}`} className="relative p-4 mb-4 bg-gray-100 rounded-lg">
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">활동명</label>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">활동명</label>
                         <input
                           type="text"
                           maxLength="20"
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           placeholder="예: 대학생 마케팅 동아리"
                           value={activity.name}
                           onChange={(e) => handleArrayInputChange('activities', index, 'name', e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">역할</label>
+                        <label className="block mb-1 text-sm font-medium text-gray-600">역할</label>
                         <input
                           type="text"
                           maxLength="15"
-                          className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                           placeholder="예: 팀장, 팀원 등"
                           value={activity.role}
                           onChange={(e) => handleArrayInputChange('activities', index, 'role', e.target.value)}
@@ -760,9 +769,9 @@ const SpecInputPage = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">수상내역 <span className="text-xs text-gray-500">(선택)</span></label>
+                      <label className="block mb-1 text-sm font-medium text-gray-600">수상내역 <span className="text-xs text-gray-500">(선택)</span></label>
                       <textarea
-                        className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                         placeholder="수상 내역이 있으시면 입력하세요"
                         maxLength="20"
                         value={activity.award || ''}
@@ -781,12 +790,12 @@ const SpecInputPage = () => {
             {/* 지원 분야 */}
             <div className="mb-2">
               <h3 className="text-lg font-medium">
-                지원 분야 <span className="text-red-500">*</span><span className="text-xs text-gray-500 ml-1">(필수)</span>
+                지원 분야 <span className="text-red-500">*</span><span className="ml-1 text-xs text-gray-500">(필수)</span>
               </h3>
             </div>
-            <div className="bg-gray-100 p-4 rounded-lg">
+            <div className="p-4 bg-gray-100 rounded-lg">
               <select
-                className="block w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={formData.jobField}
                 onChange={(e) => handleInputChange('jobField', e.target.value)}
               >
@@ -799,10 +808,10 @@ const SpecInputPage = () => {
             {/* Error message display */}
             {error && (
               <div className="mt-4">
-                <div className="flex items-center justify-between bg-red-300 border border-red-400 text-gray-900 px-4 py-3 rounded-md mb-3 relative">
+                <div className="relative flex items-center justify-between px-4 py-3 mb-3 text-gray-900 bg-red-300 border border-red-400 rounded-md">
                   <div className="flex items-center">
-                    <div className="mr-3 text-red-600 flex-shrink-0">
-                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <div className="flex-shrink-0 mr-3 text-red-600">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="2" />
                         <path d="M12 8L12 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                         <circle cx="12" cy="16" r="1" fill="currentColor" />
@@ -811,7 +820,7 @@ const SpecInputPage = () => {
                     <span className="text-sm font-medium">{error}</span>
                   </div>
                   <button type="button" className="text-gray-500 hover:text-gray-700" onClick={clearError}>
-                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -828,7 +837,7 @@ const SpecInputPage = () => {
                 disabled={loading}
               >
                 {loading ? (
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 mr-3 -ml-1 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -843,7 +852,7 @@ const SpecInputPage = () => {
               </button>
               <button
                 type="button"
-                className="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-300 flex items-center justify-center"
+                className="flex items-center justify-center flex-1 px-4 py-3 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
                 onClick={() => navigate(-1)}
                 disabled={loading}
               >
@@ -856,8 +865,6 @@ const SpecInputPage = () => {
             </div>
           </div>
         </div>
-        
-        <BottomNavBar />
       </div>
     </div>
   );
