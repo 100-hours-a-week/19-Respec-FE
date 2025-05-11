@@ -7,12 +7,14 @@ import { useAuth } from '../context/AuthContext';
 const MyPage = () => {
   const [user, setUser] = useState({
     nickname: '',
-    userProfileUrl: '',
+    profileImageUrl: '',
     createdAt: '',
     jobField: '',
     hasActiveSpec: false,
     activeSpec: 0
   });
+
+  const [specStats, setSpecStats] = useState(null);
   
   const [isPublic, setIsPublic] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -24,9 +26,8 @@ const MyPage = () => {
     const fetchUserData = async () => {
       try {
         const response = await axios.get('/api/users/me');
-        console.log(response);
+
         if (response.data.isSuccess) {
-          console.log(response);
           const userData = response.data.data.user;
 
           // 날짜 형식 변환
@@ -34,16 +35,33 @@ const MyPage = () => {
           const formattedDate = `${createdAt.getFullYear()}년 ${createdAt.getMonth() + 1}월 ${createdAt.getDate()}일`;
           
           setUser({
-            nickname: userData.nickname || '',
-            userProfileUrl: userData.userProfileUrl || '',
+            nickname: userData.nickname,
+            profileImageUrl: userData.profileImageUrl,
             createdAt: formattedDate,
             jobField: userData.jobField || '',
-            hasActiveSpec: userData.spec?.hasActiveSpec || false,
-            activeSpec: userData.spec?.activeSpec || 0
+            hasActiveSpec: userData.spec?.hasActiveSpec,
+            activeSpec: userData.spec?.activeSpec
           });
 
           // 공개 설정 상태 가져오기
           setIsPublic(userData.isPublic || false);
+
+          // spec api 호출
+          if (userData.spec?.hasActiveSpec) {
+            const specResponse = await axios.get(`/api/specs/${userData.spec.activeSpec}`);
+            if (specResponse.data.isSuccess) {
+              const { totalScore, rank, jobFieldUserCount, jobFieldRank } = specResponse.data.data;
+
+              setSpecStats({
+                totalScore,
+                rank,
+                jobFieldUserCount,
+                percentage: ((jobFieldRank / jobFieldUserCount) * 100).toFixed(2)
+              });
+            }
+          } else {
+            setSpecStats(null);
+          }
         }
       } catch (error) {
         console.error('사용자 정보 조회 실패:', error);
@@ -91,23 +109,23 @@ const MyPage = () => {
         <div className="flex items-center">
           {/* 프로필 이미지 */}
           <div className="w-20 h-20 mr-4 bg-gray-200">
-            {user.userProfileUrl ? (
-              <img src={user.userProfileUrl} alt="Profile" className="object-cover w-20 h-20" />
-            ) : (
-              <div className="flex items-center justify-center w-20 h-20 bg-gray-200">
-                <span className="text-gray-400">X</span>
-              </div>
-            )}
+            <img src={user.profileImageUrl} alt="Profile" className="object-cover w-20 h-20" />
           </div>
           
           <div className="flex-1">
             <h2 className="mb-1 text-xl font-bold">{user.nickname}</h2>
             <div className="flex items-center">
-              <span className="mr-2 text-yellow-500">상위 12%</span>
-              <span className="text-blue-500">총점 78점</span>
-            </div>
-            <div className="mt-1 text-sm text-gray-500">
-              342위 / 5280명
+              {specStats ? (
+                <>
+                  <span className="mr-2 text-yellow-500">상위 {specStats.percentage}%</span>
+                  <span className="text-blue-500">총점 {specStats.totalScore}점</span>
+                  <div className="mt-1 text-sm text-gray-500">
+                    {specStats.rank}위 / {specStats.jobFieldUserCount}명
+                  </div>
+                </>
+              ) : (
+                <span className="text-gray-500">아직 스펙 정보가 없습니다</span>
+              )}
             </div>
           </div>
         </div>
@@ -129,10 +147,10 @@ const MyPage = () => {
                 </div>
                 <div>
                     <span className="font-medium text-gray-800">스펙 정보 공개 설정</span>
-                    <p className="text-xs text-gray-500">나의 스펙 정보를 다른 사용자에게 공개할지 설정합니다.</p>
+                    <p className="text-xs text-gray-500">소셜 페이지 공개 여부를 결정합니다.</p>
                 </div>
             </div>
-            <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+            <div className="relative inline-block w-10 h-6 transition duration-200 ease-in-out">
                 <input
                     type="checkbox"
                     id="toggle"
@@ -160,12 +178,18 @@ const MyPage = () => {
       <div className="px-4">
         <div className="overflow-hidden bg-white rounded-lg shadow-sm">
           {/* 회원정보 관리 */}
-          <div className="flex items-center justify-between p-4 border-b">
+          <div 
+            className="flex items-center justify-between p-4 border-b cursor-pointer"
+            onClick={() => alert("준비 중인 기능입니다.")}
+          >
             <div className="flex items-center">
               <div className="flex items-center justify-center w-8 h-8 mr-3 bg-blue-100 rounded-full">
                 <UserRoundPen size={18} className="text-blue-500" />
               </div>
-              <span className="text-gray-800">회원정보 관리</span>
+              <div>
+                <span className="font-medium text-gray-800">회원정보 관리</span>
+                <p className="text-xs text-gray-500">닉네임, 이미지 등 개인정보를 관리합니다.</p>
+              </div>
             </div>
             <ChevronRight size={20} className="text-gray-400" />
           </div>
@@ -179,18 +203,27 @@ const MyPage = () => {
               <div className="flex items-center justify-center w-8 h-8 mr-3 bg-blue-100 rounded-full">
                 <ScrollText size={18} className="text-blue-500" />
               </div>
-              <span className="text-gray-800">스펙 정보 관리</span>
+              <div>
+                <span className="font-medium text-gray-800">스펙 정보 관리</span>
+                <p className="text-xs text-gray-500">나의 스펙 정보를 등록 및 수정합니다.</p>
+              </div>
             </div>
             <ChevronRight size={20} className="text-gray-400" />
           </div>
           
           {/* 즐겨찾기 */}
-          <div className="flex items-center justify-between p-4">
+          <div 
+            className="flex items-center justify-between p-4 cursor-pointer"
+            onClick={() => alert("준비 중인 기능입니다.")}
+          >
             <div className="flex items-center">
               <div className="flex items-center justify-center w-8 h-8 mr-3 bg-blue-100 rounded-full">
                 <Star size={18} className='text-blue-500' />
               </div>
-              <span className="text-gray-800">즐겨찾기</span>
+              <div>
+                <span className="font-medium text-gray-800">즐겨찾기</span>
+                <p className="text-xs text-gray-500">저장한 다른 사용자들의 스펙 정보를 확인합니다.</p>
+              </div>
             </div>
             <ChevronRight size={20} className="text-gray-400" />
           </div>
@@ -207,7 +240,10 @@ const MyPage = () => {
             <div className="flex items-center justify-center w-8 h-8 mr-3 bg-red-100 rounded-full">
               <LogOut size={18} className='text-red-500'/>
             </div>
-            <span className="text-gray-800">회원 탈퇴</span>
+            <div>
+                <span className="font-medium text-gray-800">회원 탈퇴</span>
+                <p className="text-xs text-gray-500">계정을 영구적으로 삭제합니다.</p>
+              </div>
           </div>
           <ChevronRight size={20} className="text-gray-400" />
         </div>

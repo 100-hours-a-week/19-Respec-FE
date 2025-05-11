@@ -5,45 +5,64 @@ import { MessageCircleQuestion } from 'lucide-react';
 import axios from 'axios';
 
 const ProfileCard = () => {
-  const { isLoggedIn, user } = useAuth();
+  const { user } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const [score, setScore] = useState(null);
   const [rankPercent, setRankPercent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      const fetchProfile = async () => {
-        try {
-          setLoading(true);
+    const fetchProfile = async () => {
+      if (!user?.spec?.hasActiveSpec || !user?.spec?.activeSpec) return;
 
-          const userResponse = await axios.get('/api/users/me');
-          const userData = userResponse.data.data.user;
-          setProfileData(userData);
+      try {
+        const response = await axios.get(`/api/specs/${user.spec.activeSpec}`, { withCredentials: true });
+        const detail = response.data.data.rankings.details;
+        const percent = ((detail.jobFieldRank / detail.jobFieldUserCount) * 100).toFixed(2);
 
-          if (userData.spec?.hasActiveSpec && userData.spec.activeSpec) {
-            const specResponse = await axios.get(`/api/specs/${userData.spec.activeSpec}`);
-            const detail = specResponse.data.data.rankings.details;
-            const percent = ((detail.jobFieldRank / detail.jobFieldUserCount) * 100).toFixed(2);
+        setScore(detail.score);
+        setRankPercent(percent);
+      } catch (error) {
+        console.error('스펙 상세 정보 조회 실패:', error);
+      }
+    };
 
-            setScore(detail.score);
-            setRankPercent(percent);
-          }
-        } catch (err) {
-          console.error('프로필 불러오기 실패:', err);
-          setError(err);
-        } finally {
-          setLoading(false);
-        }
-      };
-
+    if (user) {
+      setProfileData(user);
       fetchProfile();
     }
-  }, [isLoggedIn]);
+    if (user) {
+      // const fetchProfile = async () => {
+      //   try {
+      //     setLoading(true);
+
+      //     const userResponse = await axios.get('/api/users/me');
+      //     const userData = userResponse.data.data.user;
+      //     setProfileData(userData);
+
+      //     if (userData.spec?.hasActiveSpec && userData.spec.activeSpec) {
+      //       const specResponse = await axios.get(`/api/specs/${userData.spec.activeSpec}`);
+      //       const detail = specResponse.data.data.rankings.details;
+      //       const percent = ((detail.jobFieldRank / detail.jobFieldUserCount) * 100).toFixed(2);
+
+      //       setScore(detail.score);
+      //       setRankPercent(percent);
+      //     }
+      //   } catch (err) {
+      //     console.error('프로필 불러오기 실패:', err);
+      //     setError(err);
+      //   } finally {
+      //     setLoading(false);
+      //   }
+      // };
+
+      // fetchProfile();
+
+      setProfileData(user);
+    }
+  }, [user]);
 
   // 미로그인 상태일 때 보여줄 블러 처리된 카드
-  if (!isLoggedIn) {
+  if (!user) {
     return (
       <div className="relative p-4 mb-4 overflow-hidden bg-white rounded-lg shadow">
         <div className="pointer-events-none blur-sm">
@@ -80,21 +99,22 @@ const ProfileCard = () => {
     );
   }
 
-  // 스펙 정보가 없을 때 표시
-  if (!profileData || !profileData.spec) {
+  // 로그인했지만 스펙 정보가 없을 때 표시
+  if (!profileData?.spec?.hasActiveSpec) {
     return (
       <div className="p-4 mb-4 bg-white rounded-lg shadow">
         <div className="flex items-center mb-3">
-          <div className="relative w-20 h-20">
+          <div className="relative w-16 h-16">
             <svg viewBox="0 0 100 100" className="w-full h-full">
               <circle cx="50" cy="50" r="45" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="2" />
-              <MessageCircleQuestion x={30} y={30} size={38}/>
             </svg>
-            
+            <div className="absolute top-5 left-5">
+              <MessageCircleQuestion size={24} className="text-gray-400" />
+            </div>
           </div>
           <div className="ml-4">
             <h2 className="text-lg font-bold">안녕하세요, {user?.nickname}님</h2>
-            <p className="text-gray-700">스펙 정보를 입력하고 나의 순위를 확인해보세요!</p>
+            <p className="text-sm text-gray-700">스펙 정보를 입력하고 순위를 확인해보세요!</p>
             <Link 
               to="/spec-input" 
               className="inline-block px-4 py-2 mt-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600"

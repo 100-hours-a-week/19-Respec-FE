@@ -7,26 +7,28 @@ const OAuthCallbackPage = () => {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
 
   useEffect(() => {
     const processOAuthCallback = async () => {
       try {
         // 사용자 정보 조회 시도 - 쿠키는 자동으로 전송되므로 헤더에 추가할 필요 없음
-        const response = await axios.get('/api/users/me');
-        
-        const user = response.data;
-        
-        // 인증 상태 업데이트
-        login(user);
-
-        if (!user.nickname || user.nickname.startsWith('guest-')) {
-          // 프로필 설정 페이지로 이동 (최초 로그인)
-          navigate('/profile-setup');
-        } else {
-          // 기존 사용자는 홈페이지로 이동
+        if (user?.id) {
           navigate('/');
+          return;
         }
+
+        const response = await axios.get('/api/users/me');
+        const userData = response.data?.data?.user;
+        
+        // 유효한 사용자인지 판단
+        if (!userData?.id) {
+          setError('회원 정보가 유효하지 않습니다.');
+          return;
+        }
+
+        login(userData);
+        navigate('/');
 
       } catch (err) {
         if (err.response?.status === 401) {
@@ -43,7 +45,7 @@ const OAuthCallbackPage = () => {
     };
     
     processOAuthCallback();
-  }, [navigate, login]);
+  }, [navigate, login, user]);
 
   if (loading) {
     return (

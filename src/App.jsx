@@ -14,6 +14,7 @@ import SocialPage from './pages/SocialPage';
 import TopBar from './components/TopBar';
 import BottomNavBar from './components/BottomNavBar';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import OAuthRedirectPage from './pages/OAuthRedirectPage';
 
 axios.defaults.withCredentials = true;
 
@@ -105,6 +106,7 @@ function App() {
           <Route path="/login" element={<Layout><LoginPage /></Layout>} />
           <Route path="/profile-setup" element={<Layout><ProfileSetupPage /></Layout>} />
           <Route path="/oauth2/callback" element={<OAuthCallbackPage />} />
+          <Route path="/oauth-redirect" element={<OAuthRedirectPage />} />
           <Route path="/spec-input" element={<Layout><SpecInputPage /></Layout>} />
           <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
           <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
