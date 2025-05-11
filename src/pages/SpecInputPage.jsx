@@ -129,8 +129,18 @@ const SpecInputPage = () => {
       try {
         setLoading(true);
         
-        // Authorization 헤더에서 토큰 가져오기 (예제에서 주어진 형식)
-        const token = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsImxvZ2luSWQiOiJrYWthbyA0MjUyMTg3ODI2IiwiaWF0IjoxNzQ2NzEzMzYwLCJleHAiOjE3NDY3MTY5NjB9.OFvm371M-r-_edv6iCxIlZeTeXWy7dfIbpzWQLjMbwk";
+        // Get token from Authorization cookie header
+        const token = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('Authorization='))
+          ?.split('=')[1];
+        
+        if (!token) {
+          setError('인증 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+          setLoading(false);
+          return;
+        }
+
         let userId;
         
         try {
@@ -478,8 +488,17 @@ const SpecInputPage = () => {
     setError(null);
 
     try {
-      // Authorization 헤더에서 토큰 가져오기
-      const token = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsImxvZ2luSWQiOiJrYWthbyA0MjUyMTg3ODI2IiwiaWF0IjoxNzQ2NzEzMzYwLCJleHAiOjE3NDY3MTY5NjB9.OFvm371M-r-_edv6iCxIlZeTeXWy7dfIbpzWQLjMbwk";
+      // Get token from Authorization cookie header
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('Authorization='))
+        ?.split('=')[1];
+      
+      if (!token) {
+        setError('인증 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+        setLoading(false);
+        return;
+      }
       
       // 데이터 형식 변환
       const submissionData = formatDataForSubmission();
