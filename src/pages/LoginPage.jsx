@@ -36,10 +36,13 @@ const LoginPage = () => {
   }
 
   const handleLogin = () => {
-    const redirectUri = encodeURIComponent("http://localhost:3000/oauth-redirect");
+    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+    const frontendBaseUrl = process.env.REACT_APP_FRONTEND_URL;
+
+    const redirectUri = encodeURIComponent(`${frontendBaseUrl}/oauth-redirect`);
 
     // window.location.href = "http://localhost:8080/oauth2/authorization/kakao";
-    window.location.href = `http://localhost:8080/oauth2/authorization/kakao?redirect_uri=${redirectUri}`;
+    window.location.href = `${apiBaseUrl}/oauth2/authorization/kakao?redirect_uri=${redirectUri}`;
   };
 
   return (
@@ -62,10 +65,6 @@ const LoginPage = () => {
           </div>
           
           <div className="mt-10">
-            {/* <a
-              href="http://localhost:8080/oauth2/authorization/kakao"
-              className="flex items-center justify-center w-full px-4 py-3 text-black transition-colors bg-yellow-400 rounded-md hover:bg-yellow-500"
-            > */}
             <button
               onClick={handleLogin}
               className="flex items-center justify-center w-full gap-3 px-4 py-3 text-black transition-colors bg-yellow-400 rounded-md hover:bg-yellow-500"

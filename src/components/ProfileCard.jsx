@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MessageCircleQuestion } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 
 const ProfileCard = () => {
   const { user } = useAuth();
@@ -15,7 +15,7 @@ const ProfileCard = () => {
       if (!user?.spec?.hasActiveSpec || !user?.spec?.activeSpec) return;
 
       try {
-        const response = await axios.get(`/api/specs/${user.spec.activeSpec}`, { withCredentials: true });
+        const response = await axiosInstance.get(`/api/specs/${user.spec.activeSpec}`, { withCredentials: true });
         const detail = response.data.data.rankings.details;
         const percent = ((detail.jobFieldRank / detail.jobFieldUserCount) * 100).toFixed(2);
 

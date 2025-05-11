@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import RankingItem from '../components/RankingItem';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 
 // 로딩 인디케이터 컴포넌트
 const LoadingIndicator = () => (
@@ -105,7 +105,7 @@ const RankingResultPage = () => {
     try {
       console.log('검색 결과 요청 중...', { type: 'search', 'nickname-keyword': keyword, limit: 10 });
       
-      const response = await axios.get('http://localhost:8080/api/specs', {
+      const response = await axiosInstance.get('/api/specs', {
         params: {
           type: 'search',
           'nickname-keyword': keyword,
@@ -164,7 +164,7 @@ const RankingResultPage = () => {
         limit: 10 
       });
       
-      const response = await axios.get('http://localhost:8080/api/specs', {
+      const response = await axiosInstance.get('/api/specs', {
         params: {
           type: 'search',
           'nickname-keyword': keyword,

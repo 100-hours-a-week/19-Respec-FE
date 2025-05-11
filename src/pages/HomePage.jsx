@@ -3,7 +3,7 @@ import ProfileCard from "../components/ProfileCard";
 import ServiceIntro from "../components/ServiceIntro";
 import RankingFilters from "../components/RankingFilters";
 import RankingItem from "../components/RankingItem";
-import axios from "axios";
+import axiosInstance from '../utils/axiosInstance';
 
 const HomePage = () => {
     const [selectedFilter, setSelectedFilter] = useState('전체');
@@ -12,7 +12,7 @@ const HomePage = () => {
     useEffect(() => {
       const fetchRankings = async () => {
         try {
-          const response = await axios.get('/api/specs', {
+          const response = await axiosInstance.get('/api/specs', {
             params: {
               type: 'ranking',
               jobField: selectedFilter,

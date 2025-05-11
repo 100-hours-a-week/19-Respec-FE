@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 import { useAuth } from '../context/AuthContext';
 
 // 상수 데이터 정의
@@ -150,7 +150,7 @@ const SpecInputPage = () => {
         }
         
         // 유저 정보 가져오기
-        const userResponse = await axios.get(`/api/users/${userId}`, {
+        const userResponse = await axiosInstance.get(`/api/users/${userId}`, {
           headers: {
             'Authorization': token
           }
@@ -172,7 +172,7 @@ const SpecInputPage = () => {
             setActiveSpecId(userData.spec.activeSpec);
             
             // 활성화된 스펙 정보 가져오기
-            const specResponse = await axios.get(`/api/specs/${userData.spec.activeSpec}`, {
+            const specResponse = await axiosInstance.get(`/api/specs/${userData.spec.activeSpec}`, {
               headers: {
                 'Authorization': token
               }
@@ -497,7 +497,7 @@ const SpecInputPage = () => {
       if (isEditMode && activeSpecId) {
         // 수정 모드인 경우 PUT 요청 보내기
         console.log(`Sending PUT request to: /api/specs/${activeSpecId}`);
-        response = await axios.put(`/api/specs/${activeSpecId}`, formData, {
+        response = await axiosInstance.put(`/api/specs/${activeSpecId}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': token
@@ -506,7 +506,7 @@ const SpecInputPage = () => {
       } else {
         // 신규 등록인 경우 POST 요청 보내기
         console.log('Sending POST request to: /api/specs');
-        response = await axios.post('/api/specs', formData, {
+        response = await axiosInstance.post('/api/specs', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': token

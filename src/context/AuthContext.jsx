@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 
 const AuthContext = createContext(null);
 
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const response = await axios.get('/api/users/me');
+        const response = await axiosInstance.get('/api/users/me');
         
         if (response.data?.data?.user) {
           setUser(response.data.data.user);
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   // 로그아웃 함수
   const logout = async () => {
     try {
-      await axios.delete('/api/auth/token');
+      await axiosInstance.delete('/api/auth/token');
       setUser(null);
       setIsLoggedIn(false);
     } catch (error) {
