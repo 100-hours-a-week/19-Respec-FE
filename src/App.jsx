@@ -89,7 +89,7 @@ const Layout = ({ children }) => {
   return (
     <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
       {shouldShowNavigation && <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />}
-      <main className="pt-5 pb-5">
+      <main className="pt-2 pb-2">
         {children}
       </main>
       {shouldShowNavigation && <BottomNavBar active={getActiveMenu()} />}

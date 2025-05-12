@@ -241,19 +241,20 @@ const RankingResultPage = () => {
                     // >
                     //   <SearchResultItem result={result} />
                     // </div>
-                    const percentage = ((result.rankByJobField / result.totalUsersCountByJobField) * 100).toFixed(2);
                     return (
                       <div 
                         key={`${result.userId}_${index}`} 
                         ref={index === searchResults.length - 1 ? lastResultElementRef : null}
                       >
                         <RankingItem 
-                          rank={result.totalRank}
+                          totalRank={result.totalRank}
+                          totalUsersCount={result.totalUsersCount}
                           user={result.nickname}
                           score={result.score}
                           category={result.jobField}
-                          percentage={percentage}
                           profileImageUrl={result.profileImageUrl}
+                          rankByJobField={result.rankByJobField}
+                          usersCountByJobField={result.usersCountByJobField}
                         />
                       </div>
                     );
