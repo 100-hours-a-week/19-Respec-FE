@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    if (window.location.pathname === "/profile-setup" || (!!tempLoginId && !document.cookie.includes("Authorization"))) {
+    if (window.location.pathname === "/profile-setup" || tempLoginId) {
       setLoading(false);
     } else {
       if (!isLoggedIn && !user) {

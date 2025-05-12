@@ -8,16 +8,16 @@ const OAuthRedirectPage = () => {
         const getCookie = (name) =>
             document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
 
-        const isNewUser = getCookie("IsNewUser");
         const tempLoginId = getCookie("TempLoginId");
         const hasAuthorization = document.cookie.includes("Authorization");
 
-        console.log('여기!!');
-        console.log(hasAuthorization);
-        if (!hasAuthorization || (isNewUser === "true" && tempLoginId)) {
+        if (tempLoginId) {
             navigate('/profile-setup');
-        } else {
+        } else if (hasAuthorization) {
             navigate('/oauth2/callback');
+        } else {
+            console.log('로그인 실패: Authorization, TempLoginId 둘 다 존재 X');
+            navigate('/login');
         }
     }, [navigate]);
 
