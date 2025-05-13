@@ -8,7 +8,6 @@ const ProfileSetupPage = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [error, setError] = useState('');
-  const [fileError, setFileError] = useState('');
   const [nicknameError, setNicknameError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -17,23 +16,7 @@ const ProfileSetupPage = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 파일 타입 검증
-      const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-      if (!validTypes.includes(file.type)) {
-        setFileError('PNG 또는 JPG 형식의 이미지만 업로드 가능합니다.');
-        return;
-      }
-
-      // 파일 크기 검증 (10MB)
-      const maxSize = 10 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setFileError('파일의 크기는 10MB 이하여야 합니다.')
-        return;
-      }
-
-      setFileError('');
       setProfileImage(file);
-      
       const fileReader = new FileReader();
       fileReader.onload = () => {
         setPreviewUrl(fileReader.result);
@@ -91,9 +74,22 @@ const ProfileSetupPage = () => {
     }
     
     try {
-      const formData = new FormData();
-      formData.append('nickname', nickname);
-
+      // 프로필 이미지가 있는 경우 먼저 업로드
+      let profileUrl = '';
+      if (profileImage) {
+        const formData = new FormData();
+        formData.append('file', profileImage);
+        
+        // 쿠키는 자동으로 전송되므로 Authorization 헤더를 추가할 필요 없음
+        const imageResponse = await axiosInstance.post('/api/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        profileUrl = imageResponse.data.url;
+      }
+      
       // 쿠키에서 loginId 읽기
       const getCookie = (name) =>
         document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
@@ -103,18 +99,15 @@ const ProfileSetupPage = () => {
       if (loginId) {
         loginId = loginId.replace('_', ' ');
       }
-      
-      formData.append('loginId', loginId);
 
-      // 프로필 이미지가 있으면 추가
-      if (profileImage) {
-        formData.append('userProfileUrl', profileImage);
-      }
-
-      // 사용자 생성 요청 (이미지 업로드 포함)
-      const response = await axiosInstance.post('/api/users', formData, {
+      // 사용자 정보 업데이트 - 쿠키는 자동으로 전송됨
+      const response = await axiosInstance.post('/api/users', {
+        nickname,
+        userProfileUrl: profileUrl,
+        loginId
+      }, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/json'
         }
       });
       
@@ -127,14 +120,9 @@ const ProfileSetupPage = () => {
       if (error.response) {
         const { status, data } = error.response;
         
+        // 409 = 닉네임 중복 에러
         if (status === 409) {
           setNicknameError(data.message || '이미 사용 중인 닉네임입니다.');
-          setError('');
-        } else if (status === 415) {
-          setFileError(data.message || 'PNG 또는 JPG 형식만 업로드 가능합니다.');
-          setError('');
-        } else if (status === 413) {
-          setFileError(data.message || '10MB 이하의 이미지만 업로드 가능합니다.');
           setError('');
         } else {
           setError('회원가입 중 오류가 발생했습니다.');
@@ -169,9 +157,6 @@ const ProfileSetupPage = () => {
             onChange={handleImageChange}
           />
           <p className="text-sm text-gray-500">프로필 이미지 선택 (선택사항)</p>
-          {fileError &&
-            <p className="mt-2 text-xs text-red-500">{fileError}</p>
-          }
         </div>
         
         <div>
