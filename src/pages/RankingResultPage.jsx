@@ -254,7 +254,7 @@ const RankingResultPage = () => {
                           category={result.jobField}
                           profileImageUrl={result.profileImageUrl}
                           rankByJobField={result.rankByJobField}
-                          usersCountByJobField={result.usersCountByJobField}
+                          usersCountByJobField={result.totalUsersCountByJobField}
                         />
                       </div>
                     );
