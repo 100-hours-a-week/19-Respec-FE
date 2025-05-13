@@ -28,20 +28,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      # EC2 상태 체크 (선택)
-      # - name: Check EC2 status and start if stopped
-      #   run: |
-      #     INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
-      #     STATE=$(aws ec2 describe-instances \
-      #       --instance-ids $INSTANCE_ID \
-      #       --query "Reservations[0].Instances[0].State.Name" \
-      #       --output text)
-      #
-      #     if [ "$STATE" = "stopped" ]; then
-      #       aws ec2 start-instances --instance-ids $INSTANCE_ID
-      #       aws ec2 wait instance-running --instance-ids $INSTANCE_ID
-      #     fi
-
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -49,13 +35,14 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-
-            if [ ! -d "19-RESPEC-FE" ]; then
+            if [ ! -d "19-Respec-FE" ]; then
               git clone https://github.com/100-hours-a-week/19-Respec-FE.git
             fi
 
             cd 19-Respec-FE
             git checkout stage
+            git pull origin stage
+
             npm install
             npm run build
 
