@@ -7,7 +7,7 @@ name: Deploy Frontend to EC2
 on:
     workflow_dispatch:
       inputs:
-        tags:
+        tags: 
           description: 'Set Tags Name'
           required: true
           type: string
