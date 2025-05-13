@@ -9,12 +9,13 @@ const OAuthRedirectPage = () => {
             document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
 
         const tempLoginId = getCookie("TempLoginId");
-        const hasAuthorization = document.cookie.includes("Authorization");
+        // const hasAuthorization = document.cookie.includes("Authorization");
+        const hasAuthorization = getCookie("Authorization");
 
         if (tempLoginId) {
             navigate('/profile-setup');
         } else if (hasAuthorization) {
-            navigate('/oauth2/callback');
+            navigate('/');
         } else {
             console.log('로그인 실패: Authorization, TempLoginId 둘 다 존재 X');
             navigate('/login');
