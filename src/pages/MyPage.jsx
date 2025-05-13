@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
-import { ChevronRight, Star, Shield, LogOut, X, UserRoundPen, ScrollText } from 'lucide-react';
+import { ChevronRight, Star, X, UserRoundPen, ScrollText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const MyPage = () => {
@@ -120,7 +120,9 @@ const MyPage = () => {
             <div className="flex items-center">
               {/* 프로필 이미지 */}
               <div className="w-20 h-20 mr-4 overflow-hidden bg-gray-200">
-                <img src={user.profileImageUrl} alt="Profile" className="object-cover w-20 h-20" />
+                {user.profileImageUrl && (
+                  <img src={user.profileImageUrl} alt="Profile" className="object-cover w-20 h-20" />
+                )}
               </div>
             
               <div className="flex-1">
