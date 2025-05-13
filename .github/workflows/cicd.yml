@@ -1,17 +1,17 @@
 name: Deploy Frontend to EC2
 
-# on:
-#   push:
-#     branches:
-#       - stage
 on:
-    workflow_dispatch:
-      inputs:
-        tags: 
-          description: 'Set Tags Name'
-          required: true
-          type: string
-          default: master
+  pull_request:
+    branches:
+      - stage
+# on:
+#     workflow_dispatch:
+#       inputs:
+#         tags: 
+#           description: 'Set Tags Name'
+#           required: true
+#           type: string
+#           default: master
           
 jobs:
   deploy:
