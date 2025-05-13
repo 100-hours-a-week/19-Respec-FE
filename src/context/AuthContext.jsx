@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, [isLoggedIn, user]);
+  }, []);
 
   // 로그인 함수
   const login = (userData) => {
@@ -63,6 +63,10 @@ export const AuthProvider = ({ children }) => {
       await axiosInstance.delete('/api/auth/token');
       setUser(null);
       setIsLoggedIn(false);
+
+      // 쿠키 삭제
+      document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "TempLoginId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     } catch (error) {
       console.error('Logout failed', error);
     }
