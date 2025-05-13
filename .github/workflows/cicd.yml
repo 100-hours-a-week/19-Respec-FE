@@ -28,8 +28,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
+      # EC2 상태 체크 (선택)
       # - name: Check EC2 status and start if stopped
-      #   id: ec2
       #   run: |
       #     INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
       #     STATE=$(aws ec2 describe-instances \
@@ -37,13 +37,8 @@ jobs:
       #       --query "Reservations[0].Instances[0].State.Name" \
       #       --output text)
       #
-      #     echo "EC2 instance state: $STATE"
-      #
       #     if [ "$STATE" = "stopped" ]; then
-      #       echo "Starting EC2 instance..."
       #       aws ec2 start-instances --instance-ids $INSTANCE_ID
-      #
-      #       echo "Waiting for EC2 to be running..."
       #       aws ec2 wait instance-running --instance-ids $INSTANCE_ID
       #     fi
 
@@ -59,8 +54,8 @@ jobs:
               git clone https://github.com/100-hours-a-week/19-Respec-FE.git
             fi
 
-            cd 19-RESPEC-FE
-            git pull origin stage
+            cd 19-Respec-FE
+            git checkout stage
             npm install
             npm run build
 
@@ -73,6 +68,6 @@ jobs:
               echo "✅ 종료할 프로세스 없음"
             fi
 
-            echo "🚀 serve 실행 시작..."
-            nohup npx serve -s dist -l 3000 > frontend.log 2>&1 &
+            echo "🚀 serve 실행 시작 (build)..."
+            nohup npx serve -s build -l 3000 > frontend.log 2>&1 &
             echo "✅ serve 백그라운드 실행 완료"
