@@ -163,7 +163,7 @@ const MyPage = () => {
       </div>
       
       {/* 메뉴 리스트 */}
-      {/* 스펙 정보 공개 설정 */}
+      {/* 스펙 정보 공개 설정
       <div className="p-4">
         <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
             <div className="flex items-center">
@@ -197,10 +197,10 @@ const MyPage = () => {
                 </label>
             </div>
         </div>
-      </div>
+      </div> */}
       
       {/* 회원정보, 스펙 정보, 즐겨찾기 그룹 */}
-      <div className="px-4">
+      <div className="px-4 mt-4">
         <div className="overflow-hidden bg-white rounded-lg shadow-sm">
           {/* 회원정보 관리 */}
           <div 
@@ -255,7 +255,7 @@ const MyPage = () => {
         </div>
       </div>
       
-      {/* 회원 탈퇴 */}
+      {/* 회원 탈퇴
       <div className="px-4 mt-4">
         <div 
           className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm cursor-pointer"
@@ -272,7 +272,7 @@ const MyPage = () => {
           </div>
           <ChevronRight size={20} className="text-gray-400" />
         </div>
-      </div>
+      </div> */}
       
       {/* 회원 탈퇴 확인 모달 */}
       {showModal && (
