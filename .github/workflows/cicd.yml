@@ -5,70 +5,69 @@ on:
     branches:
       - stage
 # on:
-#     workflow_dispatch:
-#       inputs: 
-#         tags:
-#           description: 'Set Tags Name'
-#           required: true
-#           type: string
-#           default: master
+#   workflow_dispatch:
+#     inputs: 
+#       tags:
+#         description: 'Set Tags Name'
+#         required: true
+#         type: string
+#         default: master
           
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ap-northeast-2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
 
-    # - name: Check EC2 status and start if stopped
-    #   id: ec2
-    #   run: |
-    #     INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
-        
-    #     STATE=$(aws ec2 describe-instances \
-    #       --instance-ids $INSTANCE_ID \
-    #       --query "Reservations[0].Instances[0].State.Name" \
-    #       --output text)
+      # - name: Check EC2 status and start if stopped
+      #   id: ec2
+      #   run: |
+      #     INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
+      #     STATE=$(aws ec2 describe-instances \
+      #       --instance-ids $INSTANCE_ID \
+      #       --query "Reservations[0].Instances[0].State.Name" \
+      #       --output text)
+      #
+      #     echo "EC2 instance state: $STATE"
+      #
+      #     if [ "$STATE" = "stopped" ]; then
+      #       echo "Starting EC2 instance..."
+      #       aws ec2 start-instances --instance-ids $INSTANCE_ID
+      #
+      #       echo "Waiting for EC2 to be running..."
+      #       aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+      #     fi
 
-    #     echo "EC2 instance state: $STATE"
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd 19-RESPEC-FE
+            git pull origin stage
+            npm install
+            npm run build
 
-    #     if [ "$STATE" = "stopped" ]; then
-    #       echo "Starting EC2 instance..."
-    #       aws ec2 start-instances --instance-ids $INSTANCE_ID
+            echo "🔍 기존 serve 프로세스 종료 시도..."
+            PORT_PID=$(lsof -i:3000 -t || true)
+            if [ -n "$PORT_PID" ]; then
+              echo "🔴 포트 3000 사용 중, 프로세스 종료 (PID: $PORT_PID)"
+              kill -9 $PORT_PID
+            else
+              echo "✅ 종료할 프로세스 없음"
+            fi
 
-    #       echo "Waiting for EC2 to be running..."
-    #       aws ec2 wait instance-running --instance-ids $INSTANCE_ID
-    #     fi
-
-- name: Deploy to EC2 via SSH
-  uses: appleboy/ssh-action@v0.1.6
-  with:
-    host: ${{ secrets.EC2_HOST }}
-    username: ec2-user
-    key: ${{ secrets.EC2_SSH_KEY }}
-    script: |
-      cd 19-RESPEC-FE
-      git pull origin stage
-      npm install
-      npm run build
-
-      echo "🔍 기존 serve 프로세스 종료 시도..."
-      PORT_PID=$(lsof -i:3000 -t || true)
-      if [ -n "$PORT_PID" ]; then
-        echo "🔴 포트 3000 사용 중, 프로세스 종료 (PID: $PORT_PID)"
-        kill -9 $PORT_PID
-      else
-        echo "✅ 종료할 프로세스 없음"
-      fi
-
-      echo "🚀 serve 실행 시작..."
-      nohup npx serve -s dist -l 3000 > frontend.log 2>&1 &
-      echo "✅ serve 백그라운드 실행 완료"
+            echo "🚀 serve 실행 시작..."
+            nohup npx serve -s dist -l 3000 > frontend.log 2>&1 &
+            echo "✅ serve 백그라운드 실행 완료"
