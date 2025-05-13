@@ -1,7 +1,7 @@
 name: Deploy Frontend to EC2
 
 on:
-  pull_request:
+  push:
     branches:
       - stage
 # on:
