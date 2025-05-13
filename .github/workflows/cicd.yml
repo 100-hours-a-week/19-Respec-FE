@@ -54,6 +54,11 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+
+            if [ ! -d "19-RESPEC-FE" ]; then
+              git clone https://github.com/your-org/19-RESPEC-FE.git
+            fi
+
             cd 19-RESPEC-FE
             git pull origin stage
             npm install
