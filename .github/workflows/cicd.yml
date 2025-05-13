@@ -56,7 +56,7 @@ jobs:
           script: |
 
             if [ ! -d "19-RESPEC-FE" ]; then
-              git clone https://github.com/your-org/19-RESPEC-FE.git
+              git clone https://github.com/100-hours-a-week/19-Respec-FE.git
             fi
 
             cd 19-RESPEC-FE
