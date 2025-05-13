@@ -570,19 +570,20 @@ const RankingPage = () => {
                     // >
                     //   <RankingCard ranking={ranking} index={index} />
                     // </div>
-                    const percentage = ((ranking.rankByJobField / ranking.totalUsersCountByJobField) * 100).toFixed(2);
                     return (
                       <div 
                         key={`${ranking.userId}_${index}`} 
                         ref={index === rankings.length - 1 ? lastRankingElementRef : null}
                       >
                         <RankingItem 
-                          rank={ranking.totalRank}
+                          totalRank={ranking.totalRank}
+                          totalUsersCount={ranking.totalUsersCount}
                           user={ranking.nickname}
                           score={ranking.score}
                           category={ranking.jobField}
-                          percentage={percentage}
                           profileImageUrl={ranking.profileImageUrl}
+                          rankByJobField={ranking.rankByJobField}
+                          usersCountByJobField={ranking.usersCountByJobField}
                         />
                       </div>
                     );

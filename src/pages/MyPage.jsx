@@ -49,14 +49,23 @@ const MyPage = () => {
           // spec api 호출
           if (userData.spec?.hasActiveSpec) {
             const specResponse = await axiosInstance.get(`/api/specs/${userData.spec.activeSpec}`);
+
             if (specResponse.data.isSuccess) {
-              const { totalScore, rank, jobFieldUserCount, jobFieldRank } = specResponse.data.data;
+              const { 
+                score,
+                jobFieldRank, 
+                jobFieldUserCount, 
+                totalRank,
+                totalUserCount
+              } = specResponse.data.specDetailData.rankings.details;
 
               setSpecStats({
-                totalScore,
-                rank,
+                score,
+                jobFieldRank,
                 jobFieldUserCount,
-                percentage: ((jobFieldRank / jobFieldUserCount) * 100).toFixed(2)
+                totalRank,
+                totalUserCount,
+                percentage: ((totalRank / totalUserCount) * 100).toFixed(2)
               });
             }
           } else {
@@ -105,35 +114,51 @@ const MyPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 상단 프로필 섹션 */}
-      <div className="p-4">
-        <div className="flex items-center">
-          {/* 프로필 이미지 */}
-          <div className="w-20 h-20 mr-4 bg-gray-200">
-            <img src={user.profileImageUrl} alt="Profile" className="object-cover w-20 h-20" />
-          </div>
-          
-          <div className="flex-1">
-            <h2 className="mb-1 text-xl font-bold">{user.nickname}</h2>
+      <div className="px-4 pt-2">
+        <div className="bg-white border border-gray-100 shadow-sm rounded-xl">
+          <div className="p-4">
             <div className="flex items-center">
-              {specStats ? (
-                <>
-                  <span className="mr-2 text-yellow-500">상위 {specStats.percentage}%</span>
-                  <span className="text-blue-500">총점 {specStats.totalScore}점</span>
-                  <div className="mt-1 text-sm text-gray-500">
-                    {specStats.rank}위 / {specStats.jobFieldUserCount}명
-                  </div>
-                </>
-              ) : (
-                <span className="text-gray-500">아직 스펙 정보가 없습니다</span>
-              )}
+              {/* 프로필 이미지 */}
+              <div className="w-20 h-20 mr-4 overflow-hidden bg-gray-200">
+                <img src={user.profileImageUrl} alt="Profile" className="object-cover w-20 h-20" />
+              </div>
+            
+              <div className="flex-1">
+                <div className="flex items-center">
+                  <h2 className="text-xl font-bold">{user.nickname}</h2>
+                  {specStats && (
+                    <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
+                      {user.jobField}
+                    </span>
+                  )}
+                </div>
+            
+                {specStats ? (
+                  <>
+                    <div className="flex items-center mt-1.5 space-x-2 text-sm">
+                      <p className="font-medium text-gray-800">
+                        상위 {specStats.percentage}%
+                      </p>
+                      <span className="text-gray-500">•</span>
+                      <p className="font-medium text-gray-800">
+                        총점 {specStats.score.toFixed(1)}점
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-gray-500">아직 스펙 정보가 없습니다</div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
         
-        {/* 가입일 */}
-        <div className="flex items-center justify-between p-4 mt-3 bg-white rounded-lg shadow-sm">
-          <span className="text-gray-600">가입일</span>
-          <span className="text-gray-800">{user.createdAt}</span>
+          <div className="h-px bg-gray-200"></div>
+
+          {/* 가입일 */}
+          <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
+            <span className="text-gray-600">가입일</span>
+            <span className="text-gray-800">{user.createdAt}</span>
+          </div>
         </div>
       </div>
       

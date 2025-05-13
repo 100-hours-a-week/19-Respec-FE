@@ -1,87 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MessageCircleQuestion } from 'lucide-react';
+import { MessageCircleQuestion, BadgeCheck, Briefcase, Users } from 'lucide-react';
 import axiosInstance from '../utils/axiosInstance';
 
 const ProfileCard = () => {
   const { user } = useAuth();
   const [profileData, setProfileData] = useState(null);
-  const [score, setScore] = useState(null);
-  const [rankPercent, setRankPercent] = useState(null);
+  const [specStats, setSpecStats] = useState(null);
+
+  const formatNumber = (num) => {
+    // 1,000 단위 콤마 표시
+    return num.toLocaleString();
+  };
+  
+  const formatNumberWithUnit = (num) => {
+    // 큰 숫자는 단위로 표시 (예: 1,200,000 -> 120만)
+    if (num >= 10000) {
+      if (num >= 100000000) { // 1억 이상
+        return (num / 100000000).toFixed(1) + '억명';
+      } else if (num >= 10000) { // 1만 이상
+        return (num / 10000).toFixed(1) + '만명';
+      }
+    }
+    return num.toLocaleString() + '명';
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user?.spec?.hasActiveSpec || !user?.spec?.activeSpec) return;
+      if (!user) return;
 
-      try {
-        const response = await axiosInstance.get(`/api/specs/${user.spec.activeSpec}`, { withCredentials: true });
-        const detail = response.data.data.rankings.details;
-        const percent = ((detail.jobFieldRank / detail.jobFieldUserCount) * 100).toFixed(2);
+      setProfileData({
+        nickname: user.nickname,
+        profileImageUrl: user.profileImageUrl,
+        jobField: user.jobField || '',
+        hasActiveSpec: user.spec?.hasActiveSpec || false,
+        activeSpec: user.spec?.activeSpec
+      });
 
-        setScore(detail.score);
-        setRankPercent(percent);
-      } catch (error) {
-        console.error('스펙 상세 정보 조회 실패:', error);
+      // spec api 호출
+      if (user?.spec?.hasActiveSpec && user?.spec?.activeSpec) {
+        try {
+          const specResponse = await axiosInstance.get(`/api/specs/${user.spec.activeSpec}`);
+
+          if (specResponse.data.isSuccess) {
+            const details = specResponse.data.specDetailData.rankings.details;
+  
+            setSpecStats({
+              score: details.score,
+              jobFieldRank: details.jobFieldRank,
+              jobFieldUserCount: details.jobFieldUserCount,
+              totalRank: details.totalRank,
+              totalUserCount: details.totalUserCount,
+              percent: details.totalUserCount 
+                ? ((details.totalRank / details.totalUserCount) * 100).toFixed(2)
+                : "0.00"
+            });
+          } else {
+            console.warn('스펙 데이터 형식이 올바르지 않습니다:', specResponse.data);
+            setSpecStats(null);
+          }
+        } catch (error) {
+          console.error('스펙 정보 조회 실패:', error);
+          setSpecStats(null);
+        }
+      } else {
+        setSpecStats(null);
       }
     };
 
     if (user) {
-      setProfileData(user);
       fetchProfile();
-    }
-    if (user) {
-      // const fetchProfile = async () => {
-      //   try {
-      //     setLoading(true);
-
-      //     const userResponse = await axios.get('/api/users/me');
-      //     const userData = userResponse.data.data.user;
-      //     setProfileData(userData);
-
-      //     if (userData.spec?.hasActiveSpec && userData.spec.activeSpec) {
-      //       const specResponse = await axios.get(`/api/specs/${userData.spec.activeSpec}`);
-      //       const detail = specResponse.data.data.rankings.details;
-      //       const percent = ((detail.jobFieldRank / detail.jobFieldUserCount) * 100).toFixed(2);
-
-      //       setScore(detail.score);
-      //       setRankPercent(percent);
-      //     }
-      //   } catch (err) {
-      //     console.error('프로필 불러오기 실패:', err);
-      //     setError(err);
-      //   } finally {
-      //     setLoading(false);
-      //   }
-      // };
-
-      // fetchProfile();
-
-      setProfileData(user);
+    } else {
+      setProfileData(null);
+      setSpecStats(null);
     }
   }, [user]);
 
   // 미로그인 상태일 때 보여줄 블러 처리된 카드
   if (!user) {
     return (
-      <div className="relative p-4 mb-4 overflow-hidden bg-white rounded-lg shadow">
+      <div className="relative p-6 mb-4 overflow-hidden bg-white rounded-lg shadow-md">
         <div className="pointer-events-none blur-sm">
-          {/* 실제 카드 내용과 유사한 더미 콘텐츠 */}
-          <div className="flex items-center mb-3">
-            <div className="relative w-20 h-20">
-              <svg viewBox="0 0 100 100" className="w-full h-full">
-                <circle cx="50" cy="50" r="45" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="2" />
-                <path d="M50 5 A45 45 0 0 1 95 50" fill="none" stroke="#3b82f6" strokeWidth="10" strokeLinecap="round" />
-                <text x="50" y="50" textAnchor="middle" dominantBaseline="middle" fontSize="20" fontWeight="bold" fill="#3b82f6">--</text>
-                <text x="50" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="#94a3b8">상위 %</text>
-              </svg>
-            </div>
-            <div className="ml-4">
-              <h2 className="text-lg font-bold">로그인이 필요합니다</h2>
-              <div className="w-full h-2 mt-2 bg-gray-200 rounded-full">
-                <div className="h-2 bg-blue-500 rounded-full" style={{ width: '0%' }}></div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="relative w-20 h-20">
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <circle cx="50" cy="50" r="45" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="2" />
+                  <path d="M50 5 A45 45 0 0 1 95 50" fill="none" stroke="#3b82f6" strokeWidth="10" strokeLinecap="round" />
+                  <text x="50" y="50" textAnchor="middle" dominantBaseline="middle" fontSize="20" fontWeight="bold" fill="#3b82f6">--</text>
+                  <text x="50" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="#94a3b8">상위 %</text>
+                </svg>
               </div>
-              <p className="mt-1 text-sm text-gray-500">---</p>
+              <div>
+                <h2 className="text-lg font-bold">로그인이 필요합니다</h2>
+                <div className="w-full h-2 max-w-xs mt-2 bg-gray-200 rounded-full">
+                  <div className="h-2 bg-blue-500 rounded-full" style={{ width: '0%' }}></div>
+                </div>
+                <p className="mt-1 text-sm text-gray-500">---</p>
+              </div>
             </div>
           </div>
         </div>
@@ -90,7 +107,7 @@ const ProfileCard = () => {
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
           <Link 
             to="/login" 
-            className="px-4 py-2 text-white transition-colors bg-blue-500 rounded-md hover:bg-blue-600"
+            className="px-6 py-2.5 text-white transition-all duration-200 bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
           >
             로그인하여 내 정보 확인하기
           </Link>
@@ -100,61 +117,105 @@ const ProfileCard = () => {
   }
 
   // 로그인했지만 스펙 정보가 없을 때 표시
-  if (!profileData?.spec?.hasActiveSpec) {
+  if (profileData && !profileData.hasActiveSpec) {
     return (
-      <div className="p-4 mb-4 bg-white rounded-lg shadow">
-        <div className="flex items-center mb-3">
-          <div className="relative w-16 h-16">
-            <svg viewBox="0 0 100 100" className="w-full h-full">
-              <circle cx="50" cy="50" r="45" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="2" />
-            </svg>
-            <div className="absolute top-5 left-5">
-              <MessageCircleQuestion size={24} className="text-gray-400" />
+      <div className="p-5 mb-4 transition-all bg-white rounded-lg shadow-md hover:shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-50">
+              <MessageCircleQuestion size={32} className="text-blue-500" />
             </div>
-          </div>
-          <div className="ml-4">
-            <h2 className="text-lg font-bold">안녕하세요, {user?.nickname}님</h2>
-            <p className="text-sm text-gray-700">스펙 정보를 입력하고 순위를 확인해보세요!</p>
-            <Link 
-              to="/spec-input" 
-              className="inline-block px-4 py-2 mt-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600"
-            >
-              스펙 입력하기
-            </Link>
+            <div>
+              <h2 className="text-lg font-bold">안녕하세요, <span className='text-blue-500'>{user?.nickname}</span>님</h2>
+              <p className="text-sm text-gray-700">스펙 정보를 입력하고 순위를 확인해보세요!</p>
+              <Link 
+                to="/spec-input" 
+                className="inline-block px-5 py-2 mt-3 text-sm font-medium text-white transition-all bg-blue-500 rounded-lg shadow-sm hover:bg-blue-600 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                스펙 입력하기
+              </Link>
+            </div>
           </div>
         </div>
       </div>
     );
   }
   
-  return (
-    <div className="p-4 mb-4 bg-white rounded-lg shadow">
-      <div className="flex items-center mb-3">
-        <div className="relative w-20 h-20">
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="45" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="2" />
-            <path
-              d="M50 5 A45 45 0 0 1 95 50"
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="10"
-              strokeLinecap="round"
-            />
-            <text x="50" y="50" textAnchor="middle" dominantBaseline="middle" fontSize="20" fontWeight="bold" fill="#3b82f6">22</text>
-            <text x="50" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="#94a3b8">상위 %</text>
-          </svg>
-        </div>
-        <div className="ml-4">
-          <h2 className="text-lg font-bold">지금 {profileData.nickname} 님은</h2>
-          <h2 className="text-lg font-bold">{profileData.jobField} 기준 상위 {rankPercent}%입니다</h2>
-          <div className="w-full h-2 mt-2 bg-gray-200 rounded-full">
-            <div className="h-2 bg-blue-500 rounded-full" style={{ width: `${score}%` }}></div>
+  // 로그인했고 스펙 정보도 있을 때 표시
+  if (specStats) {
+    return (
+      <div className="mb-4 overflow-hidden bg-white border border-blue-100 shadow-sm rounded-xl">      
+        {/* 헤더 섹션 */}
+        <div className="p-5 border-b border-gray-100">
+          <div className="flex items-center">
+            <div className="overflow-hidden w-14 h-14">
+              <img 
+                src={user.profileImageUrl} 
+                alt={user.nickname} 
+                className="object-cover w-full h-full"
+              />
+            </div>
+            <div className="ml-4">
+              <div className="flex items-center">
+                <h2 className="text-lg font-bold text-gray-800">{user.nickname}님</h2>
+                <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
+                  {user.jobField}
+                </span>
+              </div>
+              <div className="flex items-center mt-1">
+                <BadgeCheck className="w-4 h-4 text-yellow-500" />
+                <p className="ml-1 text-sm font-medium text-gray-700">
+                  상위 {specStats.percent}%
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="mt-1 text-sm text-gray-500">점수: {score} / 100</p>
+        </div>
+        
+        {/* 순위 섹션 */}
+        <div className="p-5">
+          {/* 직무 내 순위 */}
+          <div className="flex justify-between px-2">
+            <div className="flex items-center">
+              <Briefcase className="w-4 h-4 text-blue-500" />
+              <span className="ml-1.5 text-xs font-medium text-gray-700">직무 내 순위</span>
+              <span className="ml-2 text-lg font-bold text-blue-600">{formatNumber(specStats.jobFieldRank)}</span>
+              <span className="ml-1 text-xs text-gray-500">/ {formatNumberWithUnit(specStats.jobFieldUserCount)}</span>
+            </div>
+            <div className="flex items-center">
+              <Users className="w-4 h-4 text-blue-500" />
+              <span className="ml-1.5 text-xs font-medium text-gray-700">전체 순위</span>
+              <span className="ml-2 text-lg font-bold text-blue-600">{formatNumber(specStats.totalRank)}</span>
+              <span className="ml-1 text-xs text-gray-500">/ {formatNumberWithUnit(specStats.totalUserCount)}</span>
+            </div>
+          </div>
+          
+          {/* 총점 섹션 */}
+          <div className="p-4 mt-4 text-white rounded-lg bg-gradient-to-r from-blue-400 to-blue-500">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <span className="text-xl font-bold">총점</span>
+              </div>
+              <span className="text-2xl font-bold">{specStats.score.toFixed(1)}</span>
+            </div>
+            <div className="w-full h-3 overflow-hidden bg-blue-200 bg-opacity-50 rounded-full">
+              <div 
+                className="h-3 transition-all duration-700 bg-white rounded-full" 
+                style={{ width: `${specStats.score}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between mt-1 text-xs text-blue-50">
+              <span>0</span>
+              <span>25</span>
+              <span>50</span>
+              <span>75</span>
+              <span>100</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default ProfileCard;

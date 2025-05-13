@@ -8,6 +8,7 @@ const ProfileSetupPage = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [error, setError] = useState('');
+  const [nicknameError, setNicknameError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -24,11 +25,51 @@ const ProfileSetupPage = () => {
     }
   };
 
+  // 닉네임 유효성 검사 함수
+  const validateNickname = (value) => {
+    // 닉네임이 비어있는 경우
+    if (!value) {
+      setNicknameError('닉네임을 입력해주세요.');
+      return false;
+    }
+    
+    // 닉네임 길이 검사 (2-11자)
+    if (value.length < 2) {
+      setNicknameError('닉네임은 최소 2자 이상이어야 합니다.');
+      return false;
+    }
+    
+    if (value.length > 11) {
+      setNicknameError('닉네임은 최대 11자까지 가능합니다.');
+      return false;
+    }
+    
+    // 영문, 숫자, 한글만 허용하는 정규식
+    const nicknameRegex = /^[a-zA-Z0-9가-힣]+$/;
+    if (!nicknameRegex.test(value)) {
+      setNicknameError('닉네임은 영문, 숫자, 한글만 입력 가능합니다.');
+      return false;
+    }
+    
+    // 모든 검사 통과
+    setNicknameError('');
+    return true;
+  };
+
+  // 닉네임 입력 핸들러
+  const handleNicknameChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= 11) {
+      setNickname(value);
+      validateNickname(value);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!nickname) {
-      setError('닉네임을 입력해주세요.');
+    // 폼 제출 전 닉네임 최종 검증
+    if (!validateNickname(nickname)) {
       return;
     }
     
@@ -75,9 +116,17 @@ const ProfileSetupPage = () => {
       navigate('/');
       
     } catch (error) {
-      console.error(error);
-      if (error.response && error.response.data) {
-        setError(error.response.data.message || '회원가입 중 오류가 발생했습니다.');
+      // 서버에서 받은 오류 메시지 처리
+      if (error.response) {
+        const { status, data } = error.response;
+        
+        // 409 = 닉네임 중복 에러
+        if (status === 409) {
+          setNicknameError(data.message || '이미 사용 중인 닉네임입니다.');
+          setError('');
+        } else {
+          setError('회원가입 중 오류가 발생했습니다.');
+        }
       } else {
         setError('서버 연결에 실패했습니다.');
       }
@@ -118,13 +167,25 @@ const ProfileSetupPage = () => {
             <input
               id="nickname"
               type="text"
-              placeholder="다른 사용자에게 보이실 이름"
-              className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="다른 사용자에게 나타낼 이름"
+              className={`w-full px-4 py-3 border rounded-md ${
+                nicknameError 
+                  ? 'focus:outline-none focus:ring-2 focus:ring-red-500' 
+                  : 'focus:outline-none focus:ring-2 focus:ring-indigo-500'
+              }`}
+              maxLength={11}
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              onChange={handleNicknameChange}
               required
             />
           </div>
+          {nicknameError ? (
+            <p className="mt-2 text-xs text-red-500">{nicknameError}</p>
+          ) : (
+            <p className="mt-2 text-xs text-gray-500">
+              닉네임은 영문, 숫자, 한글만 입력 가능합니다. (2-11자)
+            </p>
+          )}
         </div>
         
         {error && (
@@ -135,7 +196,12 @@ const ProfileSetupPage = () => {
         
         <button
           type="submit"
-          className="flex items-center justify-center w-full py-3 text-white transition-colors bg-indigo-600 rounded-md hover:bg-indigo-700"
+          className={`flex items-center justify-center w-full py-3 text-white transition-colors rounded-md ${
+            nickname && !nicknameError 
+              ? 'bg-indigo-600 hover:bg-indigo-700' 
+              : 'bg-indigo-400 cursor-not-allowed'
+          }`}
+          disabled={!nickname || nicknameError}
         >
           가입하기
           <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

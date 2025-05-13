@@ -42,16 +42,17 @@ const HomePage = () => {
           
           <div className="bg-white rounded-lg shadow">
             {rankingData.map((item) => {
-              const percentage = ((item.rankByJobField / item.usersCountByJobField) * 100).toFixed(2);
               return (
                 <RankingItem 
                 key={item.userId}
-                rank={item.rankByJobField}
+                totalRank={item.totalRank}
+                totalUsersCount={item.totalUsersCount}
                 user={item.nickname}
                 score={item.score}
                 category={item.jobField}
-                percentage={percentage}
                 profileImageUrl={item.profileImageUrl}
+                rankByJobField={item.rankByJobField}
+                usersCountByJobField={item.usersCountByJobField}
               />
               );
             })}
