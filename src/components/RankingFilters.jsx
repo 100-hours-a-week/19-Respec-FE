@@ -22,7 +22,7 @@ const RankingFilters = ({ selectedFilter, setSelectedFilter }) => {
           </button>
         ))}
 
-        <style jsx>{`
+        <style>{`
           .hide-scrollbar::-webkit-scrollbar {
             display: none;
           }
