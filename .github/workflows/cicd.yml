@@ -56,7 +56,7 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           cd 19-RESPEC-FE
-          git pull origin main
+          git pull origin stage
           npm install
           npm run build
           pm2 delete frontend || true
