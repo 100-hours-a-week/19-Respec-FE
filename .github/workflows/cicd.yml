@@ -6,7 +6,7 @@ on:
       - stage
 # on:
 #     workflow_dispatch:
-#       inputs:
+#       inputs: 
 #         tags:
 #           description: 'Set Tags Name'
 #           required: true
