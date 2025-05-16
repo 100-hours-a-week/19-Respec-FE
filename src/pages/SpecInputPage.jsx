@@ -237,7 +237,29 @@ const SpecInputPage = () => {
       }
     };
     
+    // 페이지 로드 시 항상 데이터 가져오기
     fetchUserAndSpecData();
+    
+    // 브라우저 뒤로가기 및 페이지 복원 시 데이터 새로 로드
+    const handlePopState = () => {
+      window.location.reload(); // 브라우저 뒤로가기 시 페이지 강제 새로고침
+    };
+    
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        window.location.reload(); // bfcache에서 페이지 복원 시 강제 새로고침
+      }
+    };
+    
+    // 이벤트 리스너 등록
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('pageshow', handlePageShow);
+    
+    // 컴포넌트 언마운트 시 이벤트 리스너 제거
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, []);
 
   const handleInputChange = (field, value) => {
