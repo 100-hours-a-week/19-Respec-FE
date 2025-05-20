@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -51,29 +50,22 @@ const LoginPage = () => {
           <div className="text-center">
             <div className="flex justify-center mb-2">
               <div className="flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full">
-                <svg className="w-10 h-10 text-indigo-700" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L4 7v10l8 5 8-5V7l-8-5zm0 2.5L17 9v6l-5 3-5-3V9l5-3.5z" />
-                  <path d="M12 7l-1 5 3 2 3-4-5-3zm0 2l2 1-1 1-1-2z" />
-                </svg>
+                <img src='/specranking_logo.png' alt='logo'/>
               </div>
             </div>
             
-            <h2 className="text-xl font-semibold text-indigo-700">스펙랭킹</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <h2 className="text-xl font-semibold text-indigo-900">스펙랭킹</h2>
+            <p className="mt-2 text-sm font-semibold text-gray-500">
               취업 준비의 모든 것,<br/>당신의 커리어를 한 단계 더 높이세요
             </p>
           </div>
           
           <div className="mt-10">
-            <button
-              onClick={handleLogin}
-              className="flex items-center justify-center w-full gap-3 px-4 py-3 text-black transition-colors bg-yellow-400 rounded-md hover:bg-yellow-500"
-            >
-              <LogIn/>
-              카카오 계정으로 로그인
+            <button onClick={handleLogin}>
+              <img src='/kakao_login_large_wide.png' alt='카카오 계정으로 로그인'/>
             </button>
             
-            <p className="mt-8 text-sm text-center text-gray-600">
+            <p className="mt-5 text-xs text-center text-gray-600">
               아직 회원이 아니신가요?<br/>로그인 시 자동 회원가입됩니다.
             </p>
           </div>
