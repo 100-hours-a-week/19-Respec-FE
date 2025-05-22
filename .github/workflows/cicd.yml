@@ -28,7 +28,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-<<<<<<< HEAD
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -43,6 +42,13 @@ jobs:
             cd 19-Respec-FE
             git checkout stage
             git pull origin stage
+            
+            echo "📦 .env 파일 생성 중..."
+            cat <<EOF > .env
+            REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }}
+            REACT_APP_FRONTEND_URL=${{ secrets.REACT_APP_FRONTEND_URL }}
+            EOF
+            echo "✅ .env 파일 생성 완료"
 
             npm install
             npm run build
@@ -56,48 +62,6 @@ jobs:
               echo "✅ 종료할 프로세스 없음"
             fi
 
-=======
-      # EC2 상태 체크 (선택)
-      # - name: Check EC2 status and start if stopped
-      #   run: |
-      #     INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
-      #     STATE=$(aws ec2 describe-instances \
-      #       --instance-ids $INSTANCE_ID \
-      #       --query "Reservations[0].Instances[0].State.Name" \
-      #       --output text)
-      #
-      #     if [ "$STATE" = "stopped" ]; then
-      #       aws ec2 start-instances --instance-ids $INSTANCE_ID
-      #       aws ec2 wait instance-running --instance-ids $INSTANCE_ID
-      #     fi
-
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-
-            if [ ! -d "19-RESPEC-FE" ]; then
-              git clone https://github.com/100-hours-a-week/19-Respec-FE.git
-            fi
-
-            cd 19-Respec-FE
-            git checkout stage
-            npm install
-            npm run build
-
-            echo "🔍 기존 serve 프로세스 종료 시도..."
-            PORT_PID=$(lsof -i:3000 -t || true)
-            if [ -n "$PORT_PID" ]; then
-              echo "🔴 포트 3000 사용 중, 프로세스 종료 (PID: $PORT_PID)"
-              kill -9 $PORT_PID
-            else
-              echo "✅ 종료할 프로세스 없음"
-            fi
-
->>>>>>> dev
             echo "🚀 serve 실행 시작 (build)..."
             nohup npx serve -s build -l 3000 > frontend.log 2>&1 &
             echo "✅ serve 백그라운드 실행 완료"
