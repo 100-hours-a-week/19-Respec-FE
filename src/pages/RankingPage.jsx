@@ -4,54 +4,6 @@ import RankingFilters from '../components/RankingFilters';
 import RankingItem from '../components/RankingItem';
 import axiosInstance from '../utils/axiosInstance';
 
-// 랭킹 카드 컴포넌트 - 각 사용자의 랭킹 정보를 표시
-const RankingCard = ({ ranking, index }) => {
-  return (
-    <div className="p-4 mb-4 transition-all bg-white border border-gray-200 rounded-lg shadow-md hover:border-blue-300">
-      <div className="flex items-center">
-        {/* 랭킹 순위 */}
-        <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-4 text-lg font-bold text-white bg-blue-500 rounded-full">
-          {ranking.totalRank}
-        </div>
-        
-        {/* 프로필 이미지 */}
-        <div className="w-12 h-12 mr-4 overflow-hidden bg-gray-200 rounded-full">
-          {ranking.profileImageUrl ? (
-            <img 
-              src={ranking.profileImageUrl} 
-              alt={`${ranking.nickname}의 프로필`} 
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="flex items-center justify-center w-full h-full text-gray-600 bg-gray-300">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-          )}
-        </div>
-        
-        {/* 사용자 정보 */}
-        <div className="flex-1">
-          <h3 className="text-lg font-medium">{ranking.nickname}</h3>
-          <div className="flex items-center text-sm text-gray-600">
-            <span className="mr-2">{ranking.jobField.replace(/_/g, ' ')}</span>
-            <span className="mx-2">•</span>
-            <span>점수: <span className="font-semibold text-blue-600">{ranking.score.toFixed(1)}</span></span>
-          </div>
-        </div>
-        
-        {/* 랭킹 정보 */}
-        <div className="text-right">
-          <div className="text-sm text-gray-500">
-            직무 내 {ranking.rankByJobField}위 / {typeof ranking.totalUsersCountByJobField === 'number' ? ranking.totalUsersCountByJobField : '-'}명
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // 로딩 인디케이터 컴포넌트
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center py-4">
@@ -131,7 +83,7 @@ const RankingPage = () => {
         }
       });
       
-      console.log('API 응답:', response.data);
+      // console.log('API 응답:', response.data);
       
       if (response.data.isSuccess) {
         console.log('성공적으로 랭킹 데이터를 받았습니다');
@@ -564,12 +516,6 @@ const RankingPage = () => {
               ) : (
                 <div className="space-y-4">
                   {rankings.map((ranking, index) => {
-                    // <div 
-                    //   key={`${ranking.userId}_${index}`} 
-                    //   ref={index === rankings.length - 1 ? lastRankingElementRef : null}
-                    // >
-                    //   <RankingCard ranking={ranking} index={index} />
-                    // </div>
                     return (
                       <div 
                         key={`${ranking.userId}_${index}`} 
@@ -602,7 +548,7 @@ const RankingPage = () => {
       </div>
       
       {/* 커스텀 스타일 */}
-      <style jsx>{`
+      <style>{`
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
         }
