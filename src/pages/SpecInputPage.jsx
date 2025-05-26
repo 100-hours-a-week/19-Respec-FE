@@ -472,6 +472,11 @@ const SpecInputPage = () => {
       input = input.slice(0, 3);
     }
     
+    // If input is '0', return empty string
+    if (input === '0') {
+      return '';
+    }
+    
     return input;
   };
 
