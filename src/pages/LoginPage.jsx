@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getCookie } from '../utils/cookie';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -7,9 +8,6 @@ const LoginPage = () => {
 
   // 쿠키에서 TempLoginId 확인
   useEffect(() => {
-    const getCookie = (name) =>
-      document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
-  
     const tempLoginId = getCookie("TempLoginId");
   
     if (tempLoginId) {
@@ -40,7 +38,6 @@ const LoginPage = () => {
 
     const redirectUri = encodeURIComponent(`${frontendBaseUrl}/oauth-redirect`);
 
-    // window.location.href = "http://localhost:8080/oauth2/authorization/kakao";
     window.location.href = `${apiBaseUrl}/oauth2/authorization/kakao?redirect_uri=${redirectUri}`;
   };
 

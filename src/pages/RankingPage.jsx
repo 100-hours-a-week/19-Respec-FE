@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SpecAPI } from '../api';
 import RankingFilters from '../components/RankingFilters';
 import RankingItem from '../components/RankingItem';
-import axiosInstance from '../utils/axiosInstance';
 
 // 로딩 인디케이터 컴포넌트
 const LoadingIndicator = () => (
@@ -75,12 +75,10 @@ const RankingPage = () => {
       console.log('랭킹 데이터 요청 중...', { type: 'ranking', jobField: jobFieldName, limit: 10 });
       
       // 올바른 API 엔드포인트 및 파라미터로 요청
-      const response = await axiosInstance.get('/api/specs', {
-        params: {
-          type: 'ranking',
-          jobField: jobFieldName,
-          limit: 10
-        }
+      const response = await SpecAPI.getRankings({
+        type: 'ranking',
+        jobField: jobFieldName,
+        limit: 10
       });
       
       // console.log('API 응답:', response.data);
@@ -124,11 +122,9 @@ const RankingPage = () => {
   // 메타 데이터 가져오기 (총 사용자 수, 평균 점수)
   const fetchMetaData = async (jobFieldName) => {
     try {
-      const response = await axiosInstance.get('/api/specs', {
-        params: {
-          type: 'meta',
-          jobField: jobFieldName
-        }
+      const response = await SpecAPI.getMetaData({
+        type: 'meta',
+        jobField: jobFieldName
       });
       
       if (response.data.isSuccess) {
@@ -264,13 +260,11 @@ const RankingPage = () => {
       
       console.log('추가 랭킹 데이터 요청 중...', { type: 'ranking', jobField: jobFieldName, cursor: nextCursor, limit: 10 });
       
-      const response = await axiosInstance.get('/api/specs', {
-        params: {
-          type: 'ranking',
-          jobField: jobFieldName,
-          cursor: nextCursor,
-          limit: 10
-        }
+      const response = await SpecAPI.getRankings({
+        type: 'ranking',
+        jobField: jobFieldName,
+        cursor: nextCursor,
+        limit: 10
       });
       
       if (response.data.isSuccess) {
@@ -336,11 +330,9 @@ const RankingPage = () => {
     if (value.trim().length >= 2) {
       try {
         // 올바른 검색 API 호출
-        const response = await axiosInstance.get('/api/specs', {
-          params: {
-            type: 'search',
-            'nickname-keyword': value.trim()
-          }
+        const response = await SpecAPI.getSearch({
+          type: 'search',
+          'nickname-keyword': value.trim()
         });
         
         if (response.data.isSuccess) {
@@ -454,25 +446,7 @@ const RankingPage = () => {
               )}
             </form>
           </div>
-          
-          {/* 직무 분야 필터 */}
-          {/* <div className="mb-4 overflow-x-auto hide-scrollbar">
-            <div className="flex pb-2 space-x-2 whitespace-nowrap">
-              {jobFieldOptions.map(option => (
-                <button
-                  key={option.code}
-                  className={`py-2 px-4 rounded-full text-sm flex-shrink-0 ${
-                    selectedJobField === option.code
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-                  }`}
-                  onClick={() => handleJobFieldChange(option.code)}
-                >
-                  {option.name.replace(/_/g, ' ')}
-                </button>
-              ))}
-            </div>
-          </div> */}
+
           <RankingFilters 
             selectedFilter={selectedJobField === 'TOTAL' ? '전체' : jobFieldOptions.find(option => option.code === selectedJobField)?.name || '전체'}
             setSelectedFilter={(filterName) => {

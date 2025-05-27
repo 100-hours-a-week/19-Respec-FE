@@ -1,26 +1,31 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../stores/useAuthStore";
+import { getCookie, deleteCookie } from "../utils/cookie";
 
 const OAuthRedirectPage = () => {
     const navigate = useNavigate();
+    const { login } = useAuthStore();
 
     useEffect(() => {
-        const getCookie = (name) =>
-            document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
-
-        const tempLoginId = getCookie("TempLoginId");
-        // const hasAuthorization = document.cookie.includes("Authorization");
-        const hasAuthorization = getCookie("Authorization");
+        const tempLoginId = getCookie('TempLoginId');
+        const authorization = getCookie('access');
 
         if (tempLoginId) {
             navigate('/profile-setup');
-        } else if (hasAuthorization) {
+            return;
+        } 
+        if (authorization) {
+            login(null, authorization);
+            deleteCookie('access');
             navigate('/');
-        } else {
-            console.log('로그인 실패: Authorization, TempLoginId 둘 다 존재 X');
-            navigate('/login');
+            return;
         }
-    }, [navigate]);
+
+        console.log('로그인 실패: Authorization, TempLoginId 둘 다 존재 X');
+        navigate('/login');
+        
+    }, [navigate, login]);
 
     return (
         <div className="flex items-center justify-center min-h-screen">

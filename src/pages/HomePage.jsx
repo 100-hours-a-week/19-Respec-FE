@@ -1,9 +1,9 @@
-import React, { useState, useEffect} from "react";
-import ProfileCard from "../components/ProfileCard";
+import React, { useState, useEffect } from 'react';
+import { SpecAPI } from '../api';
+import ProfileCard from '../components/ProfileCard';
 import ServiceIntro from "../components/ServiceIntro";
 import RankingFilters from "../components/RankingFilters";
 import RankingItem from "../components/RankingItem";
-import axiosInstance from '../utils/axiosInstance';
 
 const HomePage = () => {
     const [selectedFilter, setSelectedFilter] = useState('전체');
@@ -12,12 +12,10 @@ const HomePage = () => {
     useEffect(() => {
       const fetchRankings = async () => {
         try {
-          const response = await axiosInstance.get('/api/specs', {
-            params: {
-              type: 'ranking',
-              jobField: selectedFilter,
-              limit: 4
-            }
+          const response = await SpecAPI.getRankings({
+            type: 'ranking',
+            jobField: selectedFilter,
+            limit: 4
           });
 
           setRankingData(response.data.data.rankings);

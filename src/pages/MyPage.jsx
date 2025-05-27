@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosInstance';
 import { ChevronRight, Star, X, UserRoundPen, ScrollText } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../stores/useAuthStore';
+import { AuthAPI, UserAPI, SpecAPI } from '../api';
+import { getAccessToken } from '../utils/token';
 
 const MyPage = () => {
   const [user, setUser] = useState({
@@ -15,17 +16,44 @@ const MyPage = () => {
   });
 
   const [specStats, setSpecStats] = useState(null);
-  
+  const [loading, setLoading] = useState(true);
+
   const [isPublic, setIsPublic] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user: authUser, loading: authLoading, init } = useAuthStore();
 
   useEffect(() => {
     // 사용자 정보 가져오기
     const fetchUserData = async () => {
       try {
-        const response = await axiosInstance.get('/api/users/me');
+        setLoading(true);
+
+        const token = getAccessToken();
+        if (!token) {
+          console.log('토큰이 없어 로그인 페이지로 이동합니다.');
+          navigate('/login');
+          return;
+        }
+
+        if (!authUser && token && !authLoading) {
+          console.log('인증 상태를 다시 초기화하는 중...');
+          await init();
+          return;
+        }
+
+        if (authLoading) {
+          console.log('인증 상태 로딩 중...');
+          return;
+        }
+
+        if (!authUser?.id) {
+          console.error('사용자 정보를 찾을 수 없습니다.');
+          navigate('/login');
+          return;
+        }
+
+        const response = await UserAPI.getUserById(authUser.id);
 
         if (response.data.isSuccess) {
           const userData = response.data.data.user;
@@ -48,7 +76,7 @@ const MyPage = () => {
 
           // spec api 호출
           if (userData.spec?.hasActiveSpec) {
-            const specResponse = await axiosInstance.get(`/api/specs/${userData.spec.activeSpec}`);
+            const specResponse = await SpecAPI.fetchSpecDetail(userData.spec.activeSpec);
 
             if (specResponse.data.isSuccess) {
               const { 
@@ -78,16 +106,18 @@ const MyPage = () => {
         if (error.response && error.response.status === 401) {
           navigate('/login');
         }
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserData();
-  }, [navigate]);
+  }, [navigate, authUser, init, authLoading]);
 
   const handleTogglePublic = async () => {
     try {
       // 토글 상태 변경 API 호출
-      await axiosInstance.put('/api/users/me/visibility', {
+      await AuthAPI.updateVisibility({
         isPublic: !isPublic
       });
       setIsPublic(!isPublic);
@@ -99,7 +129,7 @@ const MyPage = () => {
   const handleWithdraw = async () => {
     try {
       // 회원탈퇴 API 호출
-      await axiosInstance.delete('/api/users/me');
+      await AuthAPI.deleteUser();
       
       // 로그아웃 처리
       logout();
@@ -110,6 +140,15 @@ const MyPage = () => {
       console.error('회원탈퇴 실패:', error);
     }
   };
+
+  // 로딩 중일 때 표시
+  if (authLoading || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

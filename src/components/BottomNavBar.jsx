@@ -1,9 +1,13 @@
 import React from 'react';
 import { Home, BarChart2, MessageSquare, Users, CircleUserRound } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../stores/useAuthStore';
+import { getAccessToken } from '../utils/token';
 
 const BottomNavBar = ({ active }) => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, loading } = useAuthStore();
+  const token = getAccessToken();
+
+  const isAuthenticated = isLoggedIn || (token && !loading);
   
   // 기본 네비게이션 아이템
   const baseNavItems = [
@@ -16,7 +20,7 @@ const BottomNavBar = ({ active }) => {
   // 로그인 상태에 따라 마지막 아이템 추가
   const navItems = [
     ...baseNavItems,
-    isLoggedIn 
+    isAuthenticated
       ? { name: 'MY', icon: CircleUserRound, path: '/my' }
       : { name: 'LOGIN', icon: CircleUserRound, path: '/login' }
   ];
