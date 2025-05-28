@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SpecAPI } from '../api';
-import RankingItem from '../components/RankingItem';
+import RankingItem from '../components/ranking/RankingItem';
 
 // 로딩 인디케이터 컴포넌트
 const LoadingIndicator = () => (

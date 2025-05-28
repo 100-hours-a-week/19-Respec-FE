@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import TopBar from "../components/TopBar";
-import BottomNavBar from "../components/BottomNavBar";
+import TopBar from "../components/common/TopBar";
+import BottomNavBar from "../components/common/BottomNavBar";
 
 
 const SignupPage = () => {

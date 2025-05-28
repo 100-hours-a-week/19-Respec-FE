@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { SpecAPI } from '../api';
 import ProfileCard from '../components/ProfileCard';
 import ServiceIntro from "../components/ServiceIntro";
-import RankingFilters from "../components/RankingFilters";
-import RankingItem from "../components/RankingItem";
+import RankingFilters from "../components/ranking/RankingFilters";
+import RankingItem from "../components/ranking/RankingItem";
 
 const HomePage = () => {
     const [selectedFilter, setSelectedFilter] = useState('전체');

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, BarChart2, MessageSquare, Users, CircleUserRound } from 'lucide-react';
-import { useAuthStore } from '../stores/useAuthStore';
-import { getAccessToken } from '../utils/token';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { getAccessToken } from '../../utils/token';
 
 const BottomNavBar = ({ active }) => {
   const { isLoggedIn, loading } = useAuthStore();
