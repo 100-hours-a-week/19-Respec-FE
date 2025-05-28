@@ -10,6 +10,8 @@ import RankingPage from './pages/RankingPage';
 import RankingResultPage from './pages/RankingResultPage';
 import DmPage from './pages/DmPage';
 import SocialPage from './pages/SocialPage';
+import EditProfilePage from './pages/EditProfilePage';
+import BookmarkPage from './pages/BookmarkPage';
 import TopBar from './components/common/TopBar';
 import BottomNavBar from './components/common/BottomNavBar';
 import { useEffect } from 'react';
@@ -58,6 +60,8 @@ const Layout = ({ children }) => {
       case '/dm': return '채팅';
       case '/social': return '소셜';
       case '/my': return '마이페이지';
+      case '/edit-profile': return '회원정보 수정';
+      case '/bookmark': return '즐겨찾기';
       default: return '스펙랭킹';
     }
   };
@@ -73,6 +77,8 @@ const Layout = ({ children }) => {
     if (path === '/profile-setup') return '/login';
     if (path === '/spec-input') return '/my';
     if (path === '/ranking-results') return '/rank';
+    if (path === '/edit-profile') return '/my';
+    if (path === '/bookmark') return '/my';
     
     // 그 외 페이지는 브라우저 히스토리 기반 이전 페이지로 이동
     return () => navigate(-1);
@@ -84,7 +90,7 @@ const Layout = ({ children }) => {
     if (path === '/rank' || path === 'ranking-results') return 'rank';
     if (path === '/dm') return 'dm';
     if (path === '/social') return 'social';
-    if (path === '/my' || path === '/spec-input') return 'my';
+    if (path === '/my' || path === '/spec-input' || path === '/edit-profile' || path === '/bookmark') return 'my';
     if (path === '/login' || path === '/profile-setup') return isLoggedIn ? 'my' : 'login';
     return '';
   };
@@ -116,6 +122,8 @@ function App() {
         <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
         <Route path="/dm" element={<Layout><DmPage /></Layout>} />
         <Route path="/social" element={<Layout><SocialPage /></Layout>} />
+        <Route path="/edit-profile" element={<Layout><EditProfilePage /></Layout>} />
+        <Route path="/bookmark" element={<Layout><BookmarkPage /></Layout>} />
         <Route path="/my" element={
           <ProtectedRoute>
             <Layout><MyPage /></Layout>

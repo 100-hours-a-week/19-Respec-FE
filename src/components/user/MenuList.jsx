@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Star, UserRoundPen, ScrollText, Shield, LogOut } from 'lucide-react';
 
 const MenuItem = ({ icon: Icon, title, description, onClick, iconColor = 'blue', rightElement }) => (
@@ -46,9 +47,10 @@ const ToggleSwitch = ({ isChecked, onChange }) => (
 const MenuList = ({ 
   isPublic, 
   onTogglePublic, 
-  onNavigateToSpecInput, 
   onShowWithdrawModal 
 }) => {
+  const navigate = useNavigate();
+
   return (
     <>
       {/* <div className="px-4 mt-4">
@@ -68,21 +70,21 @@ const MenuList = ({
             icon={UserRoundPen}
             title="회원정보 관리"
             description="닉네임, 이미지 등 개인정보를 관리합니다."
-            onClick={() => alert("준비 중인 기능입니다.")}
+            onClick={() => navigate('/edit-profile')}
           />
 
           <MenuItem
             icon={ScrollText}
             title="스펙 정보 관리"
             description="나의 스펙 정보를 등록 및 수정합니다."
-            onClick={onNavigateToSpecInput}
+            onClick={() => navigate('/spec-input')}
           />
 
           <MenuItem
             icon={Star}
             title="즐겨찾기"
             description="저장한 다른 사용자들의 스펙 정보를 확인합니다."
-            onClick={() => alert("준비 중인 기능입니다.")}
+            onClick={() => navigate('/bookmark')}
           />
         </div>
       </div>

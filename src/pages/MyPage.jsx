@@ -147,7 +147,6 @@ const MyPage = () => {
       <MenuList
         isPublic={isPublic}
         onTogglePublic={handleTogglePublic}
-        onNavigateToSpecInput={() => navigate('/spec-input')}
         onShowWithdrawModal={() => setShowModal(true)}
       />
 
