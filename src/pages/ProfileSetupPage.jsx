@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosInstance';
-import { useAuth } from '../context/AuthContext';
+import { AuthAPI } from '../api';
+import { useAuthStore } from '../stores/useAuthStore';
+import { setAccessToken } from '../utils/token';
+import { getCookie, deleteCookie } from '../utils/cookie';
 
 const ProfileSetupPage = () => {
   const [nickname, setNickname] = useState('');
@@ -11,7 +13,7 @@ const ProfileSetupPage = () => {
   const [fileError, setFileError] = useState('');
   const [nicknameError, setNicknameError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = useAuthStore();
 
   // 이미지 파일 선택 핸들러
   const handleImageChange = (e) => {
@@ -86,24 +88,16 @@ const ProfileSetupPage = () => {
     e.preventDefault();
     
     // 폼 제출 전 닉네임 최종 검증
-    if (!validateNickname(nickname)) {
-      return;
-    }
+    if (!validateNickname(nickname)) return;
     
     try {
       const formData = new FormData();
       formData.append('nickname', nickname);
 
-      // 쿠키에서 loginId 읽기
-      const getCookie = (name) =>
-        document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
-
       let loginId = getCookie("TempLoginId");
-
       if (loginId) {
         loginId = loginId.replace('_', ' ');
       }
-
       formData.append('loginId', loginId);
 
       // 프로필 이미지가 있으면 추가
@@ -111,16 +105,16 @@ const ProfileSetupPage = () => {
         formData.append('userProfileUrl', profileImage);
       }
       
-      // 사용자 생성 요청 (이미지 업로드 포함)
-      const response = await axiosInstance.post('/api/users', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await AuthAPI.signup(formData);
       
-      // 성공 시 메인 페이지로 이동
-      login(response.data);
-      navigate('/');
+      const accessToken = getCookie('access');
+      if (accessToken && response.data) {
+        setAccessToken(accessToken);
+        deleteCookie('access');
+        console.log(response.data.message, response.data.data);
+        login(response.data.data, accessToken);
+        navigate('/');
+      }
       
     } catch (error) {
       // 서버에서 받은 오류 메시지 처리

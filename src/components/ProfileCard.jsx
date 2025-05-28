@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { MessageCircleQuestion, BadgeCheck, Briefcase, Users } from 'lucide-react';
-import axiosInstance from '../utils/axiosInstance';
+import { UserAPI, SpecAPI } from '../api';
+import { useAuthStore } from '../stores/useAuthStore';
 
 const ProfileCard = () => {
-  const { user } = useAuth();
-  const [profileData, setProfileData] = useState(null);
-  const [specStats, setSpecStats] = useState(null);
+  const { user: authUser } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [specData, setSpecData] = useState(null);
 
   const formatNumber = (num) => {
     // 1,000 단위 콤마 표시
@@ -28,57 +30,90 @@ const ProfileCard = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
+      if (!authUser?.id) {
+        setLoading(false);
+        return;
+      }
 
-      setProfileData({
-        nickname: user.nickname,
-        profileImageUrl: user.profileImageUrl,
-        jobField: user.jobField || '',
-        hasActiveSpec: user.spec?.hasActiveSpec || false,
-        activeSpec: user.spec?.activeSpec
-      });
+      try {
+        const response = await UserAPI.getUserById(authUser.id);
+        if (response.data.isSuccess) {
+          const userData = response.data.data.user;
+          setUserData(userData);
 
-      // spec api 호출
-      if (user?.spec?.hasActiveSpec && user?.spec?.activeSpec) {
-        try {
-          const specResponse = await axiosInstance.get(`/api/specs/${user.spec.activeSpec}`);
+          // 스펙 정보가 있는 경우에만 스펙 통계 정보 조회
+          if (userData.spec?.hasActiveSpec && userData.spec?.activeSpec) {
+            try {
+              const specResponse = await SpecAPI.fetchSpecDetail(userData.spec.activeSpec);
 
-          if (specResponse.data.isSuccess) {
-            const details = specResponse.data.specDetailData.rankings.details;
-  
-            setSpecStats({
-              score: details.score,
-              jobFieldRank: details.jobFieldRank,
-              jobFieldUserCount: details.jobFieldUserCount,
-              totalRank: details.totalRank,
-              totalUserCount: details.totalUserCount,
-              percent: details.totalUserCount 
-                ? ((details.totalRank / details.totalUserCount) * 100).toFixed(2)
-                : "0.00"
-            });
+              if (specResponse.data.isSuccess) {
+                const details = specResponse.data.specDetailData.rankings.details;
+                
+                setSpecData({
+                  score: details.score,
+                  jobFieldRank: details.jobFieldRank,
+                  jobFieldUserCount: details.jobFieldUserCount,
+                  totalRank: details.totalRank,
+                  totalUserCount: details.totalUserCount,
+                  percent: details.totalUserCount 
+                    ? ((details.totalRank / details.totalUserCount) * 100).toFixed(2)
+                    : "0.00"
+                });
+              } else {
+                console.warn('스펙 데이터 형식이 올바르지 않습니다:', specResponse.data);
+                setSpecData(null);
+              }
+            } catch (error) {
+              console.error('스펙 정보 조회 실패:', error);
+              setSpecData(null);
+            }
           } else {
-            console.warn('스펙 데이터 형식이 올바르지 않습니다:', specResponse.data);
-            setSpecStats(null);
+            setSpecData(null);
           }
-        } catch (error) {
-          console.error('스펙 정보 조회 실패:', error);
-          setSpecStats(null);
-        }
-      } else {
-        setSpecStats(null);
+        } else {
+          setError('사용자 정보를 불러올 수 없습니다.');
+        } 
+      } catch (error) {
+        console.error('사용자 정보 조회 실패:', error);
+        setError('사용자 정보를 불러올 수 없습니다.');
+        setUserData(null);
+        setSpecData(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (user) {
-      fetchProfile();
-    } else {
-      setProfileData(null);
-      setSpecStats(null);
-    }
-  }, [user]);
+    fetchProfile();
+  }, [authUser]);
+
+  // 로딩 중일 때
+  if (loading) {
+    return (
+      <div className="p-6 mb-4 bg-white rounded-lg shadow-md">
+        <div className="animate-pulse">
+          <div className="flex items-center space-x-4">
+            <div className="w-20 h-20 bg-gray-200 rounded-full"></div>
+            <div className="flex-1">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 발생 시
+  if (error) {
+    return (
+      <div className="p-5 mb-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-sm text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   // 미로그인 상태일 때 보여줄 블러 처리된 카드
-  if (!user) {
+  if (!authUser) {
     return (
       <div className="relative p-6 mb-4 overflow-hidden bg-white rounded-lg shadow-md">
         <div className="pointer-events-none blur-sm">
@@ -116,8 +151,7 @@ const ProfileCard = () => {
     );
   }
 
-  // 로그인했지만 스펙 정보가 없을 때 표시
-  if (profileData && !profileData.hasActiveSpec) {
+  if (!userData || !userData.spec?.hasActiveSpec) {
     return (
       <div className="p-5 mb-4 transition-all bg-white rounded-lg shadow-md hover:shadow-lg">
         <div className="flex items-center justify-between">
@@ -126,7 +160,7 @@ const ProfileCard = () => {
               <MessageCircleQuestion size={32} className="text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">안녕하세요, <span className='text-blue-500'>{user?.nickname}</span>님</h2>
+              <h2 className="text-lg font-bold">안녕하세요, <span className='text-blue-500'>{userData?.nickname}</span>님</h2>
               <p className="text-sm text-gray-700">스펙 정보를 입력하고 순위를 확인해보세요!</p>
               <Link 
                 to="/spec-input" 
@@ -142,7 +176,7 @@ const ProfileCard = () => {
   }
   
   // 로그인했고 스펙 정보도 있을 때 표시
-  if (specStats) {
+  if (userData && userData.spec?.hasActiveSpec && specData) {
     return (
       <div className="mb-4 overflow-hidden bg-white border border-blue-100 shadow-sm rounded-xl">      
         {/* 헤더 섹션 */}
@@ -150,22 +184,22 @@ const ProfileCard = () => {
           <div className="flex items-center">
             <div className="overflow-hidden w-14 h-14">
               <img 
-                src={user.profileImageUrl} 
-                alt={user.nickname} 
+                src={userData.profileImageUrl} 
+                alt={userData.nickname} 
                 className="object-cover w-full h-full"
               />
             </div>
             <div className="ml-4">
               <div className="flex items-center">
-                <h2 className="text-lg font-bold text-gray-800">{user.nickname}님</h2>
+                <h2 className="text-lg font-bold text-gray-800">{userData.nickname}님</h2>
                 <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
-                  {user.jobField}
+                  {userData.jobField}
                 </span>
               </div>
               <div className="flex items-center mt-1">
                 <BadgeCheck className="w-4 h-4 text-yellow-500" />
                 <p className="ml-1 text-sm font-medium text-gray-700">
-                  상위 {specStats.percent}%
+                  상위 {specData.percent || 0}%
                 </p>
               </div>
             </div>
@@ -179,14 +213,14 @@ const ProfileCard = () => {
             <div className="flex items-center">
               <Briefcase className="w-4 h-4 text-blue-500" />
               <span className="ml-1.5 text-xs font-medium text-gray-700">직무 내 순위</span>
-              <span className="ml-2 text-lg font-bold text-blue-600">{formatNumber(specStats.jobFieldRank)}</span>
-              <span className="ml-1 text-xs text-gray-500">/ {formatNumberWithUnit(specStats.jobFieldUserCount)}</span>
+              <span className="ml-2 text-lg font-bold text-blue-600">{formatNumber(specData.jobFieldRank)}</span>
+              <span className="ml-1 text-xs text-gray-500">/ {formatNumberWithUnit(specData.jobFieldUserCount)}</span>
             </div>
             <div className="flex items-center">
               <Users className="w-4 h-4 text-blue-500" />
               <span className="ml-1.5 text-xs font-medium text-gray-700">전체 순위</span>
-              <span className="ml-2 text-lg font-bold text-blue-600">{formatNumber(specStats.totalRank)}</span>
-              <span className="ml-1 text-xs text-gray-500">/ {formatNumberWithUnit(specStats.totalUserCount)}</span>
+              <span className="ml-2 text-lg font-bold text-blue-600">{formatNumber(specData.totalRank)}</span>
+              <span className="ml-1 text-xs text-gray-500">/ {formatNumberWithUnit(specData.totalUserCount)}</span>
             </div>
           </div>
           
@@ -196,12 +230,12 @@ const ProfileCard = () => {
               <div className="flex items-center">
                 <span className="text-xl font-bold">총점</span>
               </div>
-              <span className="text-2xl font-bold">{specStats.score.toFixed(1)}</span>
+              <span className="text-2xl font-bold">{specData.score.toFixed(1)}</span>
             </div>
             <div className="w-full h-3 overflow-hidden bg-blue-200 bg-opacity-50 rounded-full">
               <div 
                 className="h-3 transition-all duration-700 bg-white rounded-full" 
-                style={{ width: `${specStats.score}%` }}
+                style={{ width: `${specData.score}%` }}
               ></div>
             </div>
             <div className="flex justify-between mt-1 text-xs text-blue-50">
@@ -216,6 +250,8 @@ const ProfileCard = () => {
       </div>
     );
   }
+
+  return null;
 };
 
 export default ProfileCard;
