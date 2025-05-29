@@ -10,7 +10,7 @@ import RankingPage from './pages/RankingPage';
 import RankingResultPage from './pages/RankingResultPage';
 import DmPage from './pages/DmPage';
 import SocialPage from './pages/SocialPage';
-import EditProfilePage from './pages/EditProfilePage';
+import ProfileEditPage from './pages/ProfileEditPage';
 import BookmarkPage from './pages/BookmarkPage';
 import TopBar from './components/common/TopBar';
 import BottomNavBar from './components/common/BottomNavBar';
@@ -122,7 +122,7 @@ function App() {
         <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
         <Route path="/dm" element={<Layout><DmPage /></Layout>} />
         <Route path="/social" element={<Layout><SocialPage /></Layout>} />
-        <Route path="/edit-profile" element={<Layout><EditProfilePage /></Layout>} />
+        <Route path="/edit-profile" element={<Layout><ProfileEditPage /></Layout>} />
         <Route path="/bookmark" element={<Layout><BookmarkPage /></Layout>} />
         <Route path="/my" element={
           <ProtectedRoute>

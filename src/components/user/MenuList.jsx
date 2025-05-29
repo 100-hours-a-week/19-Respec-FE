@@ -1,14 +1,30 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Star, UserRoundPen, ScrollText, Shield, LogOut } from 'lucide-react';
+import {
+  ChevronRight,
+  Star,
+  UserRoundPen,
+  ScrollText,
+  Shield,
+  LogOut,
+} from 'lucide-react';
 
-const MenuItem = ({ icon: Icon, title, description, onClick, iconColor = 'blue', rightElement }) => (
-  <div 
+const MenuItem = ({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+  iconColor = 'blue',
+  rightElement,
+}) => (
+  <div
     className="flex items-center justify-between p-4 border-b cursor-pointer"
     onClick={onClick}
   >
     <div className="flex items-center">
-      <div className={`flex items-center justify-center w-8 h-8 mr-3 bg-${iconColor}-100 rounded-full`}>
+      <div
+        className={`flex items-center justify-center w-8 h-8 mr-3 bg-${iconColor}-100 rounded-full`}
+      >
         <Icon size={18} className={`text-${iconColor}-500`} />
       </div>
       <div>
@@ -44,11 +60,7 @@ const ToggleSwitch = ({ isChecked, onChange }) => (
   </div>
 );
 
-const MenuList = ({ 
-  isPublic, 
-  onTogglePublic, 
-  onShowWithdrawModal 
-}) => {
+const MenuList = ({ isPublic, onTogglePublic, onShowWithdrawModal }) => {
   const navigate = useNavigate();
 
   return (
@@ -104,4 +116,4 @@ const MenuList = ({
   );
 };
 
-export default MenuList; 
+export default MenuList;
