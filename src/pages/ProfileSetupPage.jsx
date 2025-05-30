@@ -5,7 +5,7 @@ import ProfileImageUpload from '../components/user/ProfileImageUpload';
 import NicknameInput from '../components/user/NicknameInput';
 import useToast from '../hooks/useToast';
 import ToastContainer from '../components/common/ToastContainer';
-import { AuthAPI } from '../api';
+import { UserAPI } from '../api';
 import { useAuthStore } from '../stores/useAuthStore';
 import { setAccessToken } from '../utils/token';
 import { getCookie, deleteCookie } from '../utils/cookie';
@@ -60,7 +60,7 @@ const ProfileSetupPage = () => {
         formData.append('userProfileUrl', profileImage);
       }
 
-      const response = await AuthAPI.signup(formData);
+      const response = await UserAPI.signup(formData);
 
       const accessToken = getCookie('access');
       if (accessToken && response.data) {

@@ -8,20 +8,24 @@ const ProfileSection = ({ user, specStats }) => {
           <div className="flex items-center">
             <div className="w-20 h-20 mr-4 overflow-hidden bg-gray-200">
               {user.profileImageUrl && (
-                <img src={user.profileImageUrl} alt="Profile" className="object-cover w-20 h-20" />
+                <img
+                  src={user.profileImageUrl}
+                  alt="Profile"
+                  className="object-cover w-20 h-20"
+                />
               )}
             </div>
-          
+
             <div className="flex-1">
               <div className="flex items-center">
                 <h2 className="text-xl font-bold">{user.nickname}</h2>
                 {specStats && (
                   <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
-                    {user.jobField}
+                    {user.jobField.replace(/_/g, '·')}
                   </span>
                 )}
               </div>
-          
+
               {specStats ? (
                 <>
                   <div className="flex items-center mt-1.5 space-x-2 text-sm">
@@ -35,12 +39,14 @@ const ProfileSection = ({ user, specStats }) => {
                   </div>
                 </>
               ) : (
-                <div className="text-sm text-gray-500">아직 스펙 정보가 없습니다</div>
+                <div className="text-sm text-gray-500">
+                  아직 스펙 정보가 없습니다
+                </div>
               )}
             </div>
           </div>
         </div>
-      
+
         <div className="h-px bg-gray-200"></div>
 
         <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
@@ -52,4 +58,4 @@ const ProfileSection = ({ user, specStats }) => {
   );
 };
 
-export default ProfileSection; 
+export default ProfileSection;

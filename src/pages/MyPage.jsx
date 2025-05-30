@@ -14,14 +14,14 @@ const MyPage = () => {
     createdAt: '',
     jobField: '',
     hasActiveSpec: false,
-    activeSpec: 0
+    activeSpec: 0,
   });
 
   const [specStats, setSpecStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isPublic, setIsPublic] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  
+
   const navigate = useNavigate();
   const { logout, user: authUser, loading: authLoading, init } = useAuthStore();
 
@@ -61,28 +61,30 @@ const MyPage = () => {
 
           const createdAt = new Date(userData.createdAt);
           const formattedDate = `${createdAt.getFullYear()}년 ${createdAt.getMonth() + 1}월 ${createdAt.getDate()}일`;
-          
+
           setUser({
             nickname: userData.nickname,
             profileImageUrl: userData.profileImageUrl,
             createdAt: formattedDate,
             jobField: userData.jobField || '',
             hasActiveSpec: userData.spec?.hasActiveSpec,
-            activeSpec: userData.spec?.activeSpec
+            activeSpec: userData.spec?.activeSpec,
           });
 
           setIsPublic(userData.isPublic || false);
 
           if (userData.spec?.hasActiveSpec) {
-            const specResponse = await SpecAPI.fetchSpecDetail(userData.spec.activeSpec);
+            const specResponse = await SpecAPI.fetchSpecDetail(
+              userData.spec.activeSpec
+            );
 
             if (specResponse.data.isSuccess) {
-              const { 
+              const {
                 score,
-                jobFieldRank, 
-                jobFieldUserCount, 
+                jobFieldRank,
+                jobFieldUserCount,
                 totalRank,
-                totalUserCount
+                totalUserCount,
               } = specResponse.data.specDetailData.rankings.details;
 
               setSpecStats({
@@ -91,7 +93,7 @@ const MyPage = () => {
                 jobFieldUserCount,
                 totalRank,
                 totalUserCount,
-                percentage: ((totalRank / totalUserCount) * 100).toFixed(2)
+                percentage: ((totalRank / totalUserCount) * 100).toFixed(2),
               });
             }
           } else {
@@ -113,8 +115,8 @@ const MyPage = () => {
 
   const handleTogglePublic = async () => {
     try {
-      await AuthAPI.updateVisibility({
-        isPublic: !isPublic
+      await SpecAPI.updateSpecVisibility({
+        isPublic: !isPublic,
       });
       setIsPublic(!isPublic);
     } catch (error) {
@@ -143,7 +145,7 @@ const MyPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <ProfileSection user={user} specStats={specStats} />
-      
+
       <MenuList
         isPublic={isPublic}
         onTogglePublic={handleTogglePublic}
