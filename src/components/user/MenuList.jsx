@@ -1,13 +1,30 @@
 import React from 'react';
-import { ChevronRight, Star, UserRoundPen, ScrollText, Shield, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  ChevronRight,
+  Star,
+  UserRoundPen,
+  ScrollText,
+  Shield,
+  LogOut,
+} from 'lucide-react';
 
-const MenuItem = ({ icon: Icon, title, description, onClick, iconColor = 'blue', rightElement }) => (
-  <div 
+const MenuItem = ({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+  iconColor = 'blue',
+  rightElement,
+}) => (
+  <div
     className="flex items-center justify-between p-4 border-b cursor-pointer"
     onClick={onClick}
   >
     <div className="flex items-center">
-      <div className={`flex items-center justify-center w-8 h-8 mr-3 bg-${iconColor}-100 rounded-full`}>
+      <div
+        className={`flex items-center justify-center w-8 h-8 mr-3 bg-${iconColor}-100 rounded-full`}
+      >
         <Icon size={18} className={`text-${iconColor}-500`} />
       </div>
       <div>
@@ -43,12 +60,9 @@ const ToggleSwitch = ({ isChecked, onChange }) => (
   </div>
 );
 
-const MenuList = ({ 
-  isPublic, 
-  onTogglePublic, 
-  onNavigateToSpecInput, 
-  onShowWithdrawModal 
-}) => {
+const MenuList = ({ isPublic, onTogglePublic, onShowWithdrawModal }) => {
+  const navigate = useNavigate();
+
   return (
     <>
       {/* <div className="px-4 mt-4">
@@ -68,21 +82,21 @@ const MenuList = ({
             icon={UserRoundPen}
             title="회원정보 관리"
             description="닉네임, 이미지 등 개인정보를 관리합니다."
-            onClick={() => alert("준비 중인 기능입니다.")}
+            onClick={() => navigate('/edit-profile')}
           />
 
           <MenuItem
             icon={ScrollText}
             title="스펙 정보 관리"
             description="나의 스펙 정보를 등록 및 수정합니다."
-            onClick={onNavigateToSpecInput}
+            onClick={() => navigate('/spec-input')}
           />
 
           <MenuItem
             icon={Star}
             title="즐겨찾기"
             description="저장한 다른 사용자들의 스펙 정보를 확인합니다."
-            onClick={() => alert("준비 중인 기능입니다.")}
+            onClick={() => navigate('/bookmark')}
           />
         </div>
       </div>
@@ -102,4 +116,4 @@ const MenuList = ({
   );
 };
 
-export default MenuList; 
+export default MenuList;
