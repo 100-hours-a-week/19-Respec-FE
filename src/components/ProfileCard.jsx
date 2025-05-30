@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { UserAPI, SpecAPI } from '../api';
 import { useAuthStore } from '../stores/useAuthStore';
+import { PageLoadingIndicator } from './common/LoadingIndicator';
 
 const ProfileCard = () => {
   const { user: authUser } = useAuthStore();
@@ -43,6 +44,9 @@ const ProfileCard = () => {
       }
 
       try {
+        setLoading(true);
+        setError(null);
+
         const response = await UserAPI.getUserById(authUser.id);
         if (response.data.isSuccess) {
           const userData = response.data.data.user;
@@ -105,16 +109,8 @@ const ProfileCard = () => {
   // 로딩 중일 때
   if (loading) {
     return (
-      <div className="p-6 mb-4 bg-white rounded-lg shadow-md">
-        <div className="animate-pulse">
-          <div className="flex items-center space-x-4">
-            <div className="w-20 h-20 bg-gray-200 rounded-full"></div>
-            <div className="flex-1">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </div>
-        </div>
+      <div className="p-6 mb-4 bg-white rounded-lg shadow-md min-h-[180px]">
+        <PageLoadingIndicator className="py-16" />
       </div>
     );
   }
