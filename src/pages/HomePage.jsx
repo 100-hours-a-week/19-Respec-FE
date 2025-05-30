@@ -44,14 +44,14 @@ const HomePage = () => {
             <RankingItem
               key={item.userId}
               specId={item.specId}
+              nickname={item.nickname}
+              profileImageUrl={item.profileImageUrl}
               totalRank={item.totalRank}
               totalUsersCount={item.totalUsersCount}
-              user={item.nickname}
-              score={item.score}
-              category={item.jobField}
-              profileImageUrl={item.profileImageUrl}
               rankByJobField={item.rankByJobField}
               usersCountByJobField={item.usersCountByJobField}
+              score={item.score}
+              jobField={item.jobField}
               isBookmarked={item.isBookmarked}
               bookmarkId={item.bookmarkId}
               commentsCount={item.commentsCount}

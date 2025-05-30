@@ -6,14 +6,14 @@ import useToast from '../../hooks/useToast';
 
 const RankingItem = ({
   specId,
-  user,
+  nickname,
   profileImageUrl,
   totalRank,
   totalUsersCount,
   rankByJobField,
   usersCountByJobField,
   score,
-  category,
+  jobField,
   isBookmarked = false,
   bookmarkId = null,
   commentsCount = 0,
@@ -77,7 +77,7 @@ const RankingItem = ({
   };
 
   const formattedScore = score.toFixed(1);
-  const formattedJobField = category?.replace(/_/g, '·') || '';
+  const formattedJobField = jobField?.replace(/_/g, '·') || '';
 
   const handleDetailClick = () => {
     if (specId) {
@@ -128,19 +128,21 @@ const RankingItem = ({
           {profileImageUrl ? (
             <img
               src={profileImageUrl}
-              alt={user}
+              alt={nickname}
               className="object-cover w-10 h-10"
             />
           ) : (
             <div className="flex items-center justify-center w-10 h-10 bg-red-100">
-              <span className="font-bold text-red-500">{user.charAt(0)}</span>
+              <span className="font-bold text-red-500">
+                {nickname.charAt(0)}
+              </span>
             </div>
           )}
         </div>
 
         <div className="flex-1 mr-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-bold">{user}</p>
+            <p className="text-sm font-bold">{nickname}</p>
             <span className="text-base font-bold text-blue-500">
               {formattedScore}점
             </span>

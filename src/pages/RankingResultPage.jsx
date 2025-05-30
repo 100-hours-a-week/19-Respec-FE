@@ -13,12 +13,12 @@ const LoadingIndicator = () => (
 // 중복 결과 제거 함수
 const removeDuplicateResults = (results) => {
   const uniqueMap = new Map();
-  
+
   // userId를 키로 사용하여 중복 제거
-  results.forEach(result => {
+  results.forEach((result) => {
     uniqueMap.set(result.userId, result);
   });
-  
+
   return Array.from(uniqueMap.values());
 };
 
@@ -28,51 +28,51 @@ const RankingResultPage = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const keyword = queryParams.get('keyword') || '';
-  
+
   // 상태 관리
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
-  
+
   // 참조용 변수들
   const observer = useRef();
-  
+
   // 추가 검색 결과 로드 (무한 스크롤)
   const fetchMoreResults = useCallback(async () => {
     if (!hasMore || loading || !nextCursor) return;
-    
+
     setLoading(true);
-    
+
     try {
-      console.log('추가 검색 결과 요청 중...', { 
-        type: 'search', 
-        'nickname-keyword': keyword, 
-        cursor: nextCursor, 
-        limit: 10 
+      console.log('추가 검색 결과 요청 중...', {
+        type: 'search',
+        'nickname-keyword': keyword,
+        cursor: nextCursor,
+        limit: 10,
       });
-      
+
       const response = await SpecAPI.getSearch({
         type: 'search',
         'nickname-keyword': keyword,
         cursor: nextCursor,
-        limit: 10
+        limit: 10,
       });
-      
+
       console.log('추가 검색 결과 API 응답:', response.data);
-      
+
       if (response.data.isSuccess) {
         if (response.data.data && response.data.data.results) {
           // 새로 받은 데이터
           const newResults = response.data.data.results;
-          
+
           // 기존 데이터와 새 데이터 모두 포함하여 중복 제거
-          setSearchResults(prev => {
+          setSearchResults((prev) => {
             const combinedResults = [...prev, ...newResults];
             return removeDuplicateResults(combinedResults);
           });
-          
+
           setHasMore(response.data.data.hasNext);
           setNextCursor(response.data.data.nextCursor);
         } else {
@@ -90,21 +90,24 @@ const RankingResultPage = () => {
   }, [hasMore, loading, keyword, nextCursor]);
 
   // 마지막 요소 참조 콜백 (Intersection Observer API를 활용한 무한 스크롤 구현)
-  const lastResultElementRef = useCallback(node => {
-    if (loading) return;
-    
-    if (observer.current) observer.current.disconnect();
-    
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore && nextCursor) {
-        // 화면에 마지막 요소가 보이고, 더 불러올 데이터가 있으면 추가 데이터 로드
-        fetchMoreResults();
-      }
-    });
-    
-    if (node) observer.current.observe(node);
-  }, [loading, hasMore, nextCursor, fetchMoreResults]);
-  
+  const lastResultElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore && nextCursor) {
+          // 화면에 마지막 요소가 보이고, 더 불러올 데이터가 있으면 추가 데이터 로드
+          fetchMoreResults();
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore, nextCursor, fetchMoreResults]
+  );
+
   // 컴포넌트 마운트 시 초기 데이터 로드
   useEffect(() => {
     // 검색 결과 초기 로드
@@ -114,26 +117,32 @@ const RankingResultPage = () => {
         setError('검색어를 입력해주세요.');
         return;
       }
-      
+
       setLoading(true);
       setError(null);
-      
+
       try {
-        console.log('검색 결과 요청 중...', { type: 'search', 'nickname-keyword': keyword, limit: 10 });
-        
+        console.log('검색 결과 요청 중...', {
+          type: 'search',
+          'nickname-keyword': keyword,
+          limit: 10,
+        });
+
         const response = await SpecAPI.getSearch({
           type: 'search',
           'nickname-keyword': keyword,
-          limit: 10
+          limit: 10,
         });
-        
+
         console.log('검색 결과 API 응답:', response.data);
-        
+
         if (response.data.isSuccess) {
           if (response.data.data && response.data.data.results) {
             // 중복 제거를 위해 Map 사용 (userId를 키로 사용)
-            const uniqueResults = removeDuplicateResults(response.data.data.results);
-            
+            const uniqueResults = removeDuplicateResults(
+              response.data.data.results
+            );
+
             setSearchResults(uniqueResults);
             setHasMore(response.data.data.hasNext);
             setNextCursor(response.data.data.nextCursor);
@@ -160,7 +169,7 @@ const RankingResultPage = () => {
       fetchSearchResults(keyword);
     }
   }, [keyword]);
-  
+
   return (
     <div className="flex flex-col w-full min-h-screen bg-gray-50">
       <div className="relative flex flex-col flex-1 w-full max-w-md pb-16 mx-auto bg-white">
@@ -171,7 +180,7 @@ const RankingResultPage = () => {
               <span className="text-blue-600">"{keyword}"</span> 검색 결과
             </h2>
           </div>
-          
+
           {/* 검색 결과 리스트 */}
           {error ? (
             <div className="p-4 text-red-800 bg-red-100 rounded-lg">
@@ -182,24 +191,36 @@ const RankingResultPage = () => {
               {searchResults.length === 0 && !loading ? (
                 <div className="p-8 text-center text-gray-500">
                   <p>검색 결과가 없습니다.</p>
-                  <p className="mt-2 text-sm">다른 검색어로 다시 시도해보세요.</p>
+                  <p className="mt-2 text-sm">
+                    다른 검색어로 다시 시도해보세요.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {searchResults.map((result, index) => (
-                    <div 
-                      key={`${result.userId}_${index}`} 
-                      ref={index === searchResults.length - 1 ? lastResultElementRef : null}
+                    <div
+                      key={`${result.userId}_${index}`}
+                      ref={
+                        index === searchResults.length - 1
+                          ? lastResultElementRef
+                          : null
+                      }
                     >
-                      <RankingItem 
+                      <RankingItem
+                        specId={result.specId}
+                        nickname={result.nickname}
+                        profileImageUrl={result.profileImageUrl}
                         totalRank={result.totalRank}
                         totalUsersCount={result.totalUsersCount}
-                        user={result.nickname}
-                        score={result.score}
-                        category={result.jobField}
-                        profileImageUrl={result.profileImageUrl}
                         rankByJobField={result.rankByJobField}
                         usersCountByJobField={result.totalUsersCountByJobField}
+                        score={result.score}
+                        jobField={result.jobField}
+                        isBookmarked={result.isBookmarked}
+                        bookmarkId={result.bookmarkId}
+                        commentsCount={result.commentsCount}
+                        bookmarksCount={result.bookmarksCount}
+                        selectedFilter={result.selectedFilter}
                       />
                     </div>
                   ))}
@@ -219,4 +240,4 @@ const RankingResultPage = () => {
   );
 };
 
-export default RankingResultPage; 
+export default RankingResultPage;
