@@ -589,6 +589,7 @@ const RankingPage = () => {
                         }
                       >
                         <RankingItem
+                          userId={ranking.userId}
                           specId={ranking.specId}
                           nickname={ranking.nickname}
                           profileImageUrl={ranking.profileImageUrl}

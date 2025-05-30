@@ -107,6 +107,7 @@ const HomePage = () => {
           rankingData.map((item) => (
             <RankingItem
               key={`${item.userId}-${selectedFilter}`}
+              userId={item.userId}
               specId={item.specId}
               nickname={item.nickname}
               profileImageUrl={item.profileImageUrl}

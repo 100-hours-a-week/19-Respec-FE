@@ -207,6 +207,7 @@ const RankingResultPage = () => {
                       }
                     >
                       <RankingItem
+                        userId={result.userId}
                         specId={result.specId}
                         nickname={result.nickname}
                         profileImageUrl={result.profileImageUrl}
