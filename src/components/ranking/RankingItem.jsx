@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Award, MessageSquare, Star, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BookmarkAPI } from '../../api';
@@ -24,9 +24,33 @@ const RankingItem = ({
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const currentRank = selectedFilter === '전체' ? totalRank : rankByJobField;
-  const currentTotalUsers =
-    selectedFilter === '전체' ? totalUsersCount : usersCountByJobField;
+  const rankingInfo = useMemo(() => {
+    const isGlobalFilter = selectedFilter === '전체';
+    const currentRank = isGlobalFilter ? totalRank : rankByJobField;
+    const currentTotalUsers = isGlobalFilter
+      ? totalUsersCount
+      : usersCountByJobField;
+    const percentage = ((currentRank / currentTotalUsers) * 100).toFixed(2);
+    const formattedPercentage = isNaN(Number(percentage))
+      ? '-'
+      : Number(percentage).toFixed(2);
+
+    return {
+      rank: currentRank,
+      totalUsers: currentTotalUsers,
+      percentage: formattedPercentage,
+      isGlobal: isGlobalFilter,
+      percentageText: isGlobalFilter
+        ? `전체 상위 ${formattedPercentage}%`
+        : `직무 내 상위 ${formattedPercentage}%`,
+    };
+  }, [
+    selectedFilter,
+    totalRank,
+    totalUsersCount,
+    rankByJobField,
+    usersCountByJobField,
+  ]);
 
   const getMedalColor = (rank) => {
     switch (rank) {
@@ -53,10 +77,6 @@ const RankingItem = ({
   };
 
   const formattedScore = score.toFixed(1);
-  const percentage = ((currentRank / currentTotalUsers) * 100).toFixed(2);
-  const formattedPercentage = isNaN(Number(percentage))
-    ? '-'
-    : Number(percentage).toFixed(2);
   const formattedJobField = category?.replace(/_/g, '·') || '';
 
   const handleDetailClick = () => {
@@ -101,7 +121,7 @@ const RankingItem = ({
     <div className="bg-white rounded-lg shadow-sm my-1 p-4">
       <div className="flex items-center mb-2">
         <div className="flex items-center justify-center min-w-[40px] mr-3">
-          <Medal rank={currentRank} />
+          <Medal rank={rankingInfo.rank} />
         </div>
 
         <div className="mr-3">
@@ -131,9 +151,7 @@ const RankingItem = ({
               {formattedJobField}
             </span>
             <span className="text-xs text-gray-500">
-              {selectedFilter === '전체'
-                ? `전체 상위 ${formattedPercentage}%`
-                : `직무 내 상위 ${formattedPercentage}%`}
+              {rankingInfo.percentageText}
             </span>
           </div>
         </div>
