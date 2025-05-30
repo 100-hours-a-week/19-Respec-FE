@@ -1,5 +1,12 @@
 import './App.css';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import axios from 'axios';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -24,20 +31,24 @@ axios.defaults.withCredentials = true;
 const ProtectedRoute = ({ children }) => {
   const { isLoggedIn, loading, init } = useAuthStore();
   const location = useLocation();
-  
+
   useEffect(() => {
     // 라우트 변경 시 인증 상태 확인
     init();
   }, [location.pathname, init]);
-  
+
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
-  
+
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  
+
   return children;
 };
 
@@ -47,22 +58,37 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const path = location.pathname;
   const { isLoggedIn } = useAuthStore();
-  
+
   // 현재 경로에 따라 TopBar 타이틀 설정
   const getTitleByPath = () => {
     switch (path) {
-      case '/': return '스펙랭킹';
-      case '/login': return '로그인';
-      case '/profile-setup': return '회원가입';
-      case '/spec-input': return '스펙 입력';
-      case '/rank': return '랭킹';
-      case '/ranking-results': return '랭킹 검색 결과';
-      case '/dm': return '채팅';
-      case '/social': return '소셜';
-      case '/my': return '마이페이지';
-      case '/edit-profile': return '회원정보 수정';
-      case '/bookmark': return '즐겨찾기';
-      default: return '스펙랭킹';
+      case '/':
+        return '스펙랭킹';
+      case '/login':
+        return '로그인';
+      case '/profile-setup':
+        return '회원가입';
+      case '/spec-input':
+        return '스펙 입력';
+      case '/rank':
+        return '랭킹';
+      case '/ranking-results':
+        return '랭킹 검색 결과';
+      case '/dm':
+        return '채팅';
+      case '/social':
+        return '소셜';
+      case '/my':
+        return '마이페이지';
+      case '/edit-profile':
+        return '회원정보 수정';
+      case '/bookmark':
+        return '즐겨찾기';
+      default:
+        if (path.startsWith('/social/')) {
+          return '소셜';
+        }
+        return '스펙랭킹';
     }
   };
 
@@ -72,14 +98,14 @@ const Layout = ({ children }) => {
     if (['/', '/login', '/rank', '/dm', '/social', '/my'].includes(path)) {
       return null;
     }
-    
+
     // 특정 페이지로 이동해야 하는 경우
     if (path === '/profile-setup') return '/login';
     if (path === '/spec-input') return '/my';
     if (path === '/ranking-results') return '/rank';
     if (path === '/edit-profile') return '/my';
     if (path === '/bookmark') return '/my';
-    
+
     // 그 외 페이지는 브라우저 히스토리 기반 이전 페이지로 이동
     return () => navigate(-1);
   };
@@ -89,18 +115,23 @@ const Layout = ({ children }) => {
     if (path === '/') return 'home';
     if (path === '/rank' || path === 'ranking-results') return 'rank';
     if (path === '/dm') return 'dm';
-    if (path === '/social') return 'social';
-    if (path === '/my' || path === '/spec-input' || path === '/edit-profile' || path === '/bookmark') return 'my';
-    if (path === '/login' || path === '/profile-setup') return isLoggedIn ? 'my' : 'login';
+    if (path === '/social' || path.startsWith('/social/')) return 'social';
+    if (
+      path === '/my' ||
+      path === '/spec-input' ||
+      path === '/edit-profile' ||
+      path === '/bookmark'
+    )
+      return 'my';
+    if (path === '/login' || path === '/profile-setup')
+      return isLoggedIn ? 'my' : 'login';
     return '';
   };
 
   return (
     <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
       <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />
-      <main className="pt-2 pb-2">
-        {children}
-      </main>
+      <main className="pt-2 pb-2">{children}</main>
       <BottomNavBar active={getActiveMenu()} />
     </div>
   );
@@ -108,27 +139,112 @@ const Layout = ({ children }) => {
 
 function App() {
   const init = useAuthStore((s) => s.init);
-  useEffect(() => { init(); }, [init]);
-  
+  useEffect(() => {
+    init();
+  }, [init]);
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout><HomePage /></Layout>} />
-        <Route path="/login" element={<Layout><LoginPage /></Layout>} />
-        <Route path="/profile-setup" element={<Layout><ProfileSetupPage /></Layout>} />
+        <Route
+          path="/"
+          element={
+            <Layout>
+              <HomePage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <Layout>
+              <LoginPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/profile-setup"
+          element={
+            <Layout>
+              <ProfileSetupPage />
+            </Layout>
+          }
+        />
         <Route path="/oauth-redirect" element={<OAuthRedirectPage />} />
-        <Route path="/spec-input" element={<Layout><SpecInputPage /></Layout>} />
-        <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
-        <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
-        <Route path="/dm" element={<Layout><DmPage /></Layout>} />
-        <Route path="/social" element={<Layout><SocialPage /></Layout>} />
-        <Route path="/edit-profile" element={<Layout><ProfileEditPage /></Layout>} />
-        <Route path="/bookmark" element={<Layout><BookmarkPage /></Layout>} />
-        <Route path="/my" element={
-          <ProtectedRoute>
-            <Layout><MyPage /></Layout>
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/spec-input"
+          element={
+            <Layout>
+              <SpecInputPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/rank"
+          element={
+            <Layout>
+              <RankingPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/ranking-results"
+          element={
+            <Layout>
+              <RankingResultPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/dm"
+          element={
+            <Layout>
+              <DmPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/social"
+          element={
+            <Layout>
+              <SocialPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/social/:specId"
+          element={
+            <Layout>
+              <SocialPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/edit-profile"
+          element={
+            <Layout>
+              <ProfileEditPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/bookmark"
+          element={
+            <Layout>
+              <BookmarkPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/my"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MyPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
