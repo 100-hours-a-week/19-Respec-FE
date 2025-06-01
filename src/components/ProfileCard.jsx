@@ -47,7 +47,7 @@ const ProfileCard = () => {
         setLoading(true);
         setError(null);
 
-        const response = await UserAPI.getUserById(authUser.id);
+        const response = await UserAPI.getUserInfo(authUser.id);
         if (response.data.isSuccess) {
           const userData = response.data.data.user;
           setUserData(userData);
@@ -55,7 +55,7 @@ const ProfileCard = () => {
           // 스펙 정보가 있는 경우에만 스펙 통계 정보 조회
           if (userData.spec?.hasActiveSpec && userData.spec?.activeSpec) {
             try {
-              const specResponse = await SpecAPI.fetchSpecDetail(
+              const specResponse = await SpecAPI.getSpecDetail(
                 userData.spec.activeSpec
               );
 
