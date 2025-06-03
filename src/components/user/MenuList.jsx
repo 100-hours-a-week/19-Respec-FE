@@ -16,10 +16,15 @@ const MenuItem = ({
   onClick,
   iconColor = 'blue',
   rightElement,
+  disabled = false,
 }) => (
   <div
-    className="flex items-center justify-between p-4 border-b cursor-pointer"
-    onClick={onClick}
+    className={`flex items-center justify-between p-4 border-b ${
+      disabled
+        ? 'opacity-50 cursor-not-allowed'
+        : 'cursor-pointer hover:bg-gray-50'
+    }`}
+    onClick={disabled ? undefined : onClick}
   >
     <div className="flex items-center">
       <div
@@ -28,7 +33,11 @@ const MenuItem = ({
         <Icon size={18} className={`text-${iconColor}-500`} />
       </div>
       <div>
-        <span className="font-medium text-gray-800">{title}</span>
+        <span
+          className={`font-medium ${disabled ? 'text-gray-400' : 'text-gray-800'}`}
+        >
+          {title}
+        </span>
         <p className="text-xs text-gray-500">{description}</p>
       </div>
     </div>
@@ -36,23 +45,28 @@ const MenuItem = ({
   </div>
 );
 
-const ToggleSwitch = ({ isChecked, onChange }) => (
-  <div className="relative inline-block w-10 h-6 transition duration-200 ease-in-out">
+const ToggleSwitch = ({ isChecked, onChange, disabled = false }) => (
+  <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
     <input
       type="checkbox"
       id="toggle"
       className="w-0 h-0 opacity-0"
       checked={isChecked}
-      onChange={onChange}
+      onChange={disabled ? undefined : onChange}
+      disabled={disabled}
     />
     <label
       htmlFor="toggle"
       className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full ${
-        isChecked ? 'bg-green-500' : 'bg-gray-300'
+        disabled
+          ? 'bg-gray-200 cursor-not-allowed'
+          : isChecked
+            ? 'bg-green-500'
+            : 'bg-gray-300'
       }`}
     >
       <span
-        className={`absolute left-1 bottom-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${
+        className={`absolute bottom-1 bg-white w-3 h-3 rounded-full transition-transform duration-200 ease-in-out ${
           isChecked ? 'transform translate-x-6' : ''
         }`}
       ></span>
@@ -60,21 +74,36 @@ const ToggleSwitch = ({ isChecked, onChange }) => (
   </div>
 );
 
-const MenuList = ({ isPublic, onTogglePublic, onShowWithdrawModal }) => {
+const MenuList = ({
+  isPublic,
+  onTogglePublic,
+  onShowWithdrawModal,
+  hasSpec = false,
+}) => {
   const navigate = useNavigate();
 
   return (
     <>
-      {/* <div className="px-4 mt-4">
+      <div className="px-4 mt-4">
         <div className="overflow-hidden bg-white rounded-lg shadow-sm">
           <MenuItem
             icon={Shield}
             title="스펙 정보 공개 설정"
-            description="소셜 페이지 공개 여부를 결정합니다."
-            rightElement={<ToggleSwitch isChecked={isPublic} onChange={onTogglePublic} />}
+            description={
+              hasSpec
+                ? '소셜 페이지 공개 여부를 결정합니다.'
+                : '스펙 정보가 없어 설정할 수 없습니다.'
+            }
+            rightElement={
+              <ToggleSwitch
+                isChecked={isPublic}
+                onChange={onTogglePublic}
+                disabled={!hasSpec}
+              />
+            }
           />
         </div>
-      </div> */}
+      </div>
 
       <div className="px-4 mt-4">
         <div className="overflow-hidden bg-white rounded-lg shadow-sm">
