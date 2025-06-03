@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import { jwtDecode } from 'jwt-decode';
-import { getAccessToken, setAccessToken, removeAccessToken, getUserIdFromToken } from '../utils/token';
+import {
+  getAccessToken,
+  setAccessToken,
+  removeAccessToken,
+  getUserIdFromToken,
+} from '../utils/token';
 import { HttpAPI, AuthAPI, UserAPI } from '../api';
 
 const AUTHORIZATION = 'authorization';
@@ -17,10 +22,10 @@ export const useAuthStore = create((set, get) => ({
   init: async () => {
     try {
       set({ loading: true });
-      
+
       // 토큰 가져오기
       const token = getAccessToken();
-      
+
       if (!token) {
         console.log('토큰이 없습니다.');
         set({ loading: false });
@@ -28,17 +33,21 @@ export const useAuthStore = create((set, get) => ({
       }
 
       HttpAPI.setAuthToken(token);
-      HttpAPI.setupInterceptors(token, (t) => get().setToken(t), () => get().logout());
+      HttpAPI.setupInterceptors(
+        token,
+        (t) => get().setToken(t),
+        () => get().logout()
+      );
 
       // 토큰이 있으면 유저 정보 가져오기
       try {
         const userId = getUserIdFromToken(token);
-        const response = await UserAPI.getUserById(userId, token);
-        
+        const response = await UserAPI.getUserInfo(userId, token);
+
         if (response.data.isSuccess) {
           const userData = response.data.data.user;
           set({ user: userData, isLoggedIn: true, token: token });
-          
+
           // 토큰 갱신 타이머 시작
           get()._startRefreshTimer(token);
         } else {
@@ -68,7 +77,11 @@ export const useAuthStore = create((set, get) => ({
     if (accessToken) {
       setAccessToken(accessToken);
       HttpAPI.setAuthToken(accessToken);
-      HttpAPI.setupInterceptors(accessToken, (t) => get().setToken(t), () => get().logout());
+      HttpAPI.setupInterceptors(
+        accessToken,
+        (t) => get().setToken(t),
+        () => get().logout()
+      );
       get()._startRefreshTimer(accessToken);
       set({ token: accessToken });
     }
@@ -105,7 +118,7 @@ export const useAuthStore = create((set, get) => ({
         return get().refreshAuthToken();
       }
 
-      console.log(`토큰 리프레시 타이머 설정: ${delay/1000}초 후 실행`);
+      console.log(`토큰 리프레시 타이머 설정: ${delay / 1000}초 후 실행`);
       refreshTimer = setTimeout(() => {
         console.log('토큰 리프레시 타이머 실행');
         get().refreshAuthToken();
@@ -121,11 +134,11 @@ export const useAuthStore = create((set, get) => ({
       console.log('토큰 리프레시 요청 시작');
       const res = await AuthAPI.refreshToken();
       console.log('토큰 리프레시 응답:', res.data);
-      
+
       if (res.status === 200) {
         const authHeader = res.headers[AUTHORIZATION];
         const newToken = authHeader?.replace('Bearer ', '');
-        
+
         if (!newToken) {
           console.error('리프레시 응답에 authorization 헤더가 없습니다:', res);
           throw new Error('no authorization header');

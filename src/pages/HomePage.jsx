@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpecAPI } from '../api';
-import ProfileCard from '../components/ProfileCard';
+import ProfileCard from '../components/user/ProfileCard/ProfileCard';
 import ServiceIntro from '../components/ServiceIntro';
 import RankingFilters from '../components/ranking/RankingFilters';
 import RankingItem from '../components/ranking/RankingItem';

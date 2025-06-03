@@ -19,7 +19,7 @@ const RankingPage = () => {
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
-  const [selectedJobField, setSelectedJobField] = useState('TOTAL');
+  const [selectedFilter, setSelectedFilter] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -31,23 +31,6 @@ const RankingPage = () => {
   // 참조용 변수들
   const observer = useRef();
   const navigate = useNavigate();
-
-  // 직무 분야 옵션 (필터링용)
-  const jobFieldOptions = [
-    { code: 'TOTAL', name: '전체' },
-    { code: 'MANAGEMENT_BUSINESS', name: '경영_사무' },
-    { code: 'MARKETING_ADVERTISING_PR', name: '마케팅_광고_홍보' },
-    { code: 'TRADE_LOGISTICS', name: '무역_유통' },
-    { code: 'INTERNET_IT', name: '인터넷_IT' },
-    { code: 'PRODUCTION_MANUFACTURING', name: '생산_제조' },
-    { code: 'SALES_CUSTOMER_SERVICE', name: '영업_고객상담' },
-    { code: 'CONSTRUCTION', name: '건설' },
-    { code: 'FINANCE', name: '금융' },
-    { code: 'RND_PLANNING', name: '연구개발_설계' },
-    { code: 'DESIGN', name: '디자인' },
-    { code: 'MEDIA', name: '미디어' },
-    { code: 'SPECIALIZED_TECHNICAL', name: '전문직_특수직' },
-  ];
 
   // 마지막 요소 참조 콜백 (Intersection Observer API를 활용한 무한 스크롤 구현)
   const lastRankingElementRef = useCallback(
@@ -69,28 +52,21 @@ const RankingPage = () => {
   );
 
   // 랭킹 데이터 초기 로드
-  const fetchRankings = async (jobFieldCode = 'TOTAL') => {
+  const fetchRankings = async (jobField = '전체') => {
     setLoading(true);
     setError(null);
 
     try {
-      // jobField 코드를 해당 한글 이름으로 변환
-      const jobFieldName =
-        jobFieldCode === 'TOTAL'
-          ? '전체'
-          : jobFieldOptions.find((option) => option.code === jobFieldCode)
-              ?.name || '인터넷_IT';
-
       console.log('랭킹 데이터 요청 중...', {
         type: 'ranking',
-        jobField: jobFieldName,
+        jobField: jobField,
         limit: 10,
       });
 
       // 올바른 API 엔드포인트 및 파라미터로 요청
       const response = await SpecAPI.getRankings({
         type: 'ranking',
-        jobField: jobFieldName,
+        jobField: jobField,
         limit: 10,
       });
 
@@ -108,7 +84,7 @@ const RankingPage = () => {
             response.data.data.rankings
           );
           console.log('중복 제거 후 랭킹 데이터 개수:', uniqueRankings.length);
-          console.log('랭킹 데이터 구조 샘플:', uniqueRankings[0]);
+          // console.log('랭킹 데이터 구조 샘플:', uniqueRankings[0]);
 
           setRankings(uniqueRankings);
           setHasMore(response.data.data.hasNext);
@@ -118,20 +94,20 @@ const RankingPage = () => {
             '랭킹 데이터가 예상 구조와 다릅니다:',
             response.data.data
           );
-          loadTestData(jobFieldCode);
+          loadTestData(jobField);
         }
       } else {
         console.error('API 에러 응답:', response.data.message);
         setError(response.data.message);
-        loadTestData(jobFieldCode);
+        loadTestData(jobField);
       }
 
       // 메타 데이터 가져오기
-      fetchMetaData(jobFieldName);
+      fetchMetaData(jobField);
     } catch (err) {
       console.error('랭킹 데이터 로드 중 오류 발생:', err);
       setError('랭킹 데이터를 불러오는 중 오류가 발생했습니다.');
-      loadTestData(jobFieldCode);
+      loadTestData(jobField);
     } finally {
       setLoading(false);
     }
@@ -180,12 +156,6 @@ const RankingPage = () => {
   const loadTestData = (jobField) => {
     console.log('테스트 데이터를 로드합니다:', jobField);
 
-    const jobFieldName =
-      jobField === 'TOTAL'
-        ? '전체'
-        : jobFieldOptions.find((option) => option.code === jobField)?.name ||
-          '인터넷_IT';
-
     // 테스트 데이터
     const testData = [
       {
@@ -196,7 +166,7 @@ const RankingPage = () => {
         score: 89.5,
         totalRank: 1,
         totalUsersCount: 150,
-        jobField: jobFieldName,
+        jobField: jobField,
         rankByJobField: 1,
         totalUsersCountByJobField: 50,
         isBookmarked: true,
@@ -211,7 +181,7 @@ const RankingPage = () => {
         score: 85.2,
         totalRank: 2,
         totalUsersCount: 150,
-        jobField: jobFieldName,
+        jobField: jobField,
         rankByJobField: 2,
         totalUsersCountByJobField: 50,
         isBookmarked: false,
@@ -226,7 +196,7 @@ const RankingPage = () => {
         score: 82.7,
         totalRank: 3,
         totalUsersCount: 150,
-        jobField: jobFieldName,
+        jobField: jobField,
         rankByJobField: 3,
         totalUsersCountByJobField: 50,
         isBookmarked: true,
@@ -241,7 +211,7 @@ const RankingPage = () => {
         score: 78.3,
         totalRank: 4,
         totalUsersCount: 150,
-        jobField: jobFieldName,
+        jobField: jobField,
         rankByJobField: 4,
         totalUsersCountByJobField: 50,
         isBookmarked: false,
@@ -256,7 +226,7 @@ const RankingPage = () => {
         score: 75.9,
         totalRank: 5,
         totalUsersCount: 150,
-        jobField: jobFieldName,
+        jobField: jobField,
         rankByJobField: 5,
         totalUsersCountByJobField: 50,
         isBookmarked: true,
@@ -277,23 +247,16 @@ const RankingPage = () => {
     setLoading(true);
 
     try {
-      // jobField 코드를 한글 이름으로 변환
-      const jobFieldName =
-        selectedJobField === 'TOTAL'
-          ? '전체'
-          : jobFieldOptions.find((option) => option.code === selectedJobField)
-              ?.name || '인터넷_IT';
-
       console.log('추가 랭킹 데이터 요청 중...', {
         type: 'ranking',
-        jobField: jobFieldName,
+        jobField: selectedFilter,
         cursor: nextCursor,
         limit: 10,
       });
 
       const response = await SpecAPI.getRankings({
         type: 'ranking',
-        jobField: jobFieldName,
+        jobField: selectedFilter,
         cursor: nextCursor,
         limit: 10,
       });
@@ -324,18 +287,15 @@ const RankingPage = () => {
     }
   };
 
-  // 직무 분야 변경 핸들러
-  const handleJobFieldChange = (jobField) => {
-    console.log('직무 분야 변경:', jobField);
-
-    setSelectedJobField(jobField);
+  // 필터 변경 핸들러 - HomePage와 동일하게 단순화
+  const handleFilterChange = useCallback((newFilter) => {
+    console.log('필터 변경:', newFilter);
+    setSelectedFilter(newFilter);
     setRankings([]);
     setHasMore(true);
     setNextCursor(null);
-
-    // 실제 백엔드 API 호출
-    fetchRankings(jobField);
-  };
+    fetchRankings(newFilter);
+  }, []);
 
   // 검색어 강조 함수 (일치하는 부분을 파란색으로 표시)
   const highlightText = (text, query) => {
@@ -415,7 +375,7 @@ const RankingPage = () => {
   // 초기 랭킹 데이터 로드
   useEffect(() => {
     // 실제 백엔드 API 호출
-    fetchRankings(selectedJobField);
+    fetchRankings(selectedFilter);
   }, []);
 
   return (
@@ -525,19 +485,8 @@ const RankingPage = () => {
           </div>
 
           <RankingFilters
-            selectedFilter={
-              selectedJobField === 'TOTAL'
-                ? '전체'
-                : jobFieldOptions.find(
-                    (option) => option.code === selectedJobField
-                  )?.name || '전체'
-            }
-            setSelectedFilter={(filterName) => {
-              const codeOption = jobFieldOptions.find(
-                (option) => option.name === filterName
-              );
-              handleJobFieldChange(codeOption?.code || 'TOTAL');
-            }}
+            selectedFilter={selectedFilter}
+            setSelectedFilter={handleFilterChange}
           />
 
           {/* 메타 데이터 (총 사용자 수, 평균 점수) */}
@@ -565,7 +514,7 @@ const RankingPage = () => {
               <p>{error}</p>
               <button
                 className="mt-2 text-blue-500 underline"
-                onClick={() => fetchRankings(selectedJobField)}
+                onClick={() => fetchRankings(selectedFilter)}
               >
                 다시 시도
               </button>
@@ -603,7 +552,7 @@ const RankingPage = () => {
                           bookmarkId={ranking.bookmarkId}
                           commentsCount={ranking.commentsCount}
                           bookmarksCount={ranking.bookmarksCount}
-                          selectedFilter={ranking.selectedFilter}
+                          selectedFilter={selectedFilter}
                         />
                       </div>
                     );

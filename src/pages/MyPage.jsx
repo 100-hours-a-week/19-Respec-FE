@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { AuthAPI, UserAPI, SpecAPI } from '../api';
 import { getAccessToken } from '../utils/token';
-import ProfileSection from '../components/user/ProfileSection';
+import ProfileSection from '../components/user/ProfileCard/ProfileSection';
 import MenuList from '../components/user/MenuList';
 import WithdrawModal from '../components/user/WithdrawModal';
 
@@ -54,7 +54,7 @@ const MyPage = () => {
           return;
         }
 
-        const response = await UserAPI.getUserById(authUser.id);
+        const response = await UserAPI.getUserInfo(authUser.id);
 
         if (response.data.isSuccess) {
           const userData = response.data.data.user;
@@ -74,7 +74,7 @@ const MyPage = () => {
           setIsPublic(userData.isPublic || false);
 
           if (userData.spec?.hasActiveSpec) {
-            const specResponse = await SpecAPI.fetchSpecDetail(
+            const specResponse = await SpecAPI.getSpecDetail(
               userData.spec.activeSpec
             );
 
