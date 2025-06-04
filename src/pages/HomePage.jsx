@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpecAPI, UserAPI } from '../api';
 import { useAuthStore } from '../stores/useAuthStore';
-import HomeProfileCard from '../components/user/profile/HomeProfileCard';
+import UserInfoSection from '../components/user/UserInfoSection';
 import ServiceIntro from '../components/ServiceIntro';
 import RankingFilters from '../components/ranking/RankingFilters';
 import RankingItem from '../components/ranking/RankingItem';
@@ -18,6 +18,7 @@ const HomePage = () => {
 
   const [userData, setUserData] = useState(null);
   const [hasSpec, setHasSpec] = useState(false);
+  const [categoryScores, setCategoryScores] = useState([]);
   const [profileLoading, setProfileLoading] = useState(true);
 
   const fetchUserProfile = useCallback(async () => {
@@ -56,6 +57,21 @@ const HomePage = () => {
             if (specResponse.data.isSuccess) {
               const specData = specResponse.data.specDetailData;
               const rankings = specData.rankings?.details;
+              const categories = specData.rankings?.categories || [];
+
+              const scores = [
+                categories.find((category) => category.name === '학력_성적')
+                  ?.score || 0,
+                categories.find((category) => category.name === '직무_경험')
+                  ?.score || 0,
+                categories.find((category) => category.name === '자격증_스킬')
+                  ?.score || 0,
+                categories.find((category) => category.name === '어학_능력')
+                  ?.score || 0,
+                categories.find((category) => category.name === '활동_네트워킹')
+                  ?.score || 0,
+              ];
+              setCategoryScores(scores);
 
               if (rankings) {
                 // 상위 퍼센트 계산
@@ -163,10 +179,11 @@ const HomePage = () => {
 
   return (
     <div className="p-4">
-      <HomeProfileCard
+      <UserInfoSection
         userData={userData}
         isLoggedIn={isLoggedIn}
         hasSpec={hasSpec}
+        categoryScores={categoryScores}
       />
 
       <ServiceIntro />
