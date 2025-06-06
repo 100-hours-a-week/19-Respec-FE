@@ -15,7 +15,7 @@ const TopBar = ({ title, backLink }) => {
   };
 
   return (
-    <div className="flex items-center w-full px-4 bg-white border-b border-gray-100 h-14">
+    <div className="fixed top-0 left-0 right-0 mx-auto max-w-[390px] z-20 flex items-center w-full px-4 bg-white border-b border-gray-100 h-14">
       <div className="flex justify-start w-10">
         {backLink && (
           <a href="#" onClick={handleBackClick} className="mr-4">
