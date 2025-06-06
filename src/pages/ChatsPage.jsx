@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import { format, parseISO } from 'date-fns';
@@ -24,8 +24,9 @@ const ChatsPage = () => {
   const messageContainerRef = useRef(null);
   const observerRef = useRef(null);
   const firstMessageRef = useRef(null);
-  // 현재 보이는 메시지를 추적하기 위한 ref
-  const visibleMessageRef = useRef(null);
+  // 스크롤 위치 기억을 위한 ref
+  const scrollPositionRef = useRef(null);
+  const lastLoadedMessagesRef = useRef([]);
 
   // 최초 메시지 로드
   useEffect(() => {
@@ -73,6 +74,83 @@ const ChatsPage = () => {
     }
   };
 
+  // 스크롤 위치 저장 함수
+  const saveScrollPosition = useCallback(() => {
+    if (!messageContainerRef.current) return;
+    
+    const container = messageContainerRef.current;
+    
+    // 첫 번째 완전히 보이는 메시지 찾기
+    const messageElements = Array.from(container.querySelectorAll('.message-item'));
+    const containerRect = container.getBoundingClientRect();
+    
+    for (const element of messageElements) {
+      const elementRect = element.getBoundingClientRect();
+      
+      // 메시지가 컨테이너 안에 완전히 보이는지 확인
+      if (elementRect.top >= containerRect.top && 
+          elementRect.bottom <= containerRect.bottom) {
+        
+        scrollPositionRef.current = {
+          messageId: element.dataset.messageId,
+          topOffset: elementRect.top - containerRect.top,
+          timestamp: element.dataset.timestamp // 타임스탬프 추가
+        };
+        
+        break;
+      }
+    }
+    
+    // 메시지 ID 목록 저장
+    lastLoadedMessagesRef.current = messages.map(msg => msg.messageId);
+  }, [messages]);
+
+  // 스크롤 위치 복원 함수
+  const restoreScrollPosition = useCallback(() => {
+    if (!messageContainerRef.current || !scrollPositionRef.current) return;
+    
+    const container = messageContainerRef.current;
+    const { messageId, topOffset, timestamp } = scrollPositionRef.current;
+    
+    // 저장된 메시지 ID를 기준으로 요소 찾기
+    const targetElement = container.querySelector(`[data-message-id="${messageId}"]`);
+    
+    if (targetElement) {
+      // 원래 위치로 스크롤 조정
+      const elementRect = targetElement.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      const newScrollTop = container.scrollTop + (elementRect.top - containerRect.top) - topOffset;
+      container.scrollTop = newScrollTop;
+    } else if (timestamp) {
+      // 메시지를 찾을 수 없는 경우 타임스탬프가 비슷한 메시지로 스크롤
+      const messageElements = Array.from(container.querySelectorAll('.message-item[data-timestamp]'));
+      const targetTime = new Date(timestamp).getTime();
+      
+      // 타임스탬프 차이가 가장 작은 메시지 찾기
+      let closestElement = null;
+      let minTimeDiff = Infinity;
+      
+      for (const element of messageElements) {
+        const elementTime = new Date(element.dataset.timestamp).getTime();
+        const timeDiff = Math.abs(elementTime - targetTime);
+        
+        if (timeDiff < minTimeDiff) {
+          minTimeDiff = timeDiff;
+          closestElement = element;
+        }
+      }
+      
+      if (closestElement) {
+        const elementRect = closestElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        
+        const newScrollTop = container.scrollTop + (elementRect.top - containerRect.top) - topOffset;
+        container.scrollTop = newScrollTop;
+      }
+    }
+  }, []);
+
   // 무한 스크롤 구현
   useEffect(() => {
     if (!hasMore || loading || loadingMore) return;
@@ -80,8 +158,7 @@ const ChatsPage = () => {
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasMore) {
-          // 현재 화면에 보이는 메시지 찾기
-          findVisibleMessage();
+          saveScrollPosition();
           loadMoreMessages();
         }
       },
@@ -99,28 +176,7 @@ const ChatsPage = () => {
         observerRef.current.disconnect();
       }
     };
-  }, [messages, hasMore, loading, loadingMore]);
-
-  // 현재 화면에 보이는 메시지 찾기
-  const findVisibleMessage = () => {
-    if (!messageContainerRef.current) return;
-    
-    const container = messageContainerRef.current;
-    const containerRect = container.getBoundingClientRect();
-    const messageElements = container.querySelectorAll('.message-item');
-    
-    for (let i = 0; i < messageElements.length; i++) {
-      const element = messageElements[i];
-      const rect = element.getBoundingClientRect();
-      
-      // 메시지가 화면 중앙에 보이는지 확인
-      if (rect.top >= containerRect.top && rect.bottom <= containerRect.bottom) {
-        // 보이는 메시지의 ID 저장
-        visibleMessageRef.current = element.dataset.messageId;
-        break;
-      }
-    }
-  };
+  }, [messages, hasMore, loading, loadingMore, saveScrollPosition]);
 
   // 추가 메시지 로드 함수
   const loadMoreMessages = async () => {
@@ -142,20 +198,10 @@ const ChatsPage = () => {
         setHasMore(response.data.data.hasNext);
         setNextCursor(response.data.data.nextCursor);
         
-        // 스크롤 위치 복원을 위해 setTimeout 사용
+        // DOM 업데이트 후 스크롤 위치 복원
         setTimeout(() => {
-          // 이전에 보고 있던 메시지로 스크롤 위치 조정
-          if (messageContainerRef.current && visibleMessageRef.current) {
-            const visibleElement = messageContainerRef.current.querySelector(
-              `[data-message-id="${visibleMessageRef.current}"]`
-            );
-            
-            if (visibleElement) {
-              // 이전에 보던 메시지가 화면 중앙에 오도록 스크롤
-              visibleElement.scrollIntoView({ block: 'center' });
-            }
-          }
-        }, 50); // DOM 업데이트를 위한 충분한 시간 부여
+          restoreScrollPosition();
+        }, 50);
       }
     } catch (err) {
       console.error('추가 메시지 로드 오류:', err);
@@ -268,6 +314,7 @@ const ChatsPage = () => {
               key={message.messageId}
               ref={index === messages.length - 1 ? firstMessageRef : null}
               data-message-id={message.messageId}
+              data-timestamp={message.createdAt}
               className={`flex my-1 message-item ${isMyMessage ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`max-w-[70%] ${isMyMessage ? 'order-1' : 'order-2'}`}>
