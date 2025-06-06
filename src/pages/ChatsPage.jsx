@@ -4,10 +4,12 @@ import axiosInstance from '../utils/axiosInstance';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Send } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const ChatsPage = () => {
   const { chatroomId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -24,9 +26,88 @@ const ChatsPage = () => {
   const messageContainerRef = useRef(null);
   const observerRef = useRef(null);
   const firstMessageRef = useRef(null);
+  const socketRef = useRef(null);
   // 스크롤 위치 기억을 위한 ref
   const scrollPositionRef = useRef(null);
   const lastLoadedMessagesRef = useRef([]);
+  
+  // WebSocket 연결 설정
+  useEffect(() => {
+    // 사용자 정보가 없으면 연결하지 않음
+    if (!user || !partnerId) return;
+    
+    // 환경 변수 이름 출력 (디버깅용)
+    console.log('All env variables:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP_')));
+    
+    const socketUrl = process.env.REACT_APP_WEB_SOCKET_URL;
+    console.log('Socket URL from env:', socketUrl);
+    
+    if (!socketUrl) {
+      console.error('WebSocket URL is not defined in environment variables');
+      // 환경 변수를 찾을 수 없는 경우 하드코딩된 값 사용
+      const fallbackUrl = 'ws://localhost:8080/ws/chat';
+      console.log('Using fallback WebSocket URL:', fallbackUrl);
+      initWebSocket(fallbackUrl);
+    } else {
+      // WebSocket 초기화
+      initWebSocket(socketUrl);
+    }
+    
+    // 컴포넌트 언마운트 시 WebSocket 연결 종료
+    return () => {
+      if (socketRef.current) {
+        console.log('컴포넌트 언마운트: WebSocket 연결 종료');
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+    };
+  }, [user, partnerId]);
+  
+  // WebSocket 초기화 함수
+  const initWebSocket = (url) => {
+    // 기존 연결 닫기
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
+    
+    // 새 WebSocket 연결
+    socketRef.current = new WebSocket(url);
+    
+    // 연결 성공 이벤트
+    socketRef.current.onopen = () => {
+      console.log('WebSocket 연결이 열렸습니다.');
+    };
+    
+    // 메시지 수신 이벤트
+    socketRef.current.onmessage = (event) => {
+      try {
+        const receivedMessage = JSON.parse(event.data);
+        
+        // 새 메시지를 상태에 추가
+        setMessages(prevMessages => [
+          {
+            messageId: receivedMessage.messageId || `temp-${Date.now()}`,
+            senderId: receivedMessage.senderId,
+            content: receivedMessage.content,
+            createdAt: receivedMessage.createdAt || new Date().toISOString()
+          },
+          ...prevMessages
+        ]);
+      } catch (error) {
+        console.error('WebSocket 메시지 처리 오류:', error);
+      }
+    };
+    
+    // 오류 발생 이벤트
+    socketRef.current.onerror = (error) => {
+      console.error('WebSocket 오류:', error);
+    };
+    
+    // 연결 종료 이벤트
+    socketRef.current.onclose = () => {
+      console.log('WebSocket 연결이 닫혔습니다.');
+    };
+  };
 
   // 최초 메시지 로드
   useEffect(() => {
@@ -213,25 +294,36 @@ const ChatsPage = () => {
   // 메시지 전송 핸들러
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !socketRef.current || !user || !partnerId) return;
 
     try {
-      const response = await axiosInstance.post(`/api/chatrooms/${chatroomId}/chats`, {
-        content: newMessage
-      });
-
-      if (response.data.success) {
-        // 새 메시지 추가
-        setMessages(prevMessages => [
-          {
-            messageId: response.data.data.messageId,
-            senderId: response.data.data.senderId,
-            content: newMessage,
-            createdAt: new Date().toISOString()
-          },
-          ...prevMessages
-        ]);
-        setNewMessage('');
+      // 메시지 객체 생성
+      const messageToSend = {
+        senderId: user.id,
+        receiverId: partnerId,
+        content: newMessage.trim()
+      };
+      
+      // WebSocket을 통해 메시지 전송
+      socketRef.current.send(JSON.stringify(messageToSend));
+      
+      // 화면에 즉시 메시지 표시 (낙관적 UI 업데이트)
+      setMessages(prevMessages => [
+        {
+          messageId: `temp-${Date.now()}`,
+          senderId: user.id,
+          content: newMessage.trim(),
+          createdAt: new Date().toISOString()
+        },
+        ...prevMessages
+      ]);
+      
+      // 입력창 초기화
+      setNewMessage('');
+      
+      // 메시지 영역을 맨 위로 스크롤 (최신 메시지 표시)
+      if (messageContainerRef.current) {
+        messageContainerRef.current.scrollTop = 0;
       }
     } catch (err) {
       console.error('메시지 전송 오류:', err);
