@@ -24,6 +24,8 @@ const ChatsPage = () => {
   const messageContainerRef = useRef(null);
   const observerRef = useRef(null);
   const firstMessageRef = useRef(null);
+  // 현재 보이는 메시지를 추적하기 위한 ref
+  const visibleMessageRef = useRef(null);
 
   // 최초 메시지 로드
   useEffect(() => {
@@ -78,6 +80,8 @@ const ChatsPage = () => {
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasMore) {
+          // 현재 화면에 보이는 메시지 찾기
+          findVisibleMessage();
           loadMoreMessages();
         }
       },
@@ -97,12 +101,34 @@ const ChatsPage = () => {
     };
   }, [messages, hasMore, loading, loadingMore]);
 
+  // 현재 화면에 보이는 메시지 찾기
+  const findVisibleMessage = () => {
+    if (!messageContainerRef.current) return;
+    
+    const container = messageContainerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const messageElements = container.querySelectorAll('.message-item');
+    
+    for (let i = 0; i < messageElements.length; i++) {
+      const element = messageElements[i];
+      const rect = element.getBoundingClientRect();
+      
+      // 메시지가 화면 중앙에 보이는지 확인
+      if (rect.top >= containerRect.top && rect.bottom <= containerRect.bottom) {
+        // 보이는 메시지의 ID 저장
+        visibleMessageRef.current = element.dataset.messageId;
+        break;
+      }
+    }
+  };
+
   // 추가 메시지 로드 함수
   const loadMoreMessages = async () => {
     if (!hasMore || loadingMore) return;
 
     try {
       setLoadingMore(true);
+      
       const response = await axiosInstance.get(`/api/chatrooms/${chatroomId}/chats`, {
         params: {
           cursor: nextCursor,
@@ -111,19 +137,25 @@ const ChatsPage = () => {
       });
 
       if (response.data.success) {
-        // 스크롤 위치 기억
-        const currentHeight = messageContainerRef.current?.scrollHeight || 0;
-        
         // 새 메시지 추가
         setMessages(prevMessages => [...prevMessages, ...response.data.data.messages]);
         setHasMore(response.data.data.hasNext);
         setNextCursor(response.data.data.nextCursor);
         
-        // 스크롤 위치 복원
-        if (messageContainerRef.current) {
-          const newHeight = messageContainerRef.current.scrollHeight;
-          messageContainerRef.current.scrollTop = newHeight - currentHeight;
-        }
+        // 스크롤 위치 복원을 위해 setTimeout 사용
+        setTimeout(() => {
+          // 이전에 보고 있던 메시지로 스크롤 위치 조정
+          if (messageContainerRef.current && visibleMessageRef.current) {
+            const visibleElement = messageContainerRef.current.querySelector(
+              `[data-message-id="${visibleMessageRef.current}"]`
+            );
+            
+            if (visibleElement) {
+              // 이전에 보던 메시지가 화면 중앙에 오도록 스크롤
+              visibleElement.scrollIntoView({ block: 'center' });
+            }
+          }
+        }, 50); // DOM 업데이트를 위한 충분한 시간 부여
       }
     } catch (err) {
       console.error('추가 메시지 로드 오류:', err);
@@ -235,7 +267,8 @@ const ChatsPage = () => {
             <div 
               key={message.messageId}
               ref={index === messages.length - 1 ? firstMessageRef : null}
-              className={`flex my-1 ${isMyMessage ? 'justify-end' : 'justify-start'}`}
+              data-message-id={message.messageId}
+              className={`flex my-1 message-item ${isMyMessage ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`max-w-[70%] ${isMyMessage ? 'order-1' : 'order-2'}`}>
                 <div 
