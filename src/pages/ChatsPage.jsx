@@ -220,7 +220,7 @@ const ChatsPage = () => {
       {/* 메시지 영역 */}
       <div 
         ref={messageContainerRef}
-        className="flex-1 p-4 pb-20 overflow-y-auto flex flex-col-reverse"
+        className="flex-1 p-4 mb-4 overflow-y-auto flex flex-col-reverse"
       >
         {loadingMore && (
           <div className="text-center py-2">
