@@ -174,7 +174,7 @@ const ChatsPage = () => {
   // 로딩 중 표시
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-126px)] pt-14 text-gray-500">
         <p className="text-center">로딩 중...</p>
       </div>
     );
@@ -183,7 +183,7 @@ const ChatsPage = () => {
   // 에러 발생 시
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-126px)] pt-14 text-gray-500">
         <p className="text-center text-red-500">{error}</p>
         <button 
           onClick={() => window.location.reload()} 
@@ -196,7 +196,7 @@ const ChatsPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-96px)]">
+    <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden pt-16 relative">
       {/* 채팅방 상단 프로필 */}
       <div className="flex items-center p-3 border-b border-gray-200 bg-white">
         <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden mr-3">
@@ -220,7 +220,7 @@ const ChatsPage = () => {
       {/* 메시지 영역 */}
       <div 
         ref={messageContainerRef}
-        className="flex-1 p-4 overflow-y-auto flex flex-col-reverse"
+        className="flex-1 p-4 pb-20 overflow-y-auto flex flex-col-reverse"
       >
         {loadingMore && (
           <div className="text-center py-2">
@@ -257,21 +257,21 @@ const ChatsPage = () => {
       </div>
 
       {/* 메시지 입력 영역 */}
-      <div className="p-4 bg-white border-t border-gray-200">
+      <div className="px-4 py-3 bg-white border-t border-gray-200 fixed bottom-16 left-0 right-0 mx-auto max-w-[390px] z-10">
         <form onSubmit={handleSendMessage} className="flex items-center">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력해 주세요"
-            className="flex-1 border border-gray-300 rounded-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="flex-1 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
           <button
             type="submit"
-            className="ml-2 w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center"
+            className="ml-2 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center"
             disabled={!newMessage.trim()}
           >
-            <Send size={20} />
+            <Send size={18} />
           </button>
         </form>
       </div>

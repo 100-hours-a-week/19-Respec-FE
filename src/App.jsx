@@ -89,11 +89,14 @@ const Layout = ({ children }) => {
   
   // 콜백 페이지 등 TopBar와 BottomNavBar가 필요없는 페이지 체크
   const shouldShowNavigation = !['/oauth2/callback'].includes(path);
+  
+  // 채팅 페이지 여부 확인
+  const isChatPage = path.startsWith('/chat/');
 
   return (
     <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
       {shouldShowNavigation && <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />}
-      <main className="pt-16">
+      <main className={`${isChatPage ? '' : 'pt-16'}`}>
         {children}
       </main>
       {shouldShowNavigation && <BottomNavBar active={getActiveMenu()} />}
