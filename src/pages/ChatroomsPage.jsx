@@ -1,53 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../utils/axiosInstance';
+import { format, parseISO } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 const ChatroomsPage = () => {
   const navigate = useNavigate();
-  
-  // 더미 채팅방 데이터
-  const [chatrooms, setChatrooms] = useState([
-    {
-      id: 1,
-      username: 'User1',
-      lastMessage: '최근 대화한 메시지를 나타냅니다.',
-      profileImage: null,
-      timestamp: '오후 3:20'
-    },
-    {
-      id: 2,
-      username: 'User2',
-      lastMessage: '최근 대화한 메시지를 나타냅니다.',
-      profileImage: null,
-      timestamp: '오후 2:15'
-    },
-    {
-      id: 3,
-      username: 'User3',
-      lastMessage: '최근 대화한 메시지를 나타냅니다.',
-      profileImage: null,
-      timestamp: '오후 1:30'
-    },
-    {
-      id: 4,
-      username: 'User4',
-      lastMessage: '최근 대화한 메시지를 나타냅니다.',
-      profileImage: null,
-      timestamp: '오전 11:45'
-    },
-    {
-      id: 5,
-      username: 'User5',
-      lastMessage: '최근 대화한 메시지를 나타냅니다.',
-      profileImage: null,
-      timestamp: '오전 9:20'
+  const [chatrooms, setChatrooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // API를 통해 채팅방 목록 가져오기
+  useEffect(() => {
+    const fetchChatRooms = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get('/api/chat-participations');
+        
+        if (response.data.success) {
+          // API 응답 데이터 형식에 맞게 상태 업데이트
+          setChatrooms(response.data.data.chatRooms.map(room => ({
+            id: room.roomId,
+            username: room.partnerNickname,
+            lastMessage: room.lastMessage,
+            profileImage: room.partnerProfileImageUrl,
+            timestamp: formatTimestamp(room.lastMessageTime)
+          })));
+        } else {
+          setError('채팅방 목록을 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error('채팅방 목록 조회 오류:', err);
+        setError('채팅방 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChatRooms();
+  }, []);
+
+  // 날짜 형식 변환 함수
+  const formatTimestamp = (timestamp) => {
+    try {
+      const date = parseISO(timestamp);
+      const now = new Date();
+      
+      // 오늘 날짜인 경우 시간만 표시
+      if (date.toDateString() === now.toDateString()) {
+        return format(date, 'a h:mm', { locale: ko });
+      }
+      
+      // 다른 날짜인 경우 날짜 형식으로 표시
+      return format(date, 'MM월 dd일', { locale: ko });
+    } catch (e) {
+      console.error('날짜 형식 변환 오류:', e);
+      return '알 수 없음';
     }
-  ]);
+  };
 
   // 채팅방 클릭 핸들러
   const handleChatroomClick = (chatroomId) => {
     // 개별 채팅방으로 이동
     navigate(`/chat/${chatroomId}`);
   };
+
+  // 로딩 중 표시
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+        <p className="text-center">로딩 중...</p>
+      </div>
+    );
+  }
+
+  // 에러 발생 시
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+        <p className="text-center text-red-500">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
+        >
+          새로고침
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
@@ -71,7 +111,7 @@ const ChatroomsPage = () => {
               onClick={() => handleChatroomClick(room.id)}
             >
               {/* 프로필 이미지 */}
-              <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {room.profileImage ? (
                   <img 
                     src={room.profileImage} 
