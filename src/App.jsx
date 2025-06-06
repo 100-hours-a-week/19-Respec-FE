@@ -43,6 +43,9 @@ const Layout = ({ children }) => {
   
   // 현재 경로에 따라 TopBar 타이틀 설정
   const getTitleByPath = () => {
+    // /chat/ 경로인 경우 스펙랭킹 표시 (채팅방 상세에서는 헤더에 상대방 이름 표시)
+    if (path.startsWith('/chat/')) return '스펙랭킹';
+    
     switch (path) {
       case '/': return '스펙랭킹';
       case '/login': return '로그인';
