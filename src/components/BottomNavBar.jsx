@@ -1,9 +1,83 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, BarChart2, MessageSquare, Users, CircleUserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import axiosInstance from '../utils/axiosInstance';
 
 const BottomNavBar = ({ active }) => {
   const { isLoggedIn } = useAuth();
+  const [notifications, setNotifications] = useState({
+    hasUnreadChat: false,
+    hasUnreadComment: false
+  });
+  
+  // 알림 상태 가져오기
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!isLoggedIn) return;
+      
+      try {
+        const response = await axiosInstance.get('/api/notifications', {
+          params: { type: 'footer' }
+        });
+        
+        if (response.data.success) {
+          setNotifications({
+            hasUnreadChat: response.data.data.hasUnreadChat,
+            hasUnreadComment: response.data.data.hasUnreadComment
+          });
+        }
+      } catch (error) {
+        console.error('알림 상태 조회 실패:', error);
+      }
+    };
+    
+    fetchNotifications();
+    
+    // 주기적으로 알림 상태 업데이트 (1분마다)
+    const intervalId = setInterval(fetchNotifications, 60000);
+    
+    return () => clearInterval(intervalId);
+  }, [isLoggedIn, active]);
+  
+  // 채팅방 알림 삭제
+  const clearChatNotification = async () => {
+    if (!isLoggedIn || !notifications.hasUnreadChat) return;
+    
+    // 즉시 로컬 상태 업데이트 (UI가 즉시 반응하도록)
+    setNotifications(prev => ({
+      ...prev,
+      hasUnreadChat: false
+    }));
+    
+    // 서버에 삭제 요청
+    try {
+      await axiosInstance.delete('/api/notifications', {
+        params: { type: 'chat' }
+      });
+    } catch (error) {
+      console.error('채팅 알림 삭제 실패:', error);
+    }
+  };
+  
+  // 소셜 알림 삭제
+  const clearSocialNotification = async () => {
+    if (!isLoggedIn || !notifications.hasUnreadComment) return;
+    
+    // 즉시 로컬 상태 업데이트 (UI가 즉시 반응하도록)
+    setNotifications(prev => ({
+      ...prev,
+      hasUnreadComment: false
+    }));
+    
+    // 서버에 삭제 요청
+    try {
+      await axiosInstance.delete('/api/notifications', {
+        params: { type: 'social' }
+      });
+    } catch (error) {
+      console.error('소셜 알림 삭제 실패:', error);
+    }
+  };
   
   // 기본 네비게이션 아이템
   const baseNavItems = [
@@ -29,16 +103,29 @@ const BottomNavBar = ({ active }) => {
           href={item.name === 'SOCIAL' ? '#' : item.path}
           className={`flex flex-col items-center justify-center w-16 h-full ${
             active === item.name.toLowerCase() ? 'text-blue-500' : 'text-gray-500'
-          }`}
+          } relative`}
           onClick={(e) => {
             if (item.name === 'SOCIAL') {
               e.preventDefault();
+              clearSocialNotification(); // 소셜 알림 삭제
               alert('준비 중인 기능입니다.');
+            } else if (item.name === 'DM') {
+              clearChatNotification(); // 채팅방 알림 삭제
             }
           }}        
         >
           <item.icon size={20} />
           <span className="mt-1 text-xs">{item.name}</span>
+          
+          {/* 채팅 알림 표시 */}
+          {item.name === 'DM' && notifications.hasUnreadChat && (
+            <div className="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></div>
+          )}
+          
+          {/* 댓글 알림 표시 */}
+          {item.name === 'SOCIAL' && notifications.hasUnreadComment && (
+            <div className="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></div>
+          )}
         </a>
       ))}
     </div>
