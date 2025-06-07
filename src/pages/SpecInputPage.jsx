@@ -200,6 +200,18 @@ const SpecInputPage = () => {
             if (specResponse.data.isSuccess) {
               const specData = specResponse.data.specDetailData;
               
+              // 포트폴리오 정보 처리
+              if (specData.portfolioUrl && specData.portfolioUrl !== "") {
+                // 포트폴리오 파일 이름 설정 (경로에서 파일명만 추출)
+                const portfolioPath = specData.portfolioUrl;
+                const fileName = portfolioPath.split('/').pop(); // 경로에서 파일명 추출
+                setPortfolioFileName(fileName || "포트폴리오.pdf"); // 파일명이 없으면 기본값 설정
+                
+                // 이미 등록된 포트폴리오가 있음을 표시 (파일 자체는 불러오지 않음)
+                // 'KEEP_EXISTING' 특별 값으로 설정해 기존 파일 유지를 의미
+                setPortfolioFile('KEEP_EXISTING');
+              }
+              
               // 가져온 스펙 정보로 폼 데이터 업데이트
               setFormData(prev => ({
                 ...prev,
@@ -580,7 +592,13 @@ const SpecInputPage = () => {
       
       // 포트폴리오 파일 추가 (있는 경우)
       if (portfolioFile) {
-        formData.append('portfolioFile', portfolioFile);
+        if (portfolioFile === 'KEEP_EXISTING') {
+          // 기존 파일 유지 - 아무 작업도 하지 않음
+          console.log('기존 포트폴리오 파일 유지');
+        } else {
+          // 새 파일 업로드
+          formData.append('portfolioFile', portfolioFile);
+        }
       }
       
       let response;
@@ -1011,7 +1029,7 @@ const SpecInputPage = () => {
               <p className="text-xs text-gray-500">PDF 파일만 업로드 가능합니다. (최대 10MB)</p>
             </div>
             <div className="p-4 bg-gray-100 rounded-lg">
-              {!portfolioFile ? (
+              {!portfolioFile && !portfolioFileName ? (
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
