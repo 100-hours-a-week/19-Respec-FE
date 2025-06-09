@@ -43,6 +43,9 @@ const Layout = ({ children }) => {
   
   // 현재 경로에 따라 TopBar 타이틀 설정
   const getTitleByPath = () => {
+    // /chat/ 경로인 경우 스펙랭킹 표시 (채팅방 상세에서는 헤더에 상대방 이름 표시)
+    if (path.startsWith('/chat/')) return '스펙랭킹';
+    
     switch (path) {
       case '/': return '스펙랭킹';
       case '/login': return '로그인';
@@ -86,11 +89,14 @@ const Layout = ({ children }) => {
   
   // 콜백 페이지 등 TopBar와 BottomNavBar가 필요없는 페이지 체크
   const shouldShowNavigation = !['/oauth2/callback'].includes(path);
+  
+  // 채팅 페이지 여부 확인
+  const isChatPage = path.startsWith('/chat/');
 
   return (
     <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
       {shouldShowNavigation && <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />}
-      <main className="pt-16">
+      <main className={`${isChatPage ? '' : 'pt-16'}`}>
         {children}
       </main>
       {shouldShowNavigation && <BottomNavBar active={getActiveMenu()} />}
