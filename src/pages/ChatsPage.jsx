@@ -373,7 +373,7 @@ const ChatsPage = () => {
   // 로딩 중 표시
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] text-gray-500 pt-14">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] text-gray-500 pt-14 overflow-hidden">
         <p className="text-center">로딩 중...</p>
       </div>
     );
@@ -382,7 +382,7 @@ const ChatsPage = () => {
   // 에러 발생 시
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] text-gray-500 pt-14">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] text-gray-500 pt-14 overflow-hidden">
         <p className="text-center text-red-500">{error}</p>
         <button 
           onClick={() => window.location.reload()} 
@@ -395,7 +395,7 @@ const ChatsPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)] bg-white overflow-hidden pt-14">
+    <div className="flex flex-col h-[calc(100vh-56px)] bg-white overflow-hidden pt-14 fixed inset-0 max-w-[390px] mx-auto">
       {/* 상단 프로필 영역 */}
       <div className="flex items-center p-4 bg-white border-b border-gray-200">
         {partnerInfo.profileImageUrl ? (
@@ -421,6 +421,10 @@ const ChatsPage = () => {
       <div 
         ref={messageContainerRef}
         className="flex-1 p-4 overflow-y-auto flex flex-col-reverse bg-white"
+        style={{ 
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
       >
         {loadingMore && (
           <div className="text-center py-2">

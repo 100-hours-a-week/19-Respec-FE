@@ -107,7 +107,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="overflow-hidden">
+        <div className="overflow-hidden h-screen">
           <Routes>
             <Route path="/" element={<Layout><HomePage /></Layout>} />
             <Route path="/login" element={<Layout><LoginPage /></Layout>} />
