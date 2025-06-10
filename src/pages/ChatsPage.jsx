@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -7,7 +7,6 @@ import { Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const ChatsPage = () => {
-  const { chatroomId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -17,6 +16,7 @@ const ChatsPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
   const [newMessage, setNewMessage] = useState('');
+  const [chatroomId, setChatroomId] = useState(null);
   const [partnerId, setPartnerId] = useState(null);
   const [partnerInfo, setPartnerInfo] = useState({
     nickname: '',
@@ -30,6 +30,27 @@ const ChatsPage = () => {
   // 스크롤 위치 기억을 위한 ref
   const scrollPositionRef = useRef(null);
   const lastLoadedMessagesRef = useRef([]);
+  
+  // 세션 스토리지에서 데이터 가져오기
+  useEffect(() => {
+    // 세션 스토리지에서 chatroomId와 partnerId 정보 가져오기
+    const storedChatroomId = sessionStorage.getItem('chatroomId');
+    const storedPartnerId = sessionStorage.getItem('partnerId');
+    
+    if (storedChatroomId) {
+      setChatroomId(storedChatroomId);
+    } else if (storedPartnerId) {
+      // chatroomId가 없고 partnerId만 있는 경우 (직접 DM)
+      setPartnerId(storedPartnerId);
+      fetchPartnerInfo(storedPartnerId);
+      setLoading(false);
+      // 이 경우 채팅방 생성 로직이 필요할 수 있음
+    } else {
+      // 둘 다 없는 경우 오류 상태 설정
+      setError('채팅 정보를 찾을 수 없습니다.');
+      setLoading(false);
+    }
+  }, []);
   
   // WebSocket 연결 설정
   useEffect(() => {
@@ -111,6 +132,9 @@ const ChatsPage = () => {
 
   // 최초 메시지 로드
   useEffect(() => {
+    // chatroomId가 없으면 로드하지 않음
+    if (!chatroomId) return;
+    
     const fetchInitialMessages = async () => {
       try {
         setLoading(true);
@@ -123,6 +147,11 @@ const ChatsPage = () => {
           setHasMore(response.data.data.hasNext);
           setNextCursor(response.data.data.nextCursor);
           setPartnerId(response.data.data.partnerId);
+          
+          // 파트너 ID를 세션 스토리지에 저장 (나중에 DM에 사용)
+          if (response.data.data.partnerId) {
+            sessionStorage.setItem('partnerId', response.data.data.partnerId);
+          }
           
           // 상대방 정보 가져오기
           fetchPartnerInfo(response.data.data.partnerId);
@@ -261,7 +290,7 @@ const ChatsPage = () => {
 
   // 추가 메시지 로드 함수
   const loadMoreMessages = async () => {
-    if (!hasMore || loadingMore) return;
+    if (!hasMore || loadingMore || !chatroomId) return;
 
     try {
       setLoadingMore(true);
