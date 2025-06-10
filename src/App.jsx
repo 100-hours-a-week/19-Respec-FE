@@ -16,22 +16,24 @@ import TopBar from './components/TopBar';
 import BottomNavBar from './components/BottomNavBar';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import OAuthRedirectPage from './pages/OAuthRedirectPage';
+import React from 'react';
 
 axios.defaults.withCredentials = true;
 
 // 인증이 필요한 라우트를 위한 컴포넌트
 const ProtectedRoute = ({ children }) => {
-  const { isLoggedIn, loading } = useAuth();
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
+  React.useEffect(() => {
+    if (!isLoggedIn) {
+      // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
+      navigate('/login', { state: { from: location.pathname } });
+    }
+  }, [isLoggedIn, navigate, location]);
   
-  if (!isLoggedIn) {
-    return <Navigate to="/login" />;
-  }
-  
-  return children;
+  return isLoggedIn ? children : null;
 };
 
 // 레이아웃 컴포넌트
@@ -43,47 +45,44 @@ const Layout = ({ children }) => {
   
   // 현재 경로에 따라 TopBar 타이틀 설정
   const getTitleByPath = () => {
-    // /chat/ 경로인 경우 스펙랭킹 표시 (채팅방 상세에서는 헤더에 상대방 이름 표시)
-    if (path.startsWith('/chat/')) return '스펙랭킹';
+    const path = location.pathname;
     
-    switch (path) {
-      case '/': return '스펙랭킹';
-      case '/login': return '로그인';
-      case '/profile-setup': return '회원가입';
-      case '/spec-input': return '스펙 입력';
-      case '/rank': return '랭킹';
-      case '/ranking-results': return '랭킹 검색 결과';
-      case '/chatrooms': return '채팅방';
-      case '/social': return '소셜';
-      case '/my': return '마이페이지';
-      default: return '스펙랭킹';
-    }
+    if (path === '/') return '홈';
+    if (path === '/login') return '로그인';
+    if (path === '/profile-setup') return '프로필 설정';
+    if (path === '/spec-input') return '스펙 입력';
+    if (path === '/rank') return '랭킹';
+    if (path === '/ranking-results') return '랭킹 결과';
+    if (path === '/chatrooms') return '채팅';
+    if (path.startsWith('/chat')) return '스펙랭킹';
+    if (path === '/social') return '소셜';
+    if (path === '/my') return '마이페이지';
+    
+    return '';
   };
 
-  // 뒤로가기 버튼 표시 여부 및 이동 경로 결정
+  // 뒤로가기 버튼 설정
   const getBackButtonConfig = () => {
-    // 뒤로가기 버튼이 보이지 않아야 하는 페이지들
-    if (['/', '/login', '/rank', '/chatrooms', '/social', '/my'].includes(path)) {
-      return null;
-    }
+    const path = location.pathname;
     
-    // 특정 페이지로 이동해야 하는 경우
-    if (path === '/profile-setup') return '/login';
+    if (path === '/profile-setup') return null;
     if (path === '/spec-input') return '/my';
     if (path === '/ranking-results') return '/rank';
+    if (path.startsWith('/chat')) return '/chatrooms';
     
-    // 그 외 페이지는 브라우저 히스토리 기반 이전 페이지로 이동
-    return () => navigate(-1);
+    return '/';
   };
 
-  // 현재 활성화된 메뉴 아이템 결정
+  // 현재 활성 메뉴 설정
   const getActiveMenu = () => {
+    const path = window.location.pathname;
+    
     if (path === '/') return 'home';
-    if (path === '/rank' || path === 'ranking-results') return 'rank';
-    if (path === '/chatrooms') return 'dm';
+    if (path === '/rank') return 'rank';
+    if (path === '/chatrooms' || path.startsWith('/chat')) return 'dm';
     if (path === '/social') return 'social';
-    if (path === '/my' || path === '/spec-input') return 'my';
-    if (path === '/login' || path === '/profile-setup') return isLoggedIn ? 'my' : 'login';
+    if (path === '/my') return 'my';
+    
     return '';
   };
   
@@ -91,12 +90,12 @@ const Layout = ({ children }) => {
   const shouldShowNavigation = !['/oauth2/callback'].includes(path);
   
   // 채팅 페이지 여부 확인
-  const isChatPage = path.startsWith('/chat/');
+  const isChatPage = path.startsWith('/chat');
 
   return (
-    <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
+    <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative overflow-hidden">
       {shouldShowNavigation && <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />}
-      <main className={`${isChatPage ? '' : 'pt-16'}`}>
+      <main className={isChatPage ? '' : 'pt-16'}>
         {children}
       </main>
       {shouldShowNavigation && <BottomNavBar active={getActiveMenu()} />}
@@ -108,24 +107,26 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Layout><HomePage /></Layout>} />
-          <Route path="/login" element={<Layout><LoginPage /></Layout>} />
-          <Route path="/profile-setup" element={<Layout><ProfileSetupPage /></Layout>} />
-          <Route path="/oauth2/callback" element={<OAuthCallbackPage />} />
-          <Route path="/oauth-redirect" element={<OAuthRedirectPage />} />
-          <Route path="/spec-input" element={<Layout><SpecInputPage /></Layout>} />
-          <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
-          <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
-          <Route path="/chatrooms" element={<Layout><ChatroomsPage /></Layout>} />
-          <Route path="/chat/:chatroomId" element={<Layout><ChatsPage /></Layout>} />
-          <Route path="/social" element={<Layout><SocialPage /></Layout>} />
-          <Route path="/my" element={
-            <ProtectedRoute>
-              <Layout><MyPage /></Layout>
-            </ProtectedRoute>
-          } />
-        </Routes>
+        <div className="overflow-hidden">
+          <Routes>
+            <Route path="/" element={<Layout><HomePage /></Layout>} />
+            <Route path="/login" element={<Layout><LoginPage /></Layout>} />
+            <Route path="/profile-setup" element={<Layout><ProfileSetupPage /></Layout>} />
+            <Route path="/oauth2/callback" element={<OAuthCallbackPage />} />
+            <Route path="/oauth-redirect" element={<OAuthRedirectPage />} />
+            <Route path="/spec-input" element={<Layout><SpecInputPage /></Layout>} />
+            <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
+            <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
+            <Route path="/chatrooms" element={<Layout><ChatroomsPage /></Layout>} />
+            <Route path="/chat" element={<Layout><ChatsPage /></Layout>} />
+            <Route path="/social" element={<Layout><SocialPage /></Layout>} />
+            <Route path="/my" element={
+              <ProtectedRoute>
+                <Layout><MyPage /></Layout>
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </div>
       </AuthProvider>
     </BrowserRouter>
   );
