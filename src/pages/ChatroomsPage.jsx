@@ -25,7 +25,7 @@ const ChatroomsPage = () => {
             lastMessage: room.lastMessage,
             profileImage: room.partnerProfileImageUrl,
             timestamp: formatTimestamp(room.lastMessageTime),
-            partnerId: room.partnerId // 파트너 ID 추가
+            partnerId: room.partnerId
           })));
         } else {
           setError('채팅방 목록을 불러오는데 실패했습니다.');
@@ -62,13 +62,9 @@ const ChatroomsPage = () => {
 
   // 채팅방 클릭 핸들러
   const handleChatroomClick = (chatroomId, partnerId) => {
-    // 세션 스토리지에 채팅방 정보 저장
+    // 세션 스토리지에 채팅방 정보와 파트너 ID 저장
     sessionStorage.setItem('chatroomId', chatroomId);
-    
-    // partnerId도 저장 (DM 기능을 위해)
-    if (partnerId) {
-      sessionStorage.setItem('partnerId', partnerId);
-    }
+    sessionStorage.setItem('partnerId', partnerId);
     
     // URL 파라미터 없이 채팅 페이지로 이동
     navigate('/chat');
@@ -77,7 +73,7 @@ const ChatroomsPage = () => {
   // 로딩 중 표시
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-126px)] text-gray-500 pt-14">
+      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
         <p className="text-center">로딩 중...</p>
       </div>
     );
@@ -86,7 +82,7 @@ const ChatroomsPage = () => {
   // 에러 발생 시
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-126px)] text-gray-500 pt-14">
+      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
         <p className="text-center text-red-500">{error}</p>
         <button 
           onClick={() => window.location.reload()} 
@@ -99,7 +95,7 @@ const ChatroomsPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 pt-16">
+    <div className="flex flex-col h-full bg-gray-50">
       {/* 채팅방 목록 */}
       <div className="flex-1 p-5 space-y-4">
         {chatrooms.length === 0 ? (

@@ -373,7 +373,7 @@ const ChatsPage = () => {
   // 로딩 중 표시
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] text-gray-500 pt-14 overflow-hidden">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-126px)] pt-14 text-gray-500">
         <p className="text-center">로딩 중...</p>
       </div>
     );
@@ -382,7 +382,7 @@ const ChatsPage = () => {
   // 에러 발생 시
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] text-gray-500 pt-14 overflow-hidden">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-126px)] pt-14 text-gray-500">
         <p className="text-center text-red-500">{error}</p>
         <button 
           onClick={() => window.location.reload()} 
@@ -395,38 +395,31 @@ const ChatsPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)] bg-white overflow-hidden pt-14 fixed inset-0 max-w-[390px] mx-auto">
-      {/* 상단 프로필 영역 */}
-      <div className="flex items-center p-4 bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex items-center">
+    <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden pt-16 relative">
+      {/* 채팅방 상단 프로필 */}
+      <div className="flex items-center p-3 border-b border-gray-200 bg-white">
+        <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden mr-3">
           {partnerInfo.profileImageUrl ? (
             <img 
               src={partnerInfo.profileImageUrl} 
               alt={`${partnerInfo.nickname} 프로필`} 
-              className="w-12 h-12 mr-3 rounded-full object-cover border border-gray-200 shadow-sm"
+              className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-12 h-12 mr-3 bg-gray-200 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
-              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-full h-full flex items-center justify-center bg-gray-300">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
           )}
-          <div>
-            <p className="font-medium text-gray-900">{partnerInfo.nickname || "userNickname1"}</p>
-            <p className="text-xs text-gray-500">가보자고</p>
-          </div>
         </div>
+        <h3 className="text-lg font-medium">{partnerInfo.nickname}</h3>
       </div>
 
       {/* 메시지 영역 */}
       <div 
         ref={messageContainerRef}
-        className="flex-1 p-4 overflow-y-auto flex flex-col-reverse bg-gray-50"
-        style={{ 
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }}
+        className="flex-1 p-4 mb-4 overflow-y-auto flex flex-col-reverse"
       >
         {loadingMore && (
           <div className="text-center py-2">
@@ -443,19 +436,19 @@ const ChatsPage = () => {
               ref={index === messages.length - 1 ? firstMessageRef : null}
               data-message-id={message.messageId}
               data-timestamp={message.createdAt}
-              className={`flex my-2 message-item ${isMyMessage ? 'justify-end' : 'justify-start'}`}
+              className={`flex my-1 message-item ${isMyMessage ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-[75%] ${isMyMessage ? 'order-1' : 'order-2'}`}>
+              <div className={`max-w-[70%] ${isMyMessage ? 'order-1' : 'order-2'}`}>
                 <div 
-                  className={`p-3 rounded-2xl shadow-sm ${
+                  className={`p-3 rounded-2xl ${
                     isMyMessage 
                       ? 'bg-blue-500 text-white rounded-tr-none' 
-                      : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'
+                      : 'bg-gray-100 text-gray-800 rounded-tl-none'
                   }`}
                 >
                   <p className="text-sm">{message.content}</p>
                 </div>
-                <p className={`text-xs text-gray-500 mt-1 ${isMyMessage ? 'text-right mr-1' : 'text-left ml-1'}`}>
+                <p className={`text-xs text-gray-500 mt-1 ${isMyMessage ? 'text-right' : 'text-left'}`}>
                   {formatMessageTime(message.createdAt)}
                 </p>
               </div>
@@ -465,18 +458,18 @@ const ChatsPage = () => {
       </div>
 
       {/* 메시지 입력 영역 */}
-      <div className="px-4 py-3 bg-white border-t border-gray-200 shadow-inner">
+      <div className="px-4 py-3 bg-white border-t border-gray-200 fixed bottom-16 left-0 right-0 mx-auto max-w-[390px] z-10">
         <form onSubmit={handleSendMessage} className="flex items-center">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력해 주세요"
-            className="flex-1 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-gray-50"
+            className="flex-1 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
           <button
             type="submit"
-            className="ml-2 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-sm hover:bg-blue-600 transition-colors"
+            className="ml-2 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center"
             disabled={!newMessage.trim()}
           >
             <Send size={18} />
