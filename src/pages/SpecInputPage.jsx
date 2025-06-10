@@ -104,6 +104,8 @@ const SpecInputPage = () => {
   // State for portfolio file
   const [portfolioFile, setPortfolioFile] = useState(null);
   const [portfolioFileName, setPortfolioFileName] = useState('');
+  // State for portfolio visibility
+  const [isVisiblePortfolioToUser, setIsVisiblePortfolioToUser] = useState(false);
   
   // Handlers for cancel confirmation
   const handleCancelAttempt = () => setShowConfirmModal(true);
@@ -210,6 +212,8 @@ const SpecInputPage = () => {
                 // 이미 등록된 포트폴리오가 있음을 표시 (파일 자체는 불러오지 않음)
                 // 'KEEP_EXISTING' 특별 값으로 설정해 기존 파일 유지를 의미
                 setPortfolioFile('KEEP_EXISTING');
+                // 포트폴리오 가시성 설정
+                setIsVisiblePortfolioToUser(true);
               }
               
               // 가져온 스펙 정보로 폼 데이터 업데이트
@@ -447,7 +451,8 @@ const SpecInputPage = () => {
         role: activity.role,
         award: activity.award || ''
       })),
-      jobField: formData.jobField
+      jobField: formData.jobField,
+      isVisiblePortfolioToUser: isVisiblePortfolioToUser // 포트폴리오 가시성 추가
     };
 
     return formattedData;
@@ -547,12 +552,14 @@ const SpecInputPage = () => {
     
     setPortfolioFile(file);
     setPortfolioFileName(file.name);
+    setIsVisiblePortfolioToUser(true); // 새로운 파일 업로드 시 가시성 true로 설정
   };
   
   // Remove portfolio file
   const handleRemoveFile = () => {
     setPortfolioFile(null);
     setPortfolioFileName('');
+    setIsVisiblePortfolioToUser(false); // 파일 제거 시 가시성 false로 설정
   };
 
   // 제출 처리

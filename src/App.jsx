@@ -91,7 +91,7 @@ const Layout = ({ children }) => {
   const shouldShowNavigation = !['/oauth2/callback'].includes(path);
   
   // 채팅 페이지 여부 확인
-  const isChatPage = path.startsWith('/chat/');
+  const isChatPage = path === '/chat';
 
   return (
     <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
@@ -118,7 +118,7 @@ function App() {
           <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
           <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
           <Route path="/chatrooms" element={<Layout><ChatroomsPage /></Layout>} />
-          <Route path="/chat/:chatroomId" element={<Layout><ChatsPage /></Layout>} />
+          <Route path="/chat" element={<Layout><ChatsPage /></Layout>} />
           <Route path="/social" element={<Layout><SocialPage /></Layout>} />
           <Route path="/my" element={
             <ProtectedRoute>
