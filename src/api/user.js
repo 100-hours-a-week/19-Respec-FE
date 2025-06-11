@@ -10,4 +10,4 @@ export const updateProfile = (formData) =>
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
-export const getUserById = (userId) => http.get(`/api/users/${userId}`);
+export const getUserInfo = (userId) => http.get(`/api/users/${userId}`);

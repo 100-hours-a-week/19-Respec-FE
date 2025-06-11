@@ -36,7 +36,7 @@ export const getMetaData = ({ type, jobField }) => {
   });
 };
 
-export const fetchSpecDetail = (specId) => {
+export const getSpecDetail = (specId) => {
   return http.get(`/api/specs/${specId}`);
 };
 
