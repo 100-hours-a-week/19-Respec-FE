@@ -170,7 +170,7 @@ const ChatsPage = () => {
   // 상대방 정보 가져오기
   const fetchPartnerInfo = async (userId) => {
     try {
-      const response = await UserAPI.getUserById(userId);
+      const response = await UserAPI.getUserInfo(userId);
       if (response.data.isSuccess) {
         setPartnerInfo({
           nickname: response.data.data.user.nickname,

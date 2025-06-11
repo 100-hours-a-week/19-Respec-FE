@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Home, BarChart2, MessageSquare, Users, CircleUserRound } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { getAccessToken } from '../../utils/token';
+import { NotificationAPI } from '../../api';
 
 const BottomNavBar = ({ active }) => {
   const { isLoggedIn, loading } = useAuthStore();
@@ -20,9 +21,7 @@ const BottomNavBar = ({ active }) => {
       if (!isLoggedIn) return;
       
       try {
-        const response = await axiosInstance.get('/api/notifications', {
-          params: { type: 'footer' }
-        });
+        const response = await NotificationAPI.getNotifications('footer');
         
         if (response.data.success) {
           setNotifications({
@@ -55,9 +54,7 @@ const BottomNavBar = ({ active }) => {
     
     // 서버에 삭제 요청
     try {
-      await axiosInstance.delete('/api/notifications', {
-        params: { type: 'chat' }
-      });
+      await NotificationAPI.deleteNotifications('chat');
     } catch (error) {
       console.error('채팅 알림 삭제 실패:', error);
     }
@@ -75,9 +72,7 @@ const BottomNavBar = ({ active }) => {
     
     // 서버에 삭제 요청
     try {
-      await axiosInstance.delete('/api/notifications', {
-        params: { type: 'social' }
-      });
+      await NotificationAPI.deleteNotifications('social');
     } catch (error) {
       console.error('소셜 알림 삭제 실패:', error);
     }
@@ -105,15 +100,13 @@ const BottomNavBar = ({ active }) => {
       {navItems.map((item) => (
         <a 
           key={item.name}
-          href={item.name === 'SOCIAL' ? '#' : item.path}
+          href={item.path}
           className={`flex flex-col items-center justify-center w-16 h-full ${
             active === item.name.toLowerCase() ? 'text-blue-500' : 'text-gray-500'
           } relative`}
           onClick={(e) => {
             if (item.name === 'SOCIAL') {
-              e.preventDefault();
               clearSocialNotification(); // 소셜 알림 삭제
-              alert('준비 중인 기능입니다.');
             } else if (item.name === 'DM') {
               clearChatNotification(); // 채팅방 알림 삭제
             }
