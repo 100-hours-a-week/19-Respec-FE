@@ -8,7 +8,8 @@ import MyPage from './pages/MyPage';
 import SpecInputPage from './pages/SpecInputPage';
 import RankingPage from './pages/RankingPage';
 import RankingResultPage from './pages/RankingResultPage';
-import DmPage from './pages/DmPage';
+import ChatroomsPage from './pages/ChatroomsPage';
+import ChatsPage from './pages/ChatsPage';
 import SocialPage from './pages/SocialPage';
 import TopBar from './components/common/TopBar';
 import BottomNavBar from './components/common/BottomNavBar';
@@ -48,6 +49,9 @@ const Layout = ({ children }) => {
   
   // 현재 경로에 따라 TopBar 타이틀 설정
   const getTitleByPath = () => {
+    // /chat/ 경로인 경우 스펙랭킹 표시 (채팅방 상세에서는 헤더에 상대방 이름 표시)
+    if (path.startsWith('/chat/')) return '스펙랭킹';
+    
     switch (path) {
       case '/': return '스펙랭킹';
       case '/login': return '로그인';
@@ -55,7 +59,7 @@ const Layout = ({ children }) => {
       case '/spec-input': return '스펙 입력';
       case '/rank': return '랭킹';
       case '/ranking-results': return '랭킹 검색 결과';
-      case '/dm': return '채팅';
+      case '/chatrooms': return '채팅방';
       case '/social': return '소셜';
       case '/my': return '마이페이지';
       default: return '스펙랭킹';
@@ -65,7 +69,7 @@ const Layout = ({ children }) => {
   // 뒤로가기 버튼 표시 여부 및 이동 경로 결정
   const getBackButtonConfig = () => {
     // 뒤로가기 버튼이 보이지 않아야 하는 페이지들
-    if (['/', '/login', '/rank', '/dm', '/social', '/my'].includes(path)) {
+    if (['/', '/login', '/rank', '/chatrooms', '/social', '/my'].includes(path)) {
       return null;
     }
     
@@ -82,17 +86,20 @@ const Layout = ({ children }) => {
   const getActiveMenu = () => {
     if (path === '/') return 'home';
     if (path === '/rank' || path === 'ranking-results') return 'rank';
-    if (path === '/dm') return 'dm';
+    if (path === '/chatrooms') return 'dm';
     if (path === '/social') return 'social';
     if (path === '/my' || path === '/spec-input') return 'my';
     if (path === '/login' || path === '/profile-setup') return isLoggedIn ? 'my' : 'login';
     return '';
   };
 
+  // 채팅 페이지 여부 확인
+  const isChatPage = path === '/chat';
+
   return (
     <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
       <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />
-      <main className="pt-2 pb-2">
+      <main className={`${isChatPage ? '' : 'pt-16'}`}>
         {children}
       </main>
       <BottomNavBar active={getActiveMenu()} />
@@ -114,7 +121,8 @@ function App() {
         <Route path="/spec-input" element={<Layout><SpecInputPage /></Layout>} />
         <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
         <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
-        <Route path="/dm" element={<Layout><DmPage /></Layout>} />
+        <Route path="/chatrooms" element={<Layout><ChatroomsPage /></Layout>} />
+        <Route path="/chat" element={<Layout><ChatsPage /></Layout>} />
         <Route path="/social" element={<Layout><SocialPage /></Layout>} />
         <Route path="/my" element={
           <ProtectedRoute>

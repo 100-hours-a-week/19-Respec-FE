@@ -1,67 +1,47 @@
-name: Deploy Frontend to EC2
+name: Deploy Frontend to S3
 
 on:
   push:
     branches:
-      - stage
-# on:
-#   workflow_dispatch:
-#     inputs: 
-#       tags:
-#         description: 'Set Tags Name'
-#         required: true
-#         type: string
-#         default: master
-          
+      - dev
+
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build React App
+        run: |
+          echo "REACT_APP_API_BASE_URL=${{ secrets.DEV_REACT_APP_API_BASE_URL }}" >> .env
+          echo "REACT_APP_FRONTEND_URL=${{ secrets.DEV_REACT_APP_FRONTEND_URL }}" >> .env
+          CI=false npm run build
+
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            if [ ! -d "19-Respec-FE" ]; then
-              git clone https://github.com/100-hours-a-week/19-Respec-FE.git
-            fi
+      - name: Deploy to S3
+        run: |
+          aws s3 sync build/ s3://${{ secrets.DEV_S3_BUCKET_NAME }}/ \
+            --delete \
+            --cache-control "max-age=31536000"
 
-            cd 19-Respec-FE
-            git checkout stage
-            git pull origin stage
-            
-            echo "📦 .env 파일 생성 중..."
-            cat <<EOF > .env
-            REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }}
-            REACT_APP_FRONTEND_URL=${{ secrets.REACT_APP_FRONTEND_URL }}
-            EOF
-            echo "✅ .env 파일 생성 완료"
-
-            npm install
-            npm run build
-
-            echo "🔍 기존 serve 프로세스 종료 시도..."
-            PORT_PID=$(lsof -i:3000 -t || true)
-            if [ -n "$PORT_PID" ]; then
-              echo "🔴 포트 3000 사용 중, 프로세스 종료 (PID: $PORT_PID)"
-              kill -9 $PORT_PID
-            else
-              echo "✅ 종료할 프로세스 없음"
-            fi
-
-            echo "🚀 serve 실행 시작 (build)..."
-            nohup npx serve -s build -l 3000 > frontend.log 2>&1 &
-            echo "✅ serve 백그라운드 실행 완료"
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

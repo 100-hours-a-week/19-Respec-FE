@@ -99,6 +99,14 @@ const SpecInputPage = () => {
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   // State for cancel confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // State for portfolio file error modal
+  const [showFileErrorModal, setShowFileErrorModal] = useState(false);
+  const [fileErrorMessage, setFileErrorMessage] = useState('');
+  // State for portfolio file
+  const [portfolioFile, setPortfolioFile] = useState(null);
+  const [portfolioFileName, setPortfolioFileName] = useState('');
+  // State for portfolio visibility
+  const [isVisiblePortfolioToUser, setIsVisiblePortfolioToUser] = useState(false);
   
   // Handlers for cancel confirmation
   const handleCancelAttempt = () => setShowConfirmModal(true);
@@ -109,6 +117,9 @@ const SpecInputPage = () => {
   const clearError = () => {
     setError(null);
   };
+  
+  // Handler for file error modal
+  const handleCloseFileErrorModal = () => setShowFileErrorModal(false);
   
   const [formData, setFormData] = useState({
     name: '', // 사용자 닉네임(수정 불가)
@@ -177,6 +188,20 @@ const SpecInputPage = () => {
             
             if (specResponse.data.isSuccess) {
               const specData = specResponse.data.specDetailData;
+              
+              // 포트폴리오 정보 처리
+              if (specData.portfolioUrl && specData.portfolioUrl !== "") {
+                // 포트폴리오 파일 이름 설정 (경로에서 파일명만 추출)
+                const portfolioPath = specData.portfolioUrl;
+                const fileName = portfolioPath.split('/').pop(); // 경로에서 파일명 추출
+                setPortfolioFileName(fileName || "포트폴리오.pdf"); // 파일명이 없으면 기본값 설정
+                
+                // 이미 등록된 포트폴리오가 있음을 표시 (파일 자체는 불러오지 않음)
+                // 'KEEP_EXISTING' 특별 값으로 설정해 기존 파일 유지를 의미
+                setPortfolioFile('KEEP_EXISTING');
+                // 포트폴리오 가시성 설정
+                setIsVisiblePortfolioToUser(true);
+              }
               
               // 가져온 스펙 정보로 폼 데이터 업데이트
               setFormData(prev => ({
@@ -414,7 +439,8 @@ const SpecInputPage = () => {
         role: activity.role,
         award: activity.award || ''
       })),
-      jobField: formData.jobField
+      jobField: formData.jobField,
+      isVisiblePortfolioToUser: isVisiblePortfolioToUser // 포트폴리오 가시성 추가
     };
 
     return formattedData;
@@ -491,6 +517,39 @@ const SpecInputPage = () => {
     }
   };
 
+  // Handle portfolio file upload
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setFileErrorMessage('파일 크기는 최대 10MB까지 가능합니다.');
+      setShowFileErrorModal(true);
+      e.target.value = null; // Reset file input
+      return;
+    }
+    
+    // Check file type (must be PDF)
+    if (file.type !== 'application/pdf') {
+      setFileErrorMessage('PDF 파일만 업로드 가능합니다.');
+      setShowFileErrorModal(true);
+      e.target.value = null; // Reset file input
+      return;
+    }
+    
+    setPortfolioFile(file);
+    setPortfolioFileName(file.name);
+    setIsVisiblePortfolioToUser(true); // 새로운 파일 업로드 시 가시성 true로 설정
+  };
+  
+  // Remove portfolio file
+  const handleRemoveFile = () => {
+    setPortfolioFile(null);
+    setPortfolioFileName('');
+    setIsVisiblePortfolioToUser(false); // 파일 제거 시 가시성 false로 설정
+  };
+
   // 제출 처리
   const handleSubmit = async () => {
     // 폼 유효성 검사
@@ -519,6 +578,17 @@ const SpecInputPage = () => {
       // JSON 데이터를 Blob으로 변환하여 "spec" 필드에 추가 (Content-Type: application/json 설정)
       const specBlob = new Blob([JSON.stringify(submissionData)], { type: 'application/json' });
       formData.append('spec', specBlob);
+      
+      // 포트폴리오 파일 추가 (있는 경우)
+      if (portfolioFile) {
+        if (portfolioFile === 'KEEP_EXISTING') {
+          // 기존 파일 유지 - 아무 작업도 하지 않음
+          console.log('기존 포트폴리오 파일 유지');
+        } else {
+          // 새 파일 업로드
+          formData.append('portfolioFile', portfolioFile);
+        }
+      }
       
       let response;
       
@@ -932,6 +1002,52 @@ const SpecInputPage = () => {
               ))
             ) : null}
 
+            {/* 포트폴리오 섹션 */}
+            <div className="mb-2">
+              <h3 className="text-lg font-medium">포트폴리오</h3>
+              <p className="text-xs text-gray-500">PDF 파일만 업로드 가능합니다. (최대 10MB)</p>
+            </div>
+            <div className="p-4 bg-gray-100 rounded-lg">
+              {!portfolioFile && !portfolioFileName ? (
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                      </svg>
+                      <p className="mb-2 text-sm text-gray-500">PDF 파일을 클릭하여 업로드하세요</p>
+                      <p className="text-xs text-gray-500">최대 10MB</p>
+                    </div>
+                    <input 
+                      id="dropzone-file" 
+                      type="file" 
+                      className="hidden" 
+                      accept=".pdf" 
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-center">
+                    <svg className="w-8 h-8 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    <span className="text-sm truncate">{portfolioFileName}</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={handleRemoveFile}
+                    className="p-1 text-gray-500 bg-gray-100 rounded-full hover:bg-gray-200"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* 지원 분야 */}
             <div className="mb-2">
               <h3 className="text-lg font-medium">
@@ -1041,6 +1157,37 @@ const SpecInputPage = () => {
                     className="flex-1 py-3 text-center text-gray-700 bg-gray-200 rounded-lg"
                   >
                     아니오
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {showFileErrorModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+            <div className="w-11/12 max-w-sm p-6 bg-white rounded-lg shadow-lg">
+              <div className="flex justify-end">
+                <button onClick={handleCloseFileErrorModal} className="text-gray-500 hover:text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="p-4 mb-4 bg-red-100 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M12 2a10 10 0 11-0 20 10 10 0 010-20z" />
+                  </svg>
+                </div>
+                <p className="mb-6 text-lg font-semibold text-gray-800">파일 업로드 오류</p>
+                <p className="mb-6 text-sm text-gray-500">{fileErrorMessage}</p>
+                <div className="flex w-full">
+                  <button
+                    onClick={handleCloseFileErrorModal}
+                    className="flex-1 py-3 text-center text-gray-700 bg-gray-200 rounded-lg"
+                  >
+                    확인
                   </button>
                 </div>
               </div>
