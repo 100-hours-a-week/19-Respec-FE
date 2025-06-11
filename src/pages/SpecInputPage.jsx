@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosInstance';
-import { useAuth } from '../context/AuthContext';
+import { UserAPI, SpecAPI } from '../api';
+import { useAuthStore } from '../stores/useAuthStore';
+import { getAccessToken } from '../utils/token';
 
 // 상수 데이터 정의
 const JOB_FIELDS = [
@@ -89,7 +90,7 @@ const LANGUAGE_TESTS = [
 
 const SpecInputPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user: authUser, loading: authLoading, init } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -139,43 +140,33 @@ const SpecInputPage = () => {
     const fetchUserAndSpecData = async () => {
       try {
         setLoading(true);
-        
-        // Get token from Authorization cookie header
-        const token = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('Authorization='))
-          ?.split('=')[1];
-        
+
+        const token = getAccessToken();
         if (!token) {
-          setError('인증 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
-          setLoading(false);
+          console.log('토큰이 없어 로그인 페이지로 이동합니다.');
+          navigate('/login');
           return;
         }
 
-        let userId;
-        
-        try {
-          // JWT 토큰 디코딩 (Base64)
-          const payload = token.split('.')[1];
-          const decodedPayload = JSON.parse(atob(payload));
-          userId = decodedPayload.userId;
-          console.log("Decoded userId from token:", userId);
-        } catch (e) {
-          console.error('Failed to decode token:', e);
+        if (!authUser && token && !authLoading) {
+          console.log('인증 상태를 다시 초기화하는 중...');
+          await init();
+          return;
+        }
+
+        if (authLoading) {
+          console.log('인증 상태 로딩 중...');
+          return;
         }
         
-        if (!userId) {
-          setError('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
-          setLoading(false);
+        if (!authUser?.id) {
+          console.error('사용자 정보를 찾을 수 없습니다.');
+          navigate('/login');
           return;
         }
         
         // 유저 정보 가져오기
-        const userResponse = await axiosInstance.get(`/api/users/${userId}`, {
-          headers: {
-            'Authorization': token
-          }
-        });
+        const userResponse = await UserAPI.getUserById(authUser.id);
         
         if (userResponse.data.isSuccess) {
           const userData = userResponse.data.data.user;
@@ -193,11 +184,7 @@ const SpecInputPage = () => {
             setActiveSpecId(userData.spec.activeSpec);
             
             // 활성화된 스펙 정보 가져오기
-            const specResponse = await axiosInstance.get(`/api/specs/${userData.spec.activeSpec}`, {
-              headers: {
-                'Authorization': token
-              }
-            });
+            const specResponse = await SpecAPI.fetchSpecDetail(userData.spec.activeSpec);
             
             if (specResponse.data.isSuccess) {
               const specData = specResponse.data.specDetailData;
@@ -253,6 +240,7 @@ const SpecInputPage = () => {
             }
           }
         }
+        
         setInitialDataLoaded(true);
       } catch (err) {
         console.error('Error fetching user/spec data:', err);
@@ -285,7 +273,7 @@ const SpecInputPage = () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('pageshow', handlePageShow);
     };
-  }, []);
+  }, [navigate, authUser, init, authLoading]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -572,20 +560,14 @@ const SpecInputPage = () => {
     // 로딩 상태 시작
     setLoading(true);
     setError(null);
-
+    
     try {
-      // Get token from Authorization cookie header
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('Authorization='))
-        ?.split('=')[1];
-      
-      if (!token) {
+      if (!authUser?.id) {
         setError('인증 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
         setLoading(false);
         return;
       }
-      
+
       // 데이터 형식 변환
       const submissionData = formatDataForSubmission();
       console.log('Submitting data:', submissionData);
@@ -613,21 +595,11 @@ const SpecInputPage = () => {
       if (isEditMode && activeSpecId) {
         // 수정 모드인 경우 PUT 요청 보내기
         console.log(`Sending PUT request to: /api/specs/${activeSpecId}`);
-        response = await axiosInstance.put(`/api/specs/${activeSpecId}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': token
-          }
-        });
+        response = await SpecAPI.updateSpec(activeSpecId, formData);
       } else {
         // 신규 등록인 경우 POST 요청 보내기
         console.log('Sending POST request to: /api/specs');
-        response = await axiosInstance.post('/api/specs', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': token
-          }
-        });
+        response = await SpecAPI.createSpec(formData);
       }
       
       console.log('Response:', response);

@@ -4,7 +4,6 @@ import axios from 'axios';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
-import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import MyPage from './pages/MyPage';
 import SpecInputPage from './pages/SpecInputPage';
 import RankingPage from './pages/RankingPage';
@@ -12,23 +11,30 @@ import RankingResultPage from './pages/RankingResultPage';
 import ChatroomsPage from './pages/ChatroomsPage';
 import ChatsPage from './pages/ChatsPage';
 import SocialPage from './pages/SocialPage';
-import TopBar from './components/TopBar';
-import BottomNavBar from './components/BottomNavBar';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import TopBar from './components/common/TopBar';
+import BottomNavBar from './components/common/BottomNavBar';
+import { useEffect } from 'react';
+import { useAuthStore } from './stores/useAuthStore';
 import OAuthRedirectPage from './pages/OAuthRedirectPage';
 
 axios.defaults.withCredentials = true;
 
 // 인증이 필요한 라우트를 위한 컴포넌트
 const ProtectedRoute = ({ children }) => {
-  const { isLoggedIn, loading } = useAuth();
+  const { isLoggedIn, loading, init } = useAuthStore();
+  const location = useLocation();
+  
+  useEffect(() => {
+    // 라우트 변경 시 인증 상태 확인
+    init();
+  }, [location.pathname, init]);
   
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
   
   if (!isLoggedIn) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
   return children;
@@ -39,7 +45,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn } = useAuthStore();
   
   // 현재 경로에 따라 TopBar 타이틀 설정
   const getTitleByPath = () => {
@@ -86,47 +92,44 @@ const Layout = ({ children }) => {
     if (path === '/login' || path === '/profile-setup') return isLoggedIn ? 'my' : 'login';
     return '';
   };
-  
-  // 콜백 페이지 등 TopBar와 BottomNavBar가 필요없는 페이지 체크
-  const shouldShowNavigation = !['/oauth2/callback'].includes(path);
-  
+
   // 채팅 페이지 여부 확인
   const isChatPage = path === '/chat';
 
   return (
-    <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
-      {shouldShowNavigation && <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />}
+    <div className="mobile-container">
+      <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />
       <main className={`${isChatPage ? '' : 'pt-16'}`}>
         {children}
       </main>
-      {shouldShowNavigation && <BottomNavBar active={getActiveMenu()} />}
+      <BottomNavBar active={getActiveMenu()} />
     </div>
   );
 };
 
 function App() {
+  const init = useAuthStore((s) => s.init);
+  useEffect(() => { init(); }, [init]);
+  
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Layout><HomePage /></Layout>} />
-          <Route path="/login" element={<Layout><LoginPage /></Layout>} />
-          <Route path="/profile-setup" element={<Layout><ProfileSetupPage /></Layout>} />
-          <Route path="/oauth2/callback" element={<OAuthCallbackPage />} />
-          <Route path="/oauth-redirect" element={<OAuthRedirectPage />} />
-          <Route path="/spec-input" element={<Layout><SpecInputPage /></Layout>} />
-          <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
-          <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
-          <Route path="/chatrooms" element={<Layout><ChatroomsPage /></Layout>} />
-          <Route path="/chat" element={<Layout><ChatsPage /></Layout>} />
-          <Route path="/social" element={<Layout><SocialPage /></Layout>} />
-          <Route path="/my" element={
-            <ProtectedRoute>
-              <Layout><MyPage /></Layout>
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </AuthProvider>
+      <Routes>
+        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/login" element={<Layout><LoginPage /></Layout>} />
+        <Route path="/profile-setup" element={<Layout><ProfileSetupPage /></Layout>} />
+        <Route path="/oauth-redirect" element={<OAuthRedirectPage />} />
+        <Route path="/spec-input" element={<Layout><SpecInputPage /></Layout>} />
+        <Route path="/rank" element={<Layout><RankingPage /></Layout>} />
+        <Route path="/ranking-results" element={<Layout><RankingResultPage /></Layout>} />
+        <Route path="/chatrooms" element={<Layout><ChatroomsPage /></Layout>} />
+        <Route path="/chat" element={<Layout><ChatsPage /></Layout>} />
+        <Route path="/social" element={<Layout><SocialPage /></Layout>} />
+        <Route path="/my" element={
+          <ProtectedRoute>
+            <Layout><MyPage /></Layout>
+          </ProtectedRoute>
+        } />
+      </Routes>
     </BrowserRouter>
   );
 }

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosInstance';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { ChatAPI } from '../api';
 
 const ChatroomsPage = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const ChatroomsPage = () => {
     const fetchChatRooms = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get('/api/chat-participations');
+        const response = await ChatAPI.getChatParticipations();
         
         if (response.data.success) {
           // API 응답 데이터 형식에 맞게 상태 업데이트
@@ -86,7 +86,7 @@ const ChatroomsPage = () => {
         <p className="text-center text-red-500">{error}</p>
         <button 
           onClick={() => window.location.reload()} 
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
+          className="px-4 py-2 mt-4 text-white bg-blue-500 rounded-lg"
         >
           새로고침
         </button>
@@ -100,31 +100,31 @@ const ChatroomsPage = () => {
       <div className="flex-1 p-5 space-y-4">
         {chatrooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-            <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-6">
+            <div className="flex items-center justify-center w-20 h-20 mb-6 bg-gray-200 rounded-full">
               <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p className="text-center text-sm font-medium text-gray-400">아직 채팅방이 없습니다.</p>
-            <p className="text-center text-xs text-gray-300 mt-1">새로운 대화를 시작해보세요!</p>
+            <p className="text-sm font-medium text-center text-gray-400">아직 채팅방이 없습니다.</p>
+            <p className="mt-1 text-xs text-center text-gray-300">새로운 대화를 시작해보세요!</p>
           </div>
         ) : (
           chatrooms.map((room) => (
             <div 
               key={room.id}
-              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-md hover:bg-gray-50 transition-all duration-300 cursor-pointer"
+              className="flex items-center p-5 space-x-4 transition-all duration-300 bg-white border border-gray-100 shadow-sm cursor-pointer rounded-2xl hover:shadow-md hover:bg-gray-50"
               onClick={() => handleChatroomClick(room.id, room.partnerId)}
             >
               {/* 프로필 이미지 */}
-              <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-center flex-shrink-0 overflow-hidden bg-gray-200 rounded-full w-14 h-14">
                 {room.profileImage ? (
                   <img 
                     src={room.profileImage} 
                     alt={`${room.username} 프로필`}
-                    className="w-full h-full rounded-full object-cover"
+                    className="object-cover w-full h-full rounded-full"
                   />
                 ) : (
-                  <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="text-gray-400 w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 )}
@@ -133,12 +133,12 @@ const ChatroomsPage = () => {
               {/* 채팅방 정보 */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-gray-800 truncate text-base">
+                  <h3 className="text-base font-semibold text-gray-800 truncate">
                     {room.username}
                   </h3>
-                  <span className="text-xs text-gray-400 font-medium">{room.timestamp}</span>
+                  <span className="text-xs font-medium text-gray-400">{room.timestamp}</span>
                 </div>
-                <p className="text-sm text-gray-500 truncate leading-relaxed">{room.lastMessage}</p>
+                <p className="text-sm leading-relaxed text-gray-500 truncate">{room.lastMessage}</p>
               </div>
             </div>
           ))

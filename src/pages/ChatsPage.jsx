@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosInstance';
+import { ChatAPI, UserAPI } from '../api';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Send } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../stores/useAuthStore';
 
 const ChatsPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -138,9 +138,7 @@ const ChatsPage = () => {
     const fetchInitialMessages = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get(`/api/chatrooms/${chatroomId}/chats`, {
-          params: { limit: 30 }
-        });
+        const response = await ChatAPI.getChatsByRoom(chatroomId, 30);
         
         if (response.data.success) {
           setMessages(response.data.data.messages);
@@ -172,7 +170,7 @@ const ChatsPage = () => {
   // 상대방 정보 가져오기
   const fetchPartnerInfo = async (userId) => {
     try {
-      const response = await axiosInstance.get(`/api/users/${userId}`);
+      const response = await UserAPI.getUserById(userId);
       if (response.data.isSuccess) {
         setPartnerInfo({
           nickname: response.data.data.user.nickname,
@@ -295,12 +293,7 @@ const ChatsPage = () => {
     try {
       setLoadingMore(true);
       
-      const response = await axiosInstance.get(`/api/chatrooms/${chatroomId}/chats`, {
-        params: {
-          cursor: nextCursor,
-          limit: 20
-        }
-      });
+      const response = await ChatAPI.getChatsByRoomWithCursor(chatroomId, nextCursor, 20);
 
       if (response.data.success) {
         // 새 메시지 추가
@@ -386,7 +379,7 @@ const ChatsPage = () => {
         <p className="text-center text-red-500">{error}</p>
         <button 
           onClick={() => window.location.reload()} 
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
+          className="px-4 py-2 mt-4 text-white bg-blue-500 rounded-lg"
         >
           새로고침
         </button>
@@ -397,16 +390,16 @@ const ChatsPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden pt-16 relative">
       {/* 채팅방 상단 프로필 */}
-      <div className="flex items-center p-3 border-b border-gray-200 bg-white">
-        <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden mr-3">
+      <div className="flex items-center p-3 bg-white border-b border-gray-200">
+        <div className="w-10 h-10 mr-3 overflow-hidden bg-gray-200 rounded-full">
           {partnerInfo.profileImageUrl ? (
             <img 
               src={partnerInfo.profileImageUrl} 
               alt={`${partnerInfo.nickname} 프로필`} 
-              className="w-full h-full object-cover"
+              className="object-cover w-full h-full"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-300">
+            <div className="flex items-center justify-center w-full h-full bg-gray-300">
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
@@ -419,10 +412,10 @@ const ChatsPage = () => {
       {/* 메시지 영역 */}
       <div 
         ref={messageContainerRef}
-        className="flex-1 p-4 mb-4 overflow-y-auto flex flex-col-reverse"
+        className="flex flex-col-reverse flex-1 p-4 mb-4 overflow-y-auto"
       >
         {loadingMore && (
-          <div className="text-center py-2">
+          <div className="py-2 text-center">
             <p className="text-sm text-gray-500">메시지 불러오는 중...</p>
           </div>
         )}
@@ -465,11 +458,11 @@ const ChatsPage = () => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력해 주세요"
-            className="flex-1 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
           <button
             type="submit"
-            className="ml-2 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center"
+            className="flex items-center justify-center w-10 h-10 ml-2 text-white bg-blue-500 rounded-full"
             disabled={!newMessage.trim()}
           >
             <Send size={18} />

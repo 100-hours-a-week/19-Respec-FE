@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Home, BarChart2, MessageSquare, Users, CircleUserRound } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import axiosInstance from '../utils/axiosInstance';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { getAccessToken } from '../../utils/token';
 
 const BottomNavBar = ({ active }) => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, loading } = useAuthStore();
+  const token = getAccessToken();
+
+  const isAuthenticated = isLoggedIn || (token && !loading);
+
   const [notifications, setNotifications] = useState({
     hasUnreadChat: false,
     hasUnreadComment: false
@@ -78,6 +82,7 @@ const BottomNavBar = ({ active }) => {
       console.error('소셜 알림 삭제 실패:', error);
     }
   };
+
   
   // 기본 네비게이션 아이템
   const baseNavItems = [
@@ -90,7 +95,7 @@ const BottomNavBar = ({ active }) => {
   // 로그인 상태에 따라 마지막 아이템 추가
   const navItems = [
     ...baseNavItems,
-    isLoggedIn 
+    isAuthenticated
       ? { name: 'MY', icon: CircleUserRound, path: '/my' }
       : { name: 'LOGIN', icon: CircleUserRound, path: '/login' }
   ];
@@ -119,12 +124,12 @@ const BottomNavBar = ({ active }) => {
           
           {/* 채팅 알림 표시 */}
           {item.name === 'DM' && notifications.hasUnreadChat && (
-            <div className="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></div>
+            <div className="absolute top-0 w-2 h-2 bg-red-500 rounded-full right-2"></div>
           )}
           
           {/* 댓글 알림 표시 */}
           {item.name === 'SOCIAL' && notifications.hasUnreadComment && (
-            <div className="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></div>
+            <div className="absolute top-0 w-2 h-2 bg-red-500 rounded-full right-2"></div>
           )}
         </a>
       ))}
