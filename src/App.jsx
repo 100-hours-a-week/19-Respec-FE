@@ -97,7 +97,7 @@ const Layout = ({ children }) => {
   const isChatPage = path === '/chat';
 
   return (
-    <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
+    <div className="mobile-container">
       <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />
       <main className={`${isChatPage ? '' : 'pt-16'}`}>
         {children}

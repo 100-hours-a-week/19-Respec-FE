@@ -28,35 +28,37 @@ const HomePage = () => {
     }, [selectedFilter]);
     
     return (
-        <div className="p-4">
-          <ProfileCard />
-          <ServiceIntro />
-          
-          <h3 className="mt-6 mb-2 text-lg font-bold">상위 랭킹 TOP 4</h3>
-          <RankingFilters 
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-          />
-          
-          <div className="bg-white rounded-lg shadow">
-            {rankingData.map((item) => {
-              return (
-                <RankingItem 
-                key={item.userId}
-                totalRank={item.totalRank}
-                totalUsersCount={item.totalUsersCount}
-                user={item.nickname}
-                score={item.score}
-                category={item.jobField}
-                profileImageUrl={item.profileImageUrl}
-                rankByJobField={item.rankByJobField}
-                usersCountByJobField={item.usersCountByJobField}
-              />
-              );
-            })}
+        <div className="flex flex-col min-h-screen bg-gray-50">
+          <div className="flex-1 p-4 pb-20 overflow-y-auto">
+            <ProfileCard />
+            <ServiceIntro />
+            
+            <h3 className="mt-6 mb-2 text-lg font-bold">상위 랭킹 TOP 4</h3>
+            <RankingFilters 
+              selectedFilter={selectedFilter}
+              setSelectedFilter={setSelectedFilter}
+            />
+            
+            <div className="bg-white rounded-lg shadow">
+              {rankingData.map((item) => {
+                return (
+                  <RankingItem 
+                    key={item.userId}
+                    totalRank={item.totalRank}
+                    totalUsersCount={item.totalUsersCount}
+                    user={item.nickname}
+                    score={item.score}
+                    category={item.jobField}
+                    profileImageUrl={item.profileImageUrl}
+                    rankByJobField={item.rankByJobField}
+                    usersCountByJobField={item.usersCountByJobField}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
     );
   };
   
-  export default HomePage;
+export default HomePage;
