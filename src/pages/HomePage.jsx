@@ -162,7 +162,7 @@ const HomePage = () => {
   // 인증 로딩 중일 때
   if (authLoading) {
     return (
-      <div className="p-4">
+      <div className="flex-1 p-4 pb-20">
         <div className="mb-4 p-6 bg-white rounded-lg shadow">
           <div className="animate-pulse flex items-center space-x-4">
             <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
@@ -178,7 +178,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="flex-1 p-4 pb-20">
       <UserInfoSection
         userData={userData}
         isLoggedIn={isLoggedIn}
