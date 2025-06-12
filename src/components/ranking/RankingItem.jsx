@@ -5,6 +5,7 @@ import { BookmarkAPI } from '../../api';
 import useToast from '../../hooks/useToast';
 import { ButtonLoadingIndicator } from '../common/LoadingIndicator';
 import { useAuthStore } from '../../stores/useAuthStore';
+import ToastContainer from '../common/ToastContainer';
 
 const RankingItem = React.memo(
   ({
@@ -25,7 +26,7 @@ const RankingItem = React.memo(
     selectedFilter = '전체',
   }) => {
     const navigate = useNavigate();
-    const { showToast } = useToast();
+    const { showToast, toasts, removeToast } = useToast();
     const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
     const { isLoggedIn, user: currentUser } = useAuthStore();
 
@@ -137,7 +138,7 @@ const RankingItem = React.memo(
         } else {
           const response = await BookmarkAPI.addBookmark(specId);
 
-          if (response.data.isSuccess) {
+          if (response.data?.isSuccess) {
             const newBookmarkId = response.data.data?.bookmarkId;
             showToast('즐겨찾기가 등록되었습니다.', 'success');
             onBookmarkChange?.(specId, true, newBookmarkId);
@@ -250,6 +251,8 @@ const RankingItem = React.memo(
             )}
           </div>
         </div>
+
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
       </div>
     );
   }
