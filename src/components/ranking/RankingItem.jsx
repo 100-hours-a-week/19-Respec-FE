@@ -114,20 +114,46 @@ const RankingItem = React.memo(
         return;
       }
 
+      console.log('즐겨찾기 버튼 클릭:', {
+        specId,
+        isBookmarked,
+        bookmarkId,
+        action: isBookmarked ? '해제' : '등록',
+      });
+
       try {
         setIsBookmarkLoading(true);
 
-        if (isBookmarked && bookmarkId) {
-          await BookmarkAPI.removeBookmark(specId, bookmarkId);
-          console.log('즐겨찾기가 해제되었습니다.');
-          showToast('즐겨찾기가 해제되었습니다.', 'success');
-          onBookmarkChange?.(specId, false, null);
+        if (isBookmarked) {
+          if (!bookmarkId) {
+            showToast('즐겨찾기 정보를 찾을 수 없습니다.', 'error');
+            return;
+          }
+
+          const response = await BookmarkAPI.removeBookmark(bookmarkId);
+
+          if (response.status === 204 || response.data?.isSuccess) {
+            showToast('즐겨찾기가 해제되었습니다.', 'success');
+            onBookmarkChange?.(specId, false, null);
+          } else {
+            showToast(
+              response.data.message || '즐겨찾기 해제에 실패했습니다.',
+              'error'
+            );
+          }
         } else {
           const response = await BookmarkAPI.addBookmark(specId);
-          const newBookmarkId = response.data?.data?.bookmarkId;
-          console.log('즐겨찾기가 등록되었습니다.');
-          showToast('즐겨찾기가 등록되었습니다.', 'success');
-          onBookmarkChange?.(specId, true, newBookmarkId);
+
+          if (response.data.isSuccess) {
+            const newBookmarkId = response.data.data?.bookmarkId;
+            showToast('즐겨찾기가 등록되었습니다.', 'success');
+            onBookmarkChange?.(specId, true, newBookmarkId);
+          } else {
+            showToast(
+              response.data.message || '즐겨찾기 등록에 실패했습니다.',
+              'error'
+            );
+          }
         }
       } catch (error) {
         console.error('즐겨찾기 처리 중 오류: ', error);
