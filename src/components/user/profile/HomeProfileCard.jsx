@@ -6,13 +6,11 @@ import ProfileCard from './ProfileCard';
 const HomeProfileCard = ({ userData, isLoggedIn = false, hasSpec = false }) => {
   // 로그인하지 않은 경우
   if (!isLoggedIn) {
-    console.log('로그인하지 않은 사용자입니다.');
     return <LoginPrompt />;
   }
 
   // 로그인했지만 스펙이 없는 경우
   if (!hasSpec) {
-    console.log('로그인했지만 스펙이 존재하지 않는 사용자입니다.');
     return <SpecInputPrompt userData={userData} />;
   }
 
