@@ -96,6 +96,13 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggedIn: false, user: null, token: null, loading: false });
   },
 
+  /** 유저 정보 업데이트 */
+  updateUser: (userData) => {
+    set((state) => ({
+      user: { ...state.user, ...userData },
+    }));
+  },
+
   /** 내부용: 토큰 상태만 교체 (인터셉터에서 호출됨) */
   setToken: (newToken) => {
     if (!newToken) return get().logout();

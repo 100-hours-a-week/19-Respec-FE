@@ -11,7 +11,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 
 const ProfileEditPage = () => {
   const [nickname, setNickname] = useState('');
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [originalProfileUrl, setOriginalProfileUrl] = useState('');
   const [error, setError] = useState('');
@@ -35,14 +35,14 @@ const ProfileEditPage = () => {
 
   useEffect(() => {
     const nicknameChanged = nickname !== (user?.nickname || '');
-    const imageChanged = profileImage !== null;
+    const imageChanged = profileImageUrl !== null;
     setIsChanged(nicknameChanged || imageChanged);
-  }, [nickname, profileImage, user]);
+  }, [nickname, profileImageUrl, user]);
 
   const handleImageChange = (file, error, preview) => {
     setFileError(error);
     if (!error) {
-      setProfileImage(file);
+      setProfileImageUrl(file);
       setPreviewUrl(preview || originalProfileUrl);
     }
   };
@@ -53,11 +53,7 @@ const ProfileEditPage = () => {
   };
 
   const handleBack = () => {
-    if (isChanged) {
-      setShowCancelModal(true);
-    } else {
-      navigate(-1);
-    }
+    isChanged ? setShowCancelModal(true) : navigate(-1);
   };
 
   const handleCancelConfirm = () => {
@@ -88,27 +84,31 @@ const ProfileEditPage = () => {
       const formData = new FormData();
       formData.append('nickname', nickname);
 
-      if (profileImage) {
-        formData.append('profileImage', profileImage);
+      if (profileImageUrl) {
+        formData.append('profileImageUrl', profileImageUrl);
       }
 
-      // const response = await UserAPI.updateProfile(formData);
+      const response = await UserAPI.updateProfile(formData);
 
-      // 임시 성공 처리 (실제 구현 시 제거)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (response.data.isSuccess) {
+        const updatedUser = {
+          ...user,
+          nickname: response.data.data.nickname,
+          profileImageUrl: response.data.data.profileImageUrl,
+        };
+        updateUser(updatedUser);
 
-      const updatedUser = {
-        ...user,
-        nickname,
-        profileImageUrl: previewUrl,
-      };
-      updateUser(updatedUser);
+        showToast('회원정보가 수정되었습니다.', 'success');
 
-      showToast('회원정보가 수정되었습니다.', 'success');
-
-      setTimeout(() => {
-        navigate(-1);
-      }, 2000);
+        setTimeout(() => {
+          navigate(-1);
+        }, 2000);
+      } else {
+        showToast(
+          response.data.message || '회원정보 수정에 실패했습니다.',
+          'error'
+        );
+      }
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
