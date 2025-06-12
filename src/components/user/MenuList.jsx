@@ -67,7 +67,7 @@ const ToggleSwitch = ({ isChecked, onChange, disabled = false }) => (
     >
       <span
         className={`absolute bottom-1 bg-white w-3 h-3 rounded-full transition-transform duration-200 ease-in-out ${
-          isChecked ? 'transform translate-x-6' : ''
+          isChecked ? 'transform translate-x-6' : 'translate-x-1'
         }`}
       ></span>
     </label>

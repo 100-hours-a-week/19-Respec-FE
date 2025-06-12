@@ -124,7 +124,7 @@ const MyPage = () => {
 
   const handleTogglePublic = async () => {
     try {
-      await SpecAPI.updateSpecVisibility({
+      await UserAPI.updateSpecVisibility({
         isPublic: !isPublic,
       });
       setIsPublic(!isPublic);
