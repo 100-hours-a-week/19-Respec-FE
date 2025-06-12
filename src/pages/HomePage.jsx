@@ -144,16 +144,13 @@ const HomePage = () => {
     setSelectedFilter(newFilter);
   }, []);
 
-  const handleBookmarkChange = useCallback(
-    (specId, isBookmarked, bookmarkId) => {
-      setRankingData((prevData) =>
-        prevData.map((item) =>
-          item.specId === specId ? { ...item, isBookmarked, bookmarkId } : item
-        )
-      );
-    },
-    []
-  );
+  const handleBookmarkChange = useCallback((specId, isBookmarked) => {
+    setRankingData((prevData) =>
+      prevData.map((item) =>
+        item.specId === specId ? { ...item, isBookmarked } : item
+      )
+    );
+  }, []);
 
   const handleRetry = () => {
     fetchRankings(selectedFilter);
@@ -233,7 +230,6 @@ const HomePage = () => {
               score={item.score}
               jobField={item.jobField}
               isBookmarked={item.isBookmarked}
-              bookmarkId={item.bookmarkId}
               commentsCount={item.commentsCount}
               bookmarksCount={item.bookmarksCount}
               selectedFilter={selectedFilter}

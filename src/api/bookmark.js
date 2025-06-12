@@ -1,11 +1,11 @@
 import http from './http';
 
 export const addBookmark = (specId) => {
-  return http.post(`/api/specs/${specId}/bookmarks`);
+  return http.post(`/api/bookmarks/specs/${specId}`);
 };
 
-export const removeBookmark = (specId, bookmarkId) => {
-  return http.delete(`/api/specs/${specId}/bookmarks/${bookmarkId}`);
+export const removeBookmark = (specId) => {
+  return http.delete(`/api/bookmarks/specs/${specId}`);
 };
 
 export const getBookmarks = ({ cursor, limit }) => {

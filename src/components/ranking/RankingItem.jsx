@@ -5,6 +5,7 @@ import { BookmarkAPI } from '../../api';
 import useToast from '../../hooks/useToast';
 import { ButtonLoadingIndicator } from '../common/LoadingIndicator';
 import { useAuthStore } from '../../stores/useAuthStore';
+import ToastContainer from '../common/ToastContainer';
 
 const RankingItem = React.memo(
   ({
@@ -19,14 +20,13 @@ const RankingItem = React.memo(
     score,
     jobField,
     isBookmarked = false,
-    bookmarkId = null,
     commentsCount = 0,
     bookmarksCount = 0,
     onBookmarkChange,
     selectedFilter = '전체',
   }) => {
     const navigate = useNavigate();
-    const { showToast } = useToast();
+    const { showToast, toasts, removeToast } = useToast();
     const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
     const { isLoggedIn, user: currentUser } = useAuthStore();
 
@@ -114,20 +114,40 @@ const RankingItem = React.memo(
         return;
       }
 
+      console.log('즐겨찾기 버튼 클릭:', {
+        specId,
+        isBookmarked,
+        action: isBookmarked ? '해제' : '등록',
+      });
+
       try {
         setIsBookmarkLoading(true);
 
-        if (isBookmarked && bookmarkId) {
-          await BookmarkAPI.removeBookmark(specId, bookmarkId);
-          console.log('즐겨찾기가 해제되었습니다.');
-          showToast('즐겨찾기가 해제되었습니다.', 'success');
-          onBookmarkChange?.(specId, false, null);
+        if (isBookmarked) {
+          const response = await BookmarkAPI.removeBookmark(specId);
+
+          if (response.status === 204 || response.data?.isSuccess) {
+            showToast('즐겨찾기가 해제되었습니다.', 'success');
+            onBookmarkChange?.(specId, false, null);
+          } else {
+            showToast(
+              response.data.message || '즐겨찾기 해제에 실패했습니다.',
+              'error'
+            );
+          }
         } else {
           const response = await BookmarkAPI.addBookmark(specId);
-          const newBookmarkId = response.data?.data?.bookmarkId;
-          console.log('즐겨찾기가 등록되었습니다.');
-          showToast('즐겨찾기가 등록되었습니다.', 'success');
-          onBookmarkChange?.(specId, true, newBookmarkId);
+
+          if (response.data?.isSuccess) {
+            const newBookmarkId = response.data.data?.bookmarkId;
+            showToast('즐겨찾기가 등록되었습니다.', 'success');
+            onBookmarkChange?.(specId, true, newBookmarkId);
+          } else {
+            showToast(
+              response.data.message || '즐겨찾기 등록에 실패했습니다.',
+              'error'
+            );
+          }
         }
       } catch (error) {
         console.error('즐겨찾기 처리 중 오류: ', error);
@@ -231,6 +251,8 @@ const RankingItem = React.memo(
             )}
           </div>
         </div>
+
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
       </div>
     );
   }

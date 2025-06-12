@@ -372,6 +372,14 @@ const RankingPage = () => {
     }
   };
 
+  const handleBookmarkChange = useCallback((specId, isBookmarked) => {
+    setRankings((prevRankings) =>
+      prevRankings.map((ranking) =>
+        ranking.specId === specId ? { ...ranking, isBookmarked } : ranking
+      )
+    );
+  }, []);
+
   // 초기 랭킹 데이터 로드
   useEffect(() => {
     // 실제 백엔드 API 호출
@@ -549,9 +557,9 @@ const RankingPage = () => {
                           score={ranking.score}
                           jobField={ranking.jobField}
                           isBookmarked={ranking.isBookmarked}
-                          bookmarkId={ranking.bookmarkId}
                           commentsCount={ranking.commentsCount}
                           bookmarksCount={ranking.bookmarksCount}
+                          onBookmarkChange={handleBookmarkChange}
                           selectedFilter={selectedFilter}
                         />
                       </div>
