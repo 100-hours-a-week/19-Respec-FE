@@ -55,6 +55,3 @@ export const updateSpec = (specId, formData) => {
     },
   });
 };
-
-export const updateSpecVisibility = (data) =>
-  http.put('/api/specs/{specId}/visibility', data);
