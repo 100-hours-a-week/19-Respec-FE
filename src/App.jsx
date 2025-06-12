@@ -64,7 +64,7 @@ const Layout = ({ children }) => {
   const getTitleByPath = () => {
     // /chat/ 경로인 경우 스펙랭킹 표시 (채팅방 상세에서는 헤더에 상대방 이름 표시)
     if (path.startsWith('/chat/')) return '스펙랭킹';
-    
+
     switch (path) {
       case '/':
         return '스펙랭킹';
@@ -99,7 +99,9 @@ const Layout = ({ children }) => {
   // 뒤로가기 버튼 표시 여부 및 이동 경로 결정
   const getBackButtonConfig = () => {
     // 뒤로가기 버튼이 보이지 않아야 하는 페이지들
-    if (['/', '/login', '/rank', '/chatrooms', '/social', '/my'].includes(path)) {
+    if (
+      ['/', '/login', '/rank', '/chatrooms', '/social', '/my'].includes(path)
+    ) {
       return null;
     }
 
@@ -136,10 +138,12 @@ const Layout = ({ children }) => {
   const isChatPage = path === '/chat';
 
   return (
-    <div className="mobile-container">
+    <div className="relative w-full max-w-[390px] mx-auto min-h-screen bg-gray-50">
       <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />
-      <main className={`${isChatPage ? '' : 'pt-16'}`}>
-        {children}
+      <main
+        className={`${isChatPage ? '' : 'pt-14 pb-16'} min-h-[calc(100vh-120px)]`}
+      >
+        <div className="h-full">{children}</div>
       </main>
       <BottomNavBar active={getActiveMenu()} />
     </div>
