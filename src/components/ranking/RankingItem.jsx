@@ -19,7 +19,6 @@ const RankingItem = React.memo(
     score,
     jobField,
     isBookmarked = false,
-    bookmarkId = null,
     commentsCount = 0,
     bookmarksCount = 0,
     onBookmarkChange,
@@ -117,7 +116,6 @@ const RankingItem = React.memo(
       console.log('즐겨찾기 버튼 클릭:', {
         specId,
         isBookmarked,
-        bookmarkId,
         action: isBookmarked ? '해제' : '등록',
       });
 
@@ -125,12 +123,7 @@ const RankingItem = React.memo(
         setIsBookmarkLoading(true);
 
         if (isBookmarked) {
-          if (!bookmarkId) {
-            showToast('즐겨찾기 정보를 찾을 수 없습니다.', 'error');
-            return;
-          }
-
-          const response = await BookmarkAPI.removeBookmark(bookmarkId);
+          const response = await BookmarkAPI.removeBookmark(specId);
 
           if (response.status === 204 || response.data?.isSuccess) {
             showToast('즐겨찾기가 해제되었습니다.', 'success');

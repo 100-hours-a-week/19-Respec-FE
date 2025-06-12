@@ -108,6 +108,14 @@ const RankingResultPage = () => {
     [loading, hasMore, nextCursor, fetchMoreResults]
   );
 
+  const handleBookmarkChange = useCallback((specId, isBookmarked) => {
+    setSearchResults((prevData) =>
+      prevData.map((item) =>
+        item.specId === specId ? { ...item, isBookmarked } : item
+      )
+    );
+  }, []);
+
   // 컴포넌트 마운트 시 초기 데이터 로드
   useEffect(() => {
     // 검색 결과 초기 로드
@@ -218,9 +226,9 @@ const RankingResultPage = () => {
                         score={result.score}
                         jobField={result.jobField}
                         isBookmarked={result.isBookmarked}
-                        bookmarkId={result.bookmarkId}
                         commentsCount={result.commentsCount}
                         bookmarksCount={result.bookmarksCount}
+                        onBookmarkChange={handleBookmarkChange}
                         selectedFilter={result.selectedFilter}
                       />
                     </div>

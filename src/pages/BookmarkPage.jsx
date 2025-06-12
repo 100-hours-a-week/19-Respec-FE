@@ -215,7 +215,6 @@ const BookmarkPage = () => {
                   score={bookmark.score}
                   jobField={bookmark.jobField}
                   isBookmarked={bookmark.isBookmarked}
-                  bookmarkId={bookmark.bookmarkId}
                   commentsCount={bookmark.commentsCount}
                   bookmarksCount={bookmark.bookmarksCount}
                   selectedFilter="전체"

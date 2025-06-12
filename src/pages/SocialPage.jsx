@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { BarChart3, FileText } from 'lucide-react';
@@ -218,11 +218,13 @@ const SocialPage = () => {
     console.log('DM 버튼 클릭');
   };
 
-  const handleBookmarkClick = () => {
-    // 실제로는 API 호출
-    setIsBookmarked(!isBookmarked);
-    console.log(isBookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가');
-  };
+  const handleBookmarkChange = useCallback((specId, isBookmarked) => {
+    setSpecData((prevData) =>
+      prevData.map((item) =>
+        item.specId === specId ? { ...item, isBookmarked } : item
+      )
+    );
+  }, []);
 
   if (loading) {
     return (
@@ -248,7 +250,7 @@ const SocialPage = () => {
           hasSpec={hasSpec}
           showButtons={!isMyPage}
           onDMClick={handleDMClick}
-          onFavoriteClick={handleBookmarkClick}
+          onFavoriteClick={handleBookmarkChange}
           isFavorite={isBookmarked}
         />
 

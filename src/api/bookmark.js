@@ -4,8 +4,8 @@ export const addBookmark = (specId) => {
   return http.post(`/api/bookmarks/specs/${specId}`);
 };
 
-export const removeBookmark = (bookmarkId) => {
-  return http.delete(`/api/bookmarks/${bookmarkId}`);
+export const removeBookmark = (specId) => {
+  return http.delete(`/api/bookmarks/specs/${specId}`);
 };
 
 export const getBookmarks = ({ cursor, limit }) => {
