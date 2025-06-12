@@ -27,7 +27,6 @@ export const useAuthStore = create((set, get) => ({
       const token = getAccessToken();
 
       if (!token) {
-        console.log('토큰이 없습니다.');
         set({ loading: false });
         return;
       }
@@ -121,13 +120,10 @@ export const useAuthStore = create((set, get) => ({
       const delay = (exp - now - 60) * 1000; // 만료 1분 전에 리프레시
 
       if (delay <= 0) {
-        console.log('토큰이 곧 만료되어 즉시 리프레시를 시도합니다.');
         return get().refreshAuthToken();
       }
 
-      console.log(`토큰 리프레시 타이머 설정: ${delay / 1000}초 후 실행`);
       refreshTimer = setTimeout(() => {
-        console.log('토큰 리프레시 타이머 실행');
         get().refreshAuthToken();
       }, delay);
     } catch (e) {
@@ -138,9 +134,7 @@ export const useAuthStore = create((set, get) => ({
   /** access 토큰 재발급 */
   refreshAuthToken: async () => {
     try {
-      console.log('토큰 리프레시 요청 시작');
       const res = await AuthAPI.refreshToken();
-      console.log('토큰 리프레시 응답:', res.data);
 
       if (res.status === 200) {
         const authHeader = res.headers[AUTHORIZATION];
