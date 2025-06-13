@@ -21,6 +21,7 @@ const SocialPage = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [animatedScores, setAnimatedScores] = useState([0, 0, 0, 0, 0]);
   const [activeTab, setActiveTab] = useState('analysis');
+  const [currentSpecId, setCurrentSpecId] = useState(null);
 
   // 실제 스펙 점수 (임시 데이터)
   const actualScores = [50, 0, 60, 75, 85];
@@ -104,12 +105,14 @@ const SocialPage = () => {
           setHasSpec(hasActiveSpec);
 
           if (hasActiveSpec && userInfo.spec?.activeSpec) {
+            setCurrentSpecId(userInfo.spec.activeSpec);
+
             // 스펙이 있는 경우 상세 스펙 정보 조회
             try {
               const specResponse = await SpecAPI.getSpecDetail(
                 userInfo.spec.activeSpec
               );
-              console.log('specResponse: ', specResponse);
+              // console.log('specResponse: ', specResponse);
 
               if (specResponse.data.isSuccess) {
                 const specDetailData = specResponse.data.specDetailData;
@@ -141,12 +144,15 @@ const SocialPage = () => {
             } catch (specError) {
               console.error('스펙 정보 조회 실패:', specError);
             }
+          } else {
+            setCurrentSpecId(null);
           }
 
           setUserData(profileData);
         }
       } else {
         setIsMyPage(false);
+        setCurrentSpecId(specId);
 
         // const userResponse = await mockAPI.getUserBySpecId(specId);
         const userResponse = await UserAPI.getUserInfo(specId);
@@ -292,8 +298,9 @@ const SocialPage = () => {
         </div>
 
         <CommentsSection
-          specId={specId || userData.spec?.activeSpec}
+          specId={currentSpecId}
           isMyPage={isMyPage}
+          currentUser={currentUser}
         />
       </div>
     </div>

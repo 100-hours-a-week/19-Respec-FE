@@ -2,86 +2,108 @@ import React, { useState, useEffect } from 'react';
 import { CircleArrowUp } from 'lucide-react';
 import CommentItem from './CommentItem';
 import Pagination from './Pagination';
+import { CommentAPI } from '../../api';
 
 const CommentsSection = ({ specId, isMyPage, currentUser }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(5);
+  const [totalPages, setTotalPages] = useState(10);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // 임시 댓글 데이터
   useEffect(() => {
-    loadComments(currentPage);
+    if (specId) {
+      loadComments(currentPage - 1);
+    }
   }, [currentPage, specId]);
 
   const loadComments = async (page) => {
+    if (!specId) return;
+
     setLoading(true);
 
-    // 임시 데이터 (실제로는 API 호출)
-    const mockComments = [
-      {
-        id: 1,
-        userId: 1,
-        nickname: '카리나',
-        content: '스펙이 너무 좋아요ㅠㅠ',
-        createdAt: '2분 전',
-        replies: [],
-      },
-      {
-        id: 2,
-        userId: 2,
-        nickname: '원터',
-        content: '공모전 수상 끝립 있으신가요???',
-        createdAt: '5분 전',
-        replies: [],
-      },
-      {
-        id: 3,
-        userId: 3,
-        nickname: '닝닝',
-        content: '저랑 순위가 비슷하시네요! 응원합니다!',
-        createdAt: '10분 전',
-        replies: [],
-      },
-      {
-        id: 4,
-        userId: 4,
-        nickname: '지젤',
-        content: '오픽은 어떻게 공부하셨나요?',
-        createdAt: '15분 전',
-        replies: [
-          {
-            id: 41,
-            userId: 1,
-            nickname: '임솔',
-            content: '해커스 2주 단기완성반 들어봤서 공부했습니다!',
-            createdAt: '12분 전',
-          },
-        ],
-      },
-    ];
+    try {
+      const response = await CommentAPI.getComments(specId, { page, size: 5 });
 
-    setTimeout(() => {
-      setComments(mockComments);
+      if (response.data.isSuccess) {
+        const { comments: commentData, pageInfo } = response.data.data;
+
+        const transformedComments = commentData.map((comment) => ({
+          id: comment.commentId,
+          userId: comment.writerId,
+          nickname: comment.nickname,
+          content: comment.content,
+          profileImageUrl: comment.profileImageUrl,
+          createdAt: formatDate(comment.createdAt),
+          updatedAt: comment.updatedAt ? formatDate(comment.updatedAt) : null,
+          replies: comment.replies
+            ? comment.replies.map((reply) => ({
+                id: reply.replyId,
+                userId: reply.writerId,
+                nickname: reply.nickname,
+                content: reply.content,
+                profileImageUrl: reply.profileImageUrl,
+                createdAt: formatDate(reply.createdAt),
+                updatedAt: reply.updatedAt ? formatDate(reply.updatedAt) : null,
+              }))
+            : [],
+        }));
+
+        setComments(transformedComments);
+        setTotalPages(pageInfo.totalPages);
+        setTotalElements(pageInfo.totalElements);
+      }
+    } catch (error) {
+      console.error('댓글 로딩 실패: ', error);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
-  const handleSubmitComment = () => {
-    if (!newComment.trim()) return;
+  // 날짜 포맷팅 함수
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    const comment = {
-      id: Date.now(),
-      userId: currentUser?.id || 999,
-      nickname: currentUser?.nickname || '익명',
-      content: newComment,
-      createdAt: '방금 전',
-      replies: [],
-    };
+    if (diffMins < 1) return '방금 전';
+    if (diffMins < 60) return `${diffMins}분 전`;
+    if (diffHours < 24) return `${diffHours}시간 전`;
+    if (diffDays < 7) return `${diffDays}일 전`;
 
-    setComments([comment, ...comments]);
-    setNewComment('');
+    return date.toLocaleDateString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || submitting) return;
+
+    setSubmitting(true);
+
+    try {
+      const response = await CommentAPI.createComment(
+        specId,
+        newComment.trim()
+      );
+
+      if (response.data.isSuccess) {
+        setNewComment('');
+
+        if (currentPage != 1) setCurrentPage(1);
+        else loadComments(0);
+      }
+    } catch (error) {
+      console.error('댓글 작성 실패: ', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -91,36 +113,145 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
     }
   };
 
-  const handleEditComment = (commentId, newContent) => {
-    setComments(
-      comments.map((comment) =>
-        comment.id === commentId ? { ...comment, content: newContent } : comment
-      )
-    );
-  };
+  const handleEditComment = async (commentId, newContent) => {
+    try {
+      const response = await CommentAPI.updateComment(
+        specId,
+        commentId,
+        newContent.trim()
+      );
 
-  const handleDeleteComment = (commentId) => {
-    if (window.confirm('댓글을 삭제하시겠습니까?')) {
-      setComments(comments.filter((comment) => comment.id !== commentId));
+      if (response.data.isSuccess) {
+        const updatedData = response.data.data;
+
+        setComments(
+          comments.map((comment) => {
+            if (comment.id === commentId) {
+              return {
+                ...comment,
+                content: updatedData.content,
+                updatedAt: formatDate(updatedData.updatedAt),
+              };
+            }
+
+            if (comment.replies) {
+              const updatedReplies = comment.replies.map((reply) =>
+                reply.id === commentId
+                  ? {
+                      ...reply,
+                      content: updatedData.content,
+                      updatedAt: formatDate(updatedData.updatedAt),
+                    }
+                  : reply
+              );
+              return { ...comment, replies: updatedReplies };
+            }
+            return comment;
+          })
+        );
+      }
+    } catch (error) {
+      console.error('댓글 수정 실패: ', error);
+      loadComments(currentPage - 1);
     }
   };
 
-  const handleReplyComment = (commentId, replyContent) => {
-    const reply = {
-      id: Date.now(),
-      userId: currentUser?.id || 999,
-      nickname: currentUser?.nickname || '익명',
-      content: replyContent,
-      createdAt: '방금 전',
-    };
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await CommentAPI.deleteComment(specId, commentId);
 
-    setComments(
-      comments.map((comment) =>
-        comment.id === commentId
-          ? { ...comment, replies: [...(comment.replies || []), reply] }
-          : comment
-      )
-    );
+      if (response.data.isSuccess) {
+        setComments(
+          comments
+            .map((comment) => {
+              if (comment.id === commentId) {
+                if (comment.replies && comment.replies.length > 0) {
+                  return {
+                    ...comment,
+                    content: '삭제된 댓글입니다.',
+                    nickname: '삭제된 사용자',
+                    profileImageUrl: null,
+                    userId: null,
+                    updatedAt: null,
+                  };
+                } else {
+                  return null;
+                }
+              }
+
+              // 삭제하려는 댓글이 대댓글인 경우
+              if (comment.replies) {
+                const updatedReplies = comment.replies.filter(
+                  (reply) => reply.id !== commentId
+                );
+                return { ...comment, replies: updatedReplies };
+              }
+
+              return comment;
+            })
+            .filter((comment) => comment !== null)
+        );
+
+        // 전체 댓글 수 업데이트 (실제로 제거된 댓글이 있는 경우만)
+        const wasCommentRemoved = comments.some(
+          (comment) =>
+            (comment.id === commentId &&
+              (!comment.replies || comment.replies.length === 0)) ||
+            (comment.replies &&
+              comment.replies.some((reply) => reply.id === commentId))
+        );
+
+        if (wasCommentRemoved) {
+          setTotalElements((prev) => prev - 1);
+        }
+      }
+    } catch (error) {
+      console.error('댓글 삭제 실패: ', error);
+      loadComments(currentPage - 1);
+    }
+  };
+
+  const handleReplyComment = async (commentId, replyContent) => {
+    try {
+      const response = await CommentAPI.createReply(
+        specId,
+        commentId,
+        replyContent.trim()
+      );
+
+      if (response.data.isSuccess) {
+        const newReply = response.data.data;
+
+        const transformedReply = {
+          id: newReply.commentId,
+          userId: currentUser?.id,
+          nickname: newReply.nickname,
+          content: newReply.content,
+          profileImageUrl: newReply.profileImageUrl,
+          createdAt: '방금 전',
+          depth: newReply.depth,
+          parentCommentId: newReply.parentCommentId,
+        };
+
+        setComments(
+          comments.map((comment) =>
+            comment.id === commentId
+              ? {
+                  ...comment,
+                  replies: [...(comment.replies || []), transformedReply],
+                }
+              : comment
+          )
+        );
+      }
+    } catch (error) {
+      console.error('대댓글 작성 실패: ', error);
+      loadComments(currentPage - 1);
+    }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -128,7 +259,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
       {/* 댓글 헤더 */}
       <div className="px-5 py-3 border-b border-gray-100">
         <h3 className="text-lg font-bold text-gray-800">
-          댓글 {comments.length}
+          댓글 {totalElements}
         </h3>
       </div>
 
@@ -147,14 +278,15 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
             className="w-full p-4 pr-12 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows="2"
             maxLength={100}
+            disabled={submitting}
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           />
 
           <button
             onClick={handleSubmitComment}
-            disabled={!newComment.trim()}
+            disabled={!newComment.trim() || submitting}
             className={`absolute bottom-3 right-3 rounded-full flex items-center justify-center transition-colors ${
-              newComment.trim()
+              newComment.trim() && !submitting
                 ? 'text-blue-500 hover:text-blue-600'
                 : 'text-gray-400 cursor-not-allowed'
             }`}
@@ -163,7 +295,12 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
           </button>
         </div>
 
-        <div className="text-xs text-gray-500">{newComment.length}/100</div>
+        <div className="flex justify-between items-center mt-1">
+          <span className="text-xs text-gray-500">{newComment.length}/100</span>
+          {submitting && (
+            <span className="text-xs text-blue-500">작성 중...</span>
+          )}
+        </div>
       </div>
 
       {/* 댓글 목록 */}
@@ -198,7 +335,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
           />
         </div>
       )}

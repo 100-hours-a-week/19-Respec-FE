@@ -5,3 +5,4 @@ export * as SpecAPI from './spec';
 export * as BookmarkAPI from './bookmark';
 export * as ChatAPI from './chat';
 export * as NotificationAPI from './notification';
+export * as CommentAPI from './comment';

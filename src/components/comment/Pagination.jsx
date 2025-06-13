@@ -18,16 +18,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       }
     } else {
       // 현재 페이지 기준으로 앞뒤 2개씩 표시
-      let startPage = Math.max(1, currentPage - 2);
-      let endPage = Math.min(totalPages, currentPage + 2);
-
-      // 시작이나 끝에 가까우면 조정
-      if (currentPage <= 3) {
-        endPage = 5;
-      }
-      if (currentPage >= totalPages - 2) {
-        startPage = totalPages - 4;
-      }
+      const currentGroup = Math.ceil(currentPage / maxVisiblePages);
+      let startPage = (currentGroup - 1) * maxVisiblePages + 1;
+      let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
 
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
@@ -38,6 +31,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   };
 
   const visiblePages = getVisiblePages();
+  const currentGroup = Math.ceil(currentPage / 5);
+  const totalGroups = Math.ceil(totalPages / 5);
 
   return (
     <div className="flex items-center justify-center space-x-1 py-3">
@@ -45,23 +40,23 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={() => onPageChange(1)}
         disabled={currentPage === 1}
-        className={`p-1 rounded-md border text-xs ${
+        className={`p-1 text-xs ${
           currentPage === 1
-            ? 'text-gray-300 border-gray-200 cursor-not-allowed'
-            : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+            ? 'text-gray-300 cursor-not-allowed'
+            : 'text-gray-600 hover:text-gray-400'
         } transition-colors`}
       >
         <ChevronsLeft size={12} />
       </button>
 
-      {/* 이전 페이지 */}
+      {/* 이전 그룹으로 */}
       <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className={`p-1 rounded-md border text-xs ${
-          currentPage === 1
-            ? 'text-gray-300 border-gray-200 cursor-not-allowed'
-            : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+        onClick={() => onPageChange((currentGroup - 2) * 5 + 1)}
+        disabled={currentGroup === 1}
+        className={`p-1 text-xs ${
+          currentGroup === 1
+            ? 'text-gray-300 cursor-not-allowed'
+            : 'text-gray-600 hover:text-gray-400'
         } transition-colors`}
       >
         <ChevronLeft size={12} />
@@ -72,24 +67,24 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`min-w-[28px] h-7 px-2 rounded-md border text-sm font-medium transition-colors ${
+          className={`min-w-[28px] h-7 px-2 text-sm font-medium transition-colors ${
             currentPage === page
-              ? 'bg-blue-500 text-white border-blue-500'
-              : 'text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+              ? 'text-blue-500'
+              : 'text-gray-700 hover:text-gray-500'
           }`}
         >
           {page}
         </button>
       ))}
 
-      {/* 다음 페이지 */}
+      {/* 다음 그룹으로 */}
       <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className={`p-1 rounded-md border text-xs ${
-          currentPage === totalPages
-            ? 'text-gray-300 border-gray-200 cursor-not-allowed'
-            : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+        onClick={() => onPageChange(currentGroup * 5 + 1)}
+        disabled={currentGroup === totalGroups}
+        className={`p-1 text-xs ${
+          currentGroup === totalGroups
+            ? 'text-gray-300 cursor-not-allowed'
+            : 'text-gray-600 hover:text-gray-400'
         } transition-colors`}
       >
         <ChevronRight size={12} />
@@ -99,10 +94,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={() => onPageChange(totalPages)}
         disabled={currentPage === totalPages}
-        className={`p-1 rounded-md border text-xs ${
+        className={`p-1 text-xs ${
           currentPage === totalPages
-            ? 'text-gray-300 border-gray-200 cursor-not-allowed'
-            : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+            ? 'text-gray-300 cursor-not-allowed'
+            : 'text-gray-600 hover:text-gray-400'
         } transition-colors`}
       >
         <ChevronsRight size={12} />
