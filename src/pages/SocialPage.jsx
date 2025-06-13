@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { BarChart3, FileText } from 'lucide-react';
 import SocialProfileCard from '../components/user/profile/SocialProfileCard';
@@ -9,6 +9,8 @@ import CommentsSection from '../components/comment/CommentsSection';
 
 const SocialPage = () => {
   const { specId } = useParams();
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get('userId');
   const { user: currentUser } = useAuthStore();
   const navigate = useNavigate();
 
@@ -21,6 +23,7 @@ const SocialPage = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [animatedScores, setAnimatedScores] = useState([0, 0, 0, 0, 0]);
   const [activeTab, setActiveTab] = useState('analysis');
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // 실제 스펙 점수 (임시 데이터)
   const actualScores = [50, 0, 60, 75, 85];
@@ -32,7 +35,7 @@ const SocialPage = () => {
 
   useEffect(() => {
     loadPageData();
-  }, [specId, currentUser]);
+  }, [specId, userId, currentUser]);
 
   // 탭이 'analysis'로 변경될 때마다 애니메이션 시작
   useEffect(() => {
@@ -69,19 +72,20 @@ const SocialPage = () => {
   const loadPageData = async () => {
     try {
       setLoading(true);
+      setAccessDenied(false);
 
-      if (!specId) {
+      if (!specId || !userId) {
         setIsMyPage(true);
 
-        const userId = currentUser.id;
+        const currentUserId = currentUser.id;
 
-        if (!userId) {
+        if (!currentUserId) {
           console.error('로그인된 사용자 정보가 없습니다.');
           navigate('/login');
           return;
         }
 
-        const userResponse = await UserAPI.getUserInfo(userId);
+        const userResponse = await UserAPI.getUserInfo(currentUserId);
 
         if (userResponse.data.isSuccess) {
           const userInfo = userResponse.data.data.user;
@@ -148,67 +152,95 @@ const SocialPage = () => {
       } else {
         setIsMyPage(false);
 
-        // const userResponse = await mockAPI.getUserBySpecId(specId);
-        const userResponse = await UserAPI.getUserInfo(specId);
-        const specResponse = await SpecAPI.getSpecDetail(specId);
+        const userResponse = await UserAPI.getUserInfo(userId);
 
-        if (userResponse?.isSuccess) {
-          const userInfo = userResponse.data.user;
+        if (userResponse.data.isSuccess) {
+          const userInfo = userResponse.data.data.user;
 
-          // 기본 사용자 데이터 설정 (타인의 정보)
-          const profileData = {
-            id: userInfo.id,
-            nickname: userInfo.nickname,
-            profileImageUrl: userInfo.profileImageUrl,
-            jobField: userInfo.jobField,
-            joinDate: new Date(userInfo.createdAt).toLocaleDateString('ko-KR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            }),
-          };
+          if (!userInfo.isOpenSpec) {
+            console.log('스펙이 비공개 상태입니다.');
+            setAccessDenied(true);
 
-          setUserData(profileData);
-          setHasSpec(true); // specId가 있다는 것은 스펙이 있다는 의미
-        }
+            // 기본 사용자 데이터 설정 (타인의 정보)
+            const profileData = {
+              id: userInfo.id,
+              nickname: userInfo.nickname,
+              profileImageUrl: userInfo.profileImageUrl,
+              jobField: userInfo.jobField,
+              joinDate: new Date(userInfo.createdAt).toLocaleDateString(
+                'ko-KR',
+                {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                }
+              ),
+            };
 
-        if (specResponse?.isSuccess) {
-          const specDetailData = specResponse.specDetailData;
-          const rankings = specDetailData.rankings?.details;
-
-          setSpecData(specDetailData);
-
-          if (rankings && userData) {
-            // 상위 퍼센트 계산
-            const totalRankPercent = (
-              (rankings.totalRank / rankings.totalUserCount) *
-              100
-            ).toFixed(2);
-            const jobFieldRankPercent = (
-              (rankings.jobFieldRank / rankings.jobFieldUserCount) *
-              100
-            ).toFixed(2);
-
-            // 스펙 정보 추가
-            setUserData((prevData) => ({
-              ...prevData,
-              totalScore: rankings.score.toFixed(1),
-              totalRank: rankings.totalRank,
-              totalUsers: rankings.totalUserCount,
-              totalRankPercent: totalRankPercent,
-              jobFieldRank: rankings.jobFieldRank,
-              jobFieldUsers: rankings.jobFieldUserCount,
-              jobFieldRankPercent: jobFieldRankPercent,
-            }));
+            setUserData(profileData);
+            setHasSpec(false);
+            return;
           }
-        }
+          console.log('어디냐?');
+          const specResponse = await SpecAPI.getSpecDetail(specId);
+          console.log('여기다! ', specResponse);
+          if (specResponse.data?.isSuccess) {
+            const specDetailData = specResponse.specDetailData;
+            const rankings = specDetailData.rankings?.details;
 
-        // 실제로는 API를 통해 즐겨찾기 여부 확인
-        // const bookmarkStatus = await mockAPI.checkBookmark(specId);
-        // setIsBookmarked(bookmarkStatus);
+            setSpecData(specDetailData);
+            setHasSpec(true);
+
+            // 기본 사용자 데이터 설정 (타인의 정보)
+            const profileData = {
+              id: userInfo.id,
+              nickname: userInfo.nickname,
+              profileImageUrl: userInfo.profileImageUrl,
+              isOpenSpec: userInfo.isOpenSpec,
+              jobField: userInfo.jobField,
+              joinDate: new Date(userInfo.createdAt).toLocaleDateString(
+                'ko-KR',
+                {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                }
+              ),
+            };
+
+            if (rankings) {
+              const totalRankPercent = (
+                (rankings.totalRank / rankings.totalUserCount) *
+                100
+              ).toFixed(2);
+              const jobFieldRankPercent = (
+                (rankings.jobFieldRank / rankings.jobFieldUserCount) *
+                100
+              ).toFixed(2);
+
+              profileData.totalScore = rankings.score.toFixed(1);
+              profileData.totalRank = rankings.totalRank;
+              profileData.totalUsers = rankings.totalUserCount;
+              profileData.totalRankPercent = totalRankPercent;
+              profileData.jobFieldRank = rankings.jobFieldRank;
+              profileData.jobFieldUsers = rankings.jobFieldUserCount;
+              profileData.jobFieldRankPercent = jobFieldRankPercent;
+            }
+
+            setUserData(profileData);
+            setIsBookmarked(specDetailData.isBookmarked || false);
+          } else {
+            console.error('스펙 정보 조회 실패:', specResponse.data?.message);
+            throw new Error('스펙 정보를 불러올 수 없습니다.');
+          }
+        } else {
+          console.error('사용자 정보 조회 실패:', userResponse.data?.message);
+          throw new Error('사용자 정보를 불러올 수 없습니다.');
+        }
       }
     } catch (error) {
-      console.error('Failed to load page data:', error);
+      console.error('페이지 데이터 로드 실패: ', error);
+      setUserData(null);
     } finally {
       setLoading(false);
     }
@@ -219,6 +251,7 @@ const SocialPage = () => {
   };
 
   const handleBookmarkChange = useCallback((specId, isBookmarked) => {
+    setIsBookmarked(isBookmarked);
     setSpecData((prevData) =>
       prevData.map((item) =>
         item.specId === specId ? { ...item, isBookmarked } : item

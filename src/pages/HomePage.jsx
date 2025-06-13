@@ -37,6 +37,7 @@ const HomePage = () => {
           nickname: userData.nickname,
           profileImageUrl: userData.profileImageUrl,
           jobField: userData.jobField,
+          isOpenSpec: userData.isOpenSpec,
           joinDate: new Date(userData.createdAt).toLocaleDateString('ko-KR', {
             year: 'numeric',
             month: 'long',
@@ -119,7 +120,26 @@ const HomePage = () => {
         limit: 4,
       });
 
-      setRankingData(response.data.data.rankings);
+      // 각 랭킹 아이템에 대해 사용자 정보를 조회하여 isOpenSpec 정보 추가
+      const rankingsWithUserInfo = await Promise.all(
+        response.data.data.rankings.map(async (item) => {
+          try {
+            const userResponse = await UserAPI.getUserInfo(item.userId);
+            if (userResponse.data.isSuccess) {
+              return {
+                ...item,
+                isOpenSpec: userResponse.data.data.user.isOpenSpec,
+              };
+            }
+            return item;
+          } catch (error) {
+            console.error('사용자 정보 조회 실패:', error);
+            return item;
+          }
+        })
+      );
+
+      setRankingData(rankingsWithUserInfo);
     } catch (error) {
       console.error('랭킹 데이터를 불러오는 데 실패했습니다.', error);
       setError('랭킹 데이터를 불러오는 데 실패했습니다.');
@@ -223,6 +243,7 @@ const HomePage = () => {
               specId={item.specId}
               nickname={item.nickname}
               profileImageUrl={item.profileImageUrl}
+              isOpenSpec={item.isOpenSpec}
               totalRank={item.totalRank}
               totalUsersCount={item.totalUsersCount}
               rankByJobField={item.rankByJobField}
