@@ -83,7 +83,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
   };
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || submitting) return;
+    if (!newComment.trim() || submitting || !specId) return;
 
     setSubmitting(true);
 
@@ -250,7 +250,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
       {/* 댓글 헤더 */}
       <div className="px-5 py-3 border-b border-gray-100">
         <h3 className="text-lg font-bold text-gray-800">
-          댓글 {totalElements}
+          댓글 {specId ? totalElements : 0}
         </h3>
       </div>
 
@@ -265,19 +265,28 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
               }
             }}
             onKeyPress={handleKeyPress}
-            placeholder="댓글을 입력하세요."
-            className="w-full p-4 pr-12 border border-gray-300 resize-none rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            rows="2"
+            placeholder={
+              specId
+                ? '댓글을 입력하세요.'
+                : '스펙 입력 후 댓글을 작성할 수 있습니다.'
+            }
+            className={`w-full text-sm p-4 pr-12 border resize-none rounded-xl focus:outline-none 
+            ${
+              specId
+                ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                : 'border-gray-300 bg-white cursor-not-allowed'
+            }`}
+            rows="1"
             maxLength={100}
-            disabled={submitting}
+            disabled={submitting || !specId}
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           />
 
           <button
             onClick={handleSubmitComment}
-            disabled={!newComment.trim() || submitting}
+            disabled={!newComment.trim() || submitting || !specId}
             className={`absolute bottom-3 right-3 rounded-full flex items-center justify-center transition-colors ${
-              newComment.trim() && !submitting
+              newComment.trim() && !submitting && specId
                 ? 'text-blue-500 hover:text-blue-600'
                 : 'text-gray-400 cursor-not-allowed'
             }`}
@@ -296,7 +305,13 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
 
       {/* 댓글 목록 */}
       <div className="px-5 py-1">
-        {loading ? (
+        {!specId ? (
+          <div className="py-8 text-center">
+            <div className="text-gray-500">
+              스펙을 입력하고 <br /> 다른 사용자들과 소통해보세요!
+            </div>
+          </div>
+        ) : loading ? (
           <div className="py-8 text-center">
             <div className="text-gray-500">댓글을 불러오는 중...</div>
           </div>
@@ -321,7 +336,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
       </div>
 
       {/* 페이지네이션 */}
-      {!loading && totalPages > 0 && (
+      {specId && !loading && totalPages > 0 && (
         <div className="border-t border-gray-100">
           <Pagination
             currentPage={currentPage}
