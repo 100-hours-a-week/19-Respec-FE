@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { SpecAPI } from '../api';
+import { SpecAPI, UserAPI } from '../api';
 import RankingItem from '../components/ranking/RankingItem';
 
 // 로딩 인디케이터 컴포넌트
@@ -64,12 +64,28 @@ const RankingResultPage = () => {
 
       if (response.data.isSuccess) {
         if (response.data.data && response.data.data.results) {
-          // 새로 받은 데이터
-          const newResults = response.data.data.results;
+          // 새로 받은 데이터에 사용자 정보 추가
+          const newResultsWithUserInfo = await Promise.all(
+            response.data.data.results.map(async (item) => {
+              try {
+                const userResponse = await UserAPI.getUserInfo(item.userId);
+                if (userResponse.data.isSuccess) {
+                  return {
+                    ...item,
+                    isOpenSpec: userResponse.data.data.user.isOpenSpec,
+                  };
+                }
+                return item;
+              } catch (error) {
+                console.error('사용자 정보 조회 실패:', error);
+                return item;
+              }
+            })
+          );
 
           // 기존 데이터와 새 데이터 모두 포함하여 중복 제거
           setSearchResults((prev) => {
-            const combinedResults = [...prev, ...newResults];
+            const combinedResults = [...prev, ...newResultsWithUserInfo];
             return removeDuplicateResults(combinedResults);
           });
 
@@ -146,10 +162,27 @@ const RankingResultPage = () => {
 
         if (response.data.isSuccess) {
           if (response.data.data && response.data.data.results) {
-            // 중복 제거를 위해 Map 사용 (userId를 키로 사용)
-            const uniqueResults = removeDuplicateResults(
-              response.data.data.results
+            // 각 검색 결과에 대해 사용자 정보를 조회하여 isOpenSpec 정보 추가
+            const resultsWithUserInfo = await Promise.all(
+              response.data.data.results.map(async (item) => {
+                try {
+                  const userResponse = await UserAPI.getUserInfo(item.userId);
+                  if (userResponse.data.isSuccess) {
+                    return {
+                      ...item,
+                      isOpenSpec: userResponse.data.data.user.isOpenSpec,
+                    };
+                  }
+                  return item;
+                } catch (error) {
+                  console.error('사용자 정보 조회 실패:', error);
+                  return item;
+                }
+              })
             );
+
+            // 중복 제거를 위해 Map 사용 (userId를 키로 사용)
+            const uniqueResults = removeDuplicateResults(resultsWithUserInfo);
 
             setSearchResults(uniqueResults);
             setHasMore(response.data.data.hasNext);
@@ -219,6 +252,7 @@ const RankingResultPage = () => {
                         specId={result.specId}
                         nickname={result.nickname}
                         profileImageUrl={result.profileImageUrl}
+                        isOpenSpec={result.isOpenSpec}
                         totalRank={result.totalRank}
                         totalUsersCount={result.totalUsersCount}
                         rankByJobField={result.rankByJobField}

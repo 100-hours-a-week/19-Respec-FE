@@ -9,6 +9,7 @@ const SocialProfileCard = ({
   onDMClick,
   onFavoriteClick,
   isFavorite,
+  specId,
 }) => {
   // 스펙이 없는 경우
   if (!hasSpec) {
@@ -43,6 +44,7 @@ const SocialProfileCard = ({
       onDMClick={onDMClick}
       onFavoriteClick={onFavoriteClick}
       isFavorite={isFavorite}
+      specId={specId}
     />
   );
 };

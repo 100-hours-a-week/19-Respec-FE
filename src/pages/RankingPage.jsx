@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SpecAPI } from '../api';
+import { SpecAPI, UserAPI } from '../api';
 import RankingFilters from '../components/ranking/RankingFilters';
 import RankingItem from '../components/ranking/RankingItem';
 
@@ -86,7 +86,26 @@ const RankingPage = () => {
           console.log('중복 제거 후 랭킹 데이터 개수:', uniqueRankings.length);
           // console.log('랭킹 데이터 구조 샘플:', uniqueRankings[0]);
 
-          setRankings(uniqueRankings);
+          // 각 랭킹 아이템에 대해 사용자 정보를 조회하여 isOpenSpec 정보 추가
+          const rankingsWithUserInfo = await Promise.all(
+            uniqueRankings.map(async (item) => {
+              try {
+                const userResponse = await UserAPI.getUserInfo(item.userId);
+                if (userResponse.data.isSuccess) {
+                  return {
+                    ...item,
+                    isOpenSpec: userResponse.data.data.user.isOpenSpec,
+                  };
+                }
+                return item;
+              } catch (error) {
+                console.error('사용자 정보 조회 실패:', error);
+                return item;
+              }
+            })
+          );
+
+          setRankings(rankingsWithUserInfo);
           setHasMore(response.data.data.hasNext);
           setNextCursor(response.data.data.nextCursor);
         } else {
@@ -268,9 +287,28 @@ const RankingPage = () => {
           // 새로운 랭킹 데이터 가져오기
           const newRankings = response.data.data.rankings;
 
+          // 각 새로운 랭킹 아이템에 대해 사용자 정보 조회
+          const newRankingsWithUserInfo = await Promise.all(
+            newRankings.map(async (item) => {
+              try {
+                const userResponse = await UserAPI.getUserInfo(item.userId);
+                if (userResponse.data.isSuccess) {
+                  return {
+                    ...item,
+                    isOpenSpec: userResponse.data.data.user.isOpenSpec,
+                  };
+                }
+                return item;
+              } catch (error) {
+                console.error('사용자 정보 조회 실패:', error);
+                return item;
+              }
+            })
+          );
+
           // 중복 제거하며 rankings 상태 업데이트
           setRankings((prev) => {
-            const combinedRankings = [...prev, ...newRankings];
+            const combinedRankings = [...prev, ...newRankingsWithUserInfo];
             return removeDuplicateRankings(combinedRankings);
           });
 
@@ -550,6 +588,7 @@ const RankingPage = () => {
                           specId={ranking.specId}
                           nickname={ranking.nickname}
                           profileImageUrl={ranking.profileImageUrl}
+                          isOpenSpec={ranking.isOpenSpec}
                           totalRank={ranking.totalRank}
                           totalUsersCount={ranking.totalUsersCount}
                           rankByJobField={ranking.rankByJobField}

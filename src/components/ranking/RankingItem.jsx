@@ -13,6 +13,7 @@ const RankingItem = React.memo(
     specId,
     nickname,
     profileImageUrl,
+    isOpenSpec,
     totalRank,
     totalUsersCount,
     rankByJobField,
@@ -95,10 +96,24 @@ const RankingItem = React.memo(
     const formattedJobField = jobField?.replace(/_/g, '·') || '';
 
     const handleDetailClick = () => {
-      if (specId) {
-        navigate(`/social/${specId}`);
-      } else {
+      if (!specId || !userId) {
         showToast('스펙 정보를 찾을 수 없습니다.', 'error');
+        return;
+      }
+
+      // 본인의 스펙인 경우 바로 이동
+      if (currentUser && currentUser.id === userId) {
+        navigate(`/social/${specId}?userId=${userId}`);
+        return;
+      }
+
+      // 타인의 스펙인 경우 공개 여부 확인
+      if (isOpenSpec) {
+        // 스펙이 공개된 경우 소셜 페이지로 이동
+        navigate(`/social/${specId}?userId=${userId}`);
+      } else {
+        // 스펙이 비공개인 경우 토스트 메시지 표시
+        showToast('비공개 스펙입니다.', 'error');
       }
     };
 

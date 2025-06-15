@@ -78,7 +78,7 @@ const Layout = ({ children }) => {
         return '랭킹';
       case '/ranking-results':
         return '랭킹 검색 결과';
-      case '/social':
+      case '/dm':
         return '채팅방';
       case '/social':
         return '소셜';
