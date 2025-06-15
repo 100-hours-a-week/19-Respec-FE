@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { BarChart3, FileText } from 'lucide-react';
 import SocialProfileCard from '../components/user/profile/SocialProfileCard';
 import RadarChart from '../components/spec-analysis/RadarChart';
+import SpecDetailInfo from '../components/spec-analysis/SpecDetailTab';
 import { SpecAPI, UserAPI, BookmarkAPI } from '../api';
 import CommentsSection from '../components/comment/CommentsSection';
 
@@ -26,13 +27,21 @@ const SocialPage = () => {
   const [currentSpecId, setCurrentSpecId] = useState(null);
   const [accessDenied, setAccessDenied] = useState(false);
 
-  // 실제 스펙 점수 (임시 데이터)
-  const actualScores = [50, 0, 60, 75, 85];
-
   const tabs = [
     { id: 'analysis', label: 'AI 분석 결과', icon: BarChart3 },
     { id: 'details', label: '세부 스펙 정보', icon: FileText },
   ];
+
+  // 실제 스펙 점수를 specData에서 가져오도록 수정
+  const getActualScores = () => {
+    if (!specData?.rankings?.categories) {
+      return [50, 0, 60, 75, 85]; // 기본값
+    }
+
+    return specData.rankings.categories.map((category) =>
+      Math.round(category.score)
+    );
+  };
 
   useEffect(() => {
     loadPageData();
@@ -46,6 +55,7 @@ const SocialPage = () => {
 
       // 레이더 차트 애니메이션
       const animateRadar = () => {
+        const actualScores = getActualScores();
         const duration = 2000;
         const steps = 60;
         const stepDuration = duration / steps;
@@ -133,7 +143,7 @@ const SocialPage = () => {
               const specResponse = await SpecAPI.getSpecDetail(
                 userInfo.spec.activeSpec
               );
-              // console.log('specResponse: ', specResponse);
+              console.log('specResponse: ', specResponse);
 
               if (specResponse.data.isSuccess) {
                 const specDetailData = specResponse.data.specDetailData;
@@ -312,10 +322,10 @@ const SocialPage = () => {
         />
 
         {/* 스펙 분석 카드 */}
-        <div className="p-6 mb-4 bg-white shadow-sm rounded-2xl">
+        <div className="p-6 pb-2 mb-4 bg-white shadow-sm rounded-2xl">
           <h3 className="mb-4 text-lg font-bold">스펙 분석</h3>
           {/* 탭 메뉴 */}
-          <div className="flex p-1 mb-6 bg-gray-100 rounded-lg">
+          <div className="flex p-1 mb-3 bg-gray-100 rounded-lg">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
               return (
@@ -337,15 +347,21 @@ const SocialPage = () => {
             })}
           </div>
 
-          {/* 그래프 영역 */}
-          <div className="flex items-center justify-center">
-            <div className="w-full max-w-xs">
-              <RadarChart
-                animatedScores={animatedScores}
-                isAnalyzing={isAnalyzing}
-              />
+          {/* 탭 콘텐츠 */}
+          {activeTab === 'analysis' ? (
+            <div className="flex items-center justify-center pt-8 pb-2">
+              <div className="w-full max-w-xs">
+                <RadarChart
+                  animatedScores={animatedScores}
+                  isAnalyzing={isAnalyzing}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-1">
+              <SpecDetailInfo specData={specData} />
+            </div>
+          )}
         </div>
 
         <CommentsSection
