@@ -7,8 +7,6 @@ import {
 } from 'lucide-react';
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  console.log('pagination props: ', { currentPage, totalPages });
-
   if (totalPages <= 0) return null;
 
   const getVisiblePages = () => {

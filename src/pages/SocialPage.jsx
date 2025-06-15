@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { BarChart3, FileText } from 'lucide-react';
 import SocialProfileCard from '../components/user/profile/SocialProfileCard';
 import RadarChart from '../components/spec-analysis/RadarChart';
-import { SpecAPI, UserAPI } from '../api';
+import { SpecAPI, UserAPI, BookmarkAPI } from '../api';
 import CommentsSection from '../components/comment/CommentsSection';
 
 const SocialPage = () => {
@@ -69,6 +69,23 @@ const SocialPage = () => {
       return () => clearTimeout(timer);
     }
   }, [activeTab]);
+
+  // loadPageData 함수에서 타인 페이지 처리 부분에 추가
+  const checkBookmarkStatus = async (specId) => {
+    try {
+      const bookmarkResponse = await BookmarkAPI.getBookmarks({ cursor: null });
+      if (bookmarkResponse.data.isSuccess) {
+        const bookmarks = bookmarkResponse.data.data.bookmarks;
+        return bookmarks.some(
+          (bookmark) => bookmark.spec.id === parseInt(specId)
+        );
+      }
+      return false;
+    } catch (error) {
+      console.error('즐겨찾기 상태 확인 실패:', error);
+      return false;
+    }
+  };
 
   const loadPageData = async () => {
     try {
@@ -162,6 +179,7 @@ const SocialPage = () => {
 
         if (userResponse.data.isSuccess) {
           const userInfo = userResponse.data.data.user;
+          console.log('userInfo: ', userInfo);
 
           if (!userInfo.isOpenSpec) {
             console.log('스펙이 비공개 상태입니다.');
@@ -234,7 +252,8 @@ const SocialPage = () => {
             }
 
             setUserData(profileData);
-            setIsBookmarked(specDetailData.isBookmarked || false);
+            const bookmarkStatus = await checkBookmarkStatus(specId);
+            setIsBookmarked(bookmarkStatus);
           } else {
             console.error('스펙 정보 조회 실패:', specResponse.data?.message);
             throw new Error('스펙 정보를 불러올 수 없습니다.');
