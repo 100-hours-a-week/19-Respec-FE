@@ -8,7 +8,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -161,48 +161,39 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
       const response = await CommentAPI.deleteComment(specId, commentId);
 
       if (response.data.isSuccess) {
-        setComments(
-          comments
-            .map((comment) => {
-              if (comment.id === commentId) {
-                if (comment.replies && comment.replies.length > 0) {
-                  return {
-                    ...comment,
-                    content: '삭제된 댓글입니다.',
-                    nickname: '삭제된 사용자',
-                    profileImageUrl: null,
-                    userId: null,
-                    updatedAt: null,
-                  };
-                } else {
-                  return null;
-                }
-              }
-
-              // 삭제하려는 댓글이 대댓글인 경우
-              if (comment.replies) {
-                const updatedReplies = comment.replies.filter(
-                  (reply) => reply.id !== commentId
-                );
-                return { ...comment, replies: updatedReplies };
-              }
-
-              return comment;
-            })
-            .filter((comment) => comment !== null)
+        // 삭제할 댓글이 실제 댓글인지 대댓글인지 확인
+        const isMainComment = comments.some(
+          (comment) => comment.id === commentId
         );
-
-        // 전체 댓글 수 업데이트 (실제로 제거된 댓글이 있는 경우만)
-        const wasCommentRemoved = comments.some(
+        const isReply = comments.some(
           (comment) =>
-            (comment.id === commentId &&
-              (!comment.replies || comment.replies.length === 0)) ||
-            (comment.replies &&
-              comment.replies.some((reply) => reply.id === commentId))
+            comment.replies &&
+            comment.replies.some((reply) => reply.id === commentId)
         );
 
-        if (wasCommentRemoved) {
-          setTotalElements((prev) => prev - 1);
+        // 실제로 삭제되는 댓글인지 확인 (대댓글이 있는 부모 댓글은 삭제되지 않고 "삭제된 댓글입니다"로 표시)
+        let willActuallyBeDeleted = false;
+        if (isMainComment) {
+          const targetComment = comments.find(
+            (comment) => comment.id === commentId
+          );
+          willActuallyBeDeleted =
+            !targetComment.replies || targetComment.replies.length === 0;
+        } else if (isReply) {
+          willActuallyBeDeleted = true;
+        }
+
+        // 삭제 후 현재 페이지의 댓글 수가 0이 될 것인지 확인
+        const currentPageCommentCount = comments.length;
+        const willCurrentPageBeEmpty =
+          willActuallyBeDeleted && currentPageCommentCount <= 1;
+
+        if (willCurrentPageBeEmpty && currentPage > 1) {
+          // 현재 페이지가 비게 되고 첫 페이지가 아니라면 이전 페이지로 이동
+          setCurrentPage(currentPage - 1);
+        } else {
+          // 현재 페이지를 다시 로드하여 페이지네이션 재배치
+          await loadComments(currentPage - 1);
         }
       }
     } catch (error) {
@@ -255,7 +246,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="bg-white border border-gray-100 shadow-sm rounded-xl">
       {/* 댓글 헤더 */}
       <div className="px-5 py-3 border-b border-gray-100">
         <h3 className="text-lg font-bold text-gray-800">
@@ -275,7 +266,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
             }}
             onKeyPress={handleKeyPress}
             placeholder="댓글을 입력하세요."
-            className="w-full p-4 pr-12 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-4 pr-12 border border-gray-300 resize-none rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows="2"
             maxLength={100}
             disabled={submitting}
@@ -295,7 +286,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
           </button>
         </div>
 
-        <div className="flex justify-between items-center mt-1">
+        <div className="flex items-center justify-between mt-1">
           <span className="text-xs text-gray-500">{newComment.length}/100</span>
           {submitting && (
             <span className="text-xs text-blue-500">작성 중...</span>
@@ -306,11 +297,11 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
       {/* 댓글 목록 */}
       <div className="px-5 py-1">
         {loading ? (
-          <div className="text-center py-8">
+          <div className="py-8 text-center">
             <div className="text-gray-500">댓글을 불러오는 중...</div>
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="py-8 text-center">
             <div className="text-gray-500">첫 번째 댓글을 작성해보세요!</div>
           </div>
         ) : (
@@ -330,7 +321,7 @@ const CommentsSection = ({ specId, isMyPage, currentUser }) => {
       </div>
 
       {/* 페이지네이션 */}
-      {totalPages > 1 && (
+      {!loading && totalPages > 0 && (
         <div className="border-t border-gray-100">
           <Pagination
             currentPage={currentPage}

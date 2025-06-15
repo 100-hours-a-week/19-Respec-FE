@@ -7,6 +7,10 @@ import {
 } from 'lucide-react';
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  console.log('pagination props: ', { currentPage, totalPages });
+
+  if (totalPages <= 0) return null;
+
   const getVisiblePages = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -31,17 +35,17 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   };
 
   const visiblePages = getVisiblePages();
-  const currentGroup = Math.ceil(currentPage / 5);
-  const totalGroups = Math.ceil(totalPages / 5);
+  const isFirstPage = currentPage === 1;
+  const isLastPage = currentPage === totalPages;
 
   return (
-    <div className="flex items-center justify-center space-x-1 py-3">
+    <div className="flex items-center justify-center py-3 space-x-1">
       {/* 맨 첫 페이지로 */}
       <button
         onClick={() => onPageChange(1)}
-        disabled={currentPage === 1}
+        disabled={isFirstPage}
         className={`p-1 text-xs ${
-          currentPage === 1
+          isFirstPage
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:text-gray-400'
         } transition-colors`}
@@ -51,10 +55,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
       {/* 이전 그룹으로 */}
       <button
-        onClick={() => onPageChange((currentGroup - 2) * 5 + 1)}
-        disabled={currentGroup === 1}
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        disabled={isFirstPage}
         className={`p-1 text-xs ${
-          currentGroup === 1
+          isFirstPage
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:text-gray-400'
         } transition-colors`}
@@ -79,10 +83,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
       {/* 다음 그룹으로 */}
       <button
-        onClick={() => onPageChange(currentGroup * 5 + 1)}
-        disabled={currentGroup === totalGroups}
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        disabled={isLastPage}
         className={`p-1 text-xs ${
-          currentGroup === totalGroups
+          isLastPage
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:text-gray-400'
         } transition-colors`}
@@ -93,9 +97,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       {/* 맨 마지막 페이지로 */}
       <button
         onClick={() => onPageChange(totalPages)}
-        disabled={currentPage === totalPages}
+        disabled={isLastPage}
         className={`p-1 text-xs ${
-          currentPage === totalPages
+          isLastPage
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:text-gray-400'
         } transition-colors`}
