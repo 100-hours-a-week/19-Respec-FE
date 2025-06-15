@@ -4,7 +4,7 @@ import RankingItem from '../components/ranking/RankingItem';
 import { PageLoadingIndicator } from '../components/common/LoadingIndicator';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import { useAuthStore } from '../stores/useAuthStore';
-import { BookmarkAPI } from '../api';
+import { BookmarkAPI, UserAPI } from '../api';
 import ToastContainer from '../components/common/ToastContainer';
 import useToast from '../hooks/useToast';
 
@@ -34,28 +34,63 @@ const BookmarkPage = () => {
             nextCursor: responseNextCursor,
           } = response.data.data;
 
-          const transformedBookmarks = bookmarkData.map((bookmark) => ({
-            bookmarkId: bookmark.id,
-            userId: bookmark.spec.userId || null,
-            specId: bookmark.spec.id,
-            nickname: bookmark.spec.nickname,
-            profileImageUrl: bookmark.spec.profileImageUrl,
-            totalRank: bookmark.spec.totalRank,
-            totalUsersCount: bookmark.spec.totalUserCount,
-            rankByJobField: bookmark.spec.jobFieldRank,
-            usersCountByJobField: bookmark.spec.jobFieldUserCount,
-            score: bookmark.spec.score,
-            jobField: bookmark.spec.jobField,
-            isBookmarked: bookmark.spec.isBookmarked,
-            commentsCount: bookmark.spec.commentsCount,
-            bookmarksCount: bookmark.spec.bookmarksCount,
-          }));
+          // 각 북마크에 대해 사용자 정보를 조회하여 isOpenSpec 정보 추가
+          const bookmarksWithUserInfo = await Promise.all(
+            bookmarkData.map(async (bookmark) => {
+              try {
+                const userResponse = await UserAPI.getUserInfo(
+                  bookmark.spec.userId
+                );
+                const isOpenSpec = userResponse.data.isSuccess
+                  ? userResponse.data.data.user.isOpenSpec
+                  : true; // 기본값
+
+                return {
+                  bookmarkId: bookmark.id,
+                  userId: bookmark.spec.userId || null,
+                  specId: bookmark.spec.id,
+                  nickname: bookmark.spec.nickname,
+                  profileImageUrl: bookmark.spec.profileImageUrl,
+                  isOpenSpec: isOpenSpec, // 추가
+                  totalRank: bookmark.spec.totalRank,
+                  totalUsersCount: bookmark.spec.totalUserCount,
+                  rankByJobField: bookmark.spec.jobFieldRank,
+                  usersCountByJobField: bookmark.spec.jobFieldUserCount,
+                  score: bookmark.spec.score,
+                  jobField: bookmark.spec.jobField,
+                  isBookmarked: bookmark.spec.isBookmarked,
+                  commentsCount: bookmark.spec.commentsCount,
+                  bookmarksCount: bookmark.spec.bookmarksCount,
+                };
+              } catch (error) {
+                console.error('사용자 정보 조회 실패:', error);
+                // 오류 시 기본값으로 처리
+                return {
+                  bookmarkId: bookmark.id,
+                  userId: bookmark.spec.userId || null,
+                  specId: bookmark.spec.id,
+                  nickname: bookmark.spec.nickname,
+                  profileImageUrl: bookmark.spec.profileImageUrl,
+                  isOpenSpec: true, // 기본값
+                  totalRank: bookmark.spec.totalRank,
+                  totalUsersCount: bookmark.spec.totalUserCount,
+                  rankByJobField: bookmark.spec.jobFieldRank,
+                  usersCountByJobField: bookmark.spec.jobFieldUserCount,
+                  score: bookmark.spec.score,
+                  jobField: bookmark.spec.jobField,
+                  isBookmarked: bookmark.spec.isBookmarked,
+                  commentsCount: bookmark.spec.commentsCount,
+                  bookmarksCount: bookmark.spec.bookmarksCount,
+                };
+              }
+            })
+          );
 
           if (isInitial) {
-            setBookmarks(transformedBookmarks);
+            setBookmarks(bookmarksWithUserInfo);
             setInitialized(true);
           } else {
-            setBookmarks((prev) => [...prev, ...transformedBookmarks]);
+            setBookmarks((prev) => [...prev, ...bookmarksWithUserInfo]);
           }
 
           setHasNext(responseHasNext);
@@ -159,7 +194,7 @@ const BookmarkPage = () => {
           <p className="mb-4 text-gray-600">{error}</p>
           <button
             onClick={handleRetry}
-            className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 text-white transition-colors bg-blue-500 rounded hover:bg-blue-600"
           >
             다시 시도
           </button>
@@ -208,6 +243,7 @@ const BookmarkPage = () => {
                   specId={bookmark.specId}
                   nickname={bookmark.nickname}
                   profileImageUrl={bookmark.profileImageUrl}
+                  isOpenSpec={bookmark.isOpenSpec}
                   totalRank={bookmark.totalRank}
                   totalUsersCount={bookmark.totalUsersCount}
                   rankByJobField={bookmark.rankByJobField}
