@@ -187,12 +187,12 @@ const SocialPage = () => {
             setHasSpec(false);
             return;
           }
-          console.log('어디냐?');
+
           const specResponse = await SpecAPI.getSpecDetail(specId);
-          console.log('여기다! ', specResponse);
-          if (specResponse.data?.isSuccess) {
-            const specDetailData = specResponse.specDetailData;
-            const rankings = specDetailData.rankings?.details;
+
+          if (specResponse.data.isSuccess) {
+            const specDetailData = specResponse.data.specDetailData;
+            const rankings = specDetailData.rankings.details;
 
             setSpecData(specDetailData);
             setHasSpec(true);
@@ -256,14 +256,12 @@ const SocialPage = () => {
     console.log('DM 버튼 클릭');
   };
 
-  const handleBookmarkChange = useCallback((specId, isBookmarked) => {
-    setIsBookmarked(isBookmarked);
-    setSpecData((prevData) =>
-      prevData.map((item) =>
-        item.specId === specId ? { ...item, isBookmarked } : item
-      )
-    );
-  }, []);
+  const handleBookmarkChange = useCallback(
+    (specId, isBookmarked, bookmarkId) => {
+      setIsBookmarked(isBookmarked);
+    },
+    []
+  );
 
   if (loading) {
     return (
@@ -291,6 +289,7 @@ const SocialPage = () => {
           onDMClick={handleDMClick}
           onFavoriteClick={handleBookmarkChange}
           isFavorite={isBookmarked}
+          specId={specId}
         />
 
         {/* 스펙 분석 카드 */}
