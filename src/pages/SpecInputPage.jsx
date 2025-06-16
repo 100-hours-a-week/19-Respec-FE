@@ -505,111 +505,71 @@ const SpecInputPage = () => {
 
   // 제출 처리
   const handleSubmit = async () => {
-    // 폼 유효성 검사
+    // 폼 검증
     if (!validateForm()) {
       return;
     }
-
-    // 로딩 상태 시작
-    setLoading(true);
-    setError(null);
-
+    
     try {
-      // Get token from Authorization cookie header
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('Authorization='))
-        ?.split('=')[1];
+      setLoading(true);
+      setError(null); // 에러 상태 초기화
       
-      if (!token) {
-        setError('인증 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
-        setLoading(false);
-        return;
-      }
-      
-      // 데이터 형식 변환
       const submissionData = formatDataForSubmission();
-      console.log('Submitting data:', submissionData);
-
-      // FormData 객체 생성
-      const formData = new FormData();
+      console.log('전송할 데이터:', submissionData);
       
-      // JSON 데이터를 Blob으로 변환하여 "spec" 필드에 추가 (Content-Type: application/json 설정)
-      const specBlob = new Blob([JSON.stringify(submissionData)], { type: 'application/json' });
-      formData.append('spec', specBlob);
+      // API 엔드포인트 설정 (수정 모드 여부에 따라)
+      const endpoint = isEditMode ? `/api/specs/${activeSpecId}` : '/api/specs';
       
-      let response;
+      // 메소드 설정 (수정 모드 여부에 따라)
+      const method = isEditMode ? 'PUT' : 'POST';
       
-      if (isEditMode && activeSpecId) {
-        // 수정 모드인 경우 PUT 요청 보내기
-        console.log(`Sending PUT request to: /api/specs/${activeSpecId}`);
-        response = await axiosInstance.put(`/api/specs/${activeSpecId}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': token
-          }
-        });
-      } else {
-        // 신규 등록인 경우 POST 요청 보내기
-        console.log('Sending POST request to: /api/specs');
-        response = await axiosInstance.post('/api/specs', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': token
-          }
-        });
-      }
+      console.log(`API 요청: ${method} ${endpoint}`);
       
-      console.log('Response:', response);
+      // JSON 형식으로 직접 전송 (multipart/form-data 대신)
+      const response = await axiosInstance({
+        method,
+        url: endpoint,
+        data: submissionData,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
-      // 성공 처리 - 상태 코드 200 또는 201 모두 성공으로 처리
+      console.log('API 응답:', response);
+      
+      // HTTP 상태 코드로 성공 여부 확인
       if (response.status === 200 || response.status === 201) {
-        console.log('Spec data saved successfully, redirecting to mypage...');
+        console.log('스펙 정보 저장 성공');
         setSuccess(true);
-        
-        // React Router navigate 대신 강제 리다이렉트 사용
-        console.log('About to redirect to /my');
-        
-        // 0.3초 후 강제 리다이렉트 (성공 메시지를 잠깐 보여주기 위함)
+        // 0.3초 후에 마이페이지로 이동
         setTimeout(() => {
-          console.log('Executing redirect now');
-          window.location.href = '/my';
+          navigate('/my');
         }, 300);
+      } else {
+        console.error('예상치 못한 응답:', response);
+        setError('스펙 정보 저장에 실패했습니다.');
       }
     } catch (err) {
-      console.error('Error submitting spec data:', err);
+      console.error('스펙 저장 중 오류 발생:', err);
+      console.error('오류 응답:', err.response);
       
-      // 요청 및 응답 상세 정보 출력
-      if (err.response) {
-        console.error('Response status:', err.response.status);
-        console.error('Response headers:', err.response.headers);
-        console.error('Response data:', err.response.data);
-      } else if (err.request) {
-        console.error('Request sent but no response received');
-      } else {
-        console.error('Error setting up request:', err.message);
-      }
-      
-      // 에러 메시지 처리
+      // 자세한 오류 메시지 표시
       if (err.response) {
         // 서버에서 응답이 온 경우
-        if (err.response.status === 400) {
-          setError(err.response.data.message || '잘못된 요청');
-        } else if (err.response.status === 401) {
-          setError('인증 실패');
-        } else if (err.response.status === 415) {
-          setError('지원되지 않는 미디어 타입');
-        } else if (err.response.status === 500) {
-          setError('서버 오류');
+        console.error('응답 상태:', err.response.status);
+        console.error('응답 데이터:', err.response.data);
+        
+        if (err.response.data && err.response.data.message) {
+          setError(`오류: ${err.response.data.message}`);
         } else {
-          setError(`오류가 발생했습니다 (${err.response.status}). 다시 시도해주세요.`);
+          setError(`오류 코드: ${err.response.status}`);
         }
       } else if (err.request) {
         // 요청은 보냈지만 응답이 없는 경우
         setError('서버에 연결할 수 없습니다.');
       } else {
         // 요청 설정 중 오류
-        setError('요청 전송 중 오류가 발생했습니다.');
+        setError('요청 전송 중 오류가 발생했습니다: ' + err.message);
       }
     } finally {
       setLoading(false);
