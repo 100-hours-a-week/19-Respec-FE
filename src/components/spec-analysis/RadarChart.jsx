@@ -2,12 +2,22 @@ import React from 'react';
 import { GraduationCap, Briefcase, Award, BookOpen, Users } from 'lucide-react';
 
 const RadarChart = ({ animatedScores, isAnalyzing }) => {
+  if (!animatedScores) {
+    return (
+      <div className="py-8 text-center text-gray-500">
+        스펙 정보를 입력하고
+        <br />
+        AI 분석 결과를 확인해보세요.
+      </div>
+    );
+  }
+
   const specData = [
-    { category: '학력', score: 50, icon: GraduationCap, colorHex: '#3b82f6' },
+    { category: '학력', score: 0, icon: GraduationCap, colorHex: '#3b82f6' },
     { category: '경험', score: 0, icon: Briefcase, colorHex: '#8b5cf6' },
-    { category: '자격증', score: 60, icon: Award, colorHex: '#10b981' },
-    { category: '어학', score: 75, icon: BookOpen, colorHex: '#f59e0b' },
-    { category: '활동', score: 85, icon: Users, colorHex: '#ef4444' },
+    { category: '자격증', score: 0, icon: Award, colorHex: '#10b981' },
+    { category: '어학', score: 0, icon: BookOpen, colorHex: '#f59e0b' },
+    { category: '활동', score: 0, icon: Users, colorHex: '#ef4444' },
   ];
 
   const size = 180;
@@ -123,13 +133,13 @@ const RadarChart = ({ animatedScores, isAnalyzing }) => {
             className="absolute text-xs font-medium transform -translate-x-1/2 -translate-y-1/2"
             style={{ left: point.labelX, top: point.labelY }}
           >
-            <div className="bg-white px-2 py-1 rounded-lg shadow-sm border text-center">
+            <div className="px-2 py-1 text-center bg-white border rounded-lg shadow-sm">
               <div className="flex items-center justify-center mb-1">
                 <IconComponent size={10} style={{ color: point.colorHex }} />
               </div>
-              <div className="text-gray-600 text-xs">{point.category}</div>
+              <div className="text-xs text-gray-600">{point.category}</div>
               <div
-                className="font-bold text-xs"
+                className="text-xs font-bold"
                 style={{ color: point.colorHex }}
               >
                 {point.animatedScore}

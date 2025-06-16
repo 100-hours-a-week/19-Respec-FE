@@ -17,7 +17,7 @@ const SocialProfileCard = ({
       <NoSpecCard
         profileImageUrl={userData.profileImageUrl}
         nickname={userData.nickname}
-        showButtons={true}
+        showButtons={showButtons}
         onDMClick={onDMClick}
         onFavoriteClick={onFavoriteClick}
         isFavorite={isFavorite}

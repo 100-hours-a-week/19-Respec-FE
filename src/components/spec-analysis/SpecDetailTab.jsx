@@ -4,7 +4,9 @@ const SpecDetailInfo = ({ specData }) => {
   if (!specData) {
     return (
       <div className="py-8 text-center text-gray-500">
-        스펙 정보를 불러올 수 없습니다.
+        스펙 정보를 입력하고
+        <br />
+        AI 분석에 기반한 점수를 확인해보세요.
       </div>
     );
   }

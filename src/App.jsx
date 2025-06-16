@@ -25,6 +25,8 @@ import BottomNavBar from './components/common/BottomNavBar';
 import { useEffect } from 'react';
 import { useAuthStore } from './stores/useAuthStore';
 import OAuthRedirectPage from './pages/OAuthRedirectPage';
+import ToastContainer from './components/common/ToastContainer';
+import useToast from './hooks/useToast';
 
 axios.defaults.withCredentials = true;
 
@@ -59,6 +61,12 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const path = location.pathname;
   const { isLoggedIn } = useAuthStore();
+  const { toasts, removeToast, showToast } = useToast();
+
+  // 로그인 필요 토스트 표시 함수
+  const showLoginRequiredToast = () => {
+    showToast('로그인 후 더 많은 기능을 경험해보세요!', 'info');
+  };
 
   // 현재 경로에 따라 TopBar 타이틀 설정
   const getTitleByPath = () => {
@@ -145,7 +153,12 @@ const Layout = ({ children }) => {
       >
         <div className="h-full">{children}</div>
       </main>
-      <BottomNavBar active={getActiveMenu()} />
+      <BottomNavBar
+        active={getActiveMenu()}
+        showToast={showLoginRequiredToast}
+      />
+
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

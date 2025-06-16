@@ -35,7 +35,7 @@ const SocialPage = () => {
   // 실제 스펙 점수를 specData에서 가져오도록 수정
   const getActualScores = () => {
     if (!specData?.rankings?.categories) {
-      return [50, 0, 60, 75, 85]; // 기본값
+      return [0, 0, 0, 0, 0]; // 기본값
     }
 
     return specData.rankings.categories.map((category) =>
