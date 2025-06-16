@@ -61,11 +61,11 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const path = location.pathname;
   const { isLoggedIn } = useAuthStore();
-  const { toasts, removeToast, showError } = useToast();
+  const { toasts, removeToast, showToast } = useToast();
 
   // 로그인 필요 토스트 표시 함수
   const showLoginRequiredToast = () => {
-    showError('로그인이 필요한 기능입니다!');
+    showToast('로그인 후 더 많은 기능을 경험해보세요!', 'info');
   };
 
   // 현재 경로에 따라 TopBar 타이틀 설정

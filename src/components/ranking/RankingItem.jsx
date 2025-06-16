@@ -96,6 +96,11 @@ const RankingItem = React.memo(
     const formattedJobField = jobField?.replace(/_/g, '·') || '';
 
     const handleDetailClick = () => {
+      if (!isLoggedIn) {
+        showToast('로그인 후 세부 스펙을 확인해보세요!', 'info');
+        return;
+      }
+
       if (!specId || !userId) {
         showToast('스펙 정보를 찾을 수 없습니다.', 'error');
         return;
@@ -113,7 +118,7 @@ const RankingItem = React.memo(
         navigate(`/social/${specId}?userId=${userId}`);
       } else {
         // 스펙이 비공개인 경우 토스트 메시지 표시
-        showToast('비공개 스펙입니다.', 'error');
+        showToast('비공개 설정된 스펙입니다.', 'info');
       }
     };
 
@@ -178,7 +183,7 @@ const RankingItem = React.memo(
     };
 
     return (
-      <div className="bg-white rounded-lg shadow-sm my-1 p-4">
+      <div className="p-4 my-1 bg-white rounded-lg shadow-sm">
         <div className="flex items-center mb-2">
           <div className="flex items-center justify-center min-w-[40px] mr-3">
             <Medal rank={rankingInfo.rank} />
