@@ -16,6 +16,7 @@ import TopBar from './components/TopBar';
 import BottomNavBar from './components/BottomNavBar';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import OAuthRedirectPage from './pages/OAuthRedirectPage';
+import { useEffect } from 'react';
 
 axios.defaults.withCredentials = true;
 
@@ -40,6 +41,22 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const path = location.pathname;
   const { isLoggedIn } = useAuth();
+  
+  // 채팅 페이지에서만 body에 특별한 클래스를 추가하는 부분
+  useEffect(() => {
+    const isChatPage = path === '/chat';
+    
+    if (isChatPage) {
+      document.body.classList.add('chat-page-only');
+    } else {
+      document.body.classList.remove('chat-page-only');
+    }
+    
+    // 컴포넌트 언마운트 시 클래스 제거
+    return () => {
+      document.body.classList.remove('chat-page-only');
+    };
+  }, [path]);
   
   // 현재 경로에 따라 TopBar 타이틀 설정
   const getTitleByPath = () => {
@@ -96,7 +113,7 @@ const Layout = ({ children }) => {
   return (
     <div className="max-w-[390px] mx-auto bg-gray-50 min-h-screen pb-16 relative">
       {shouldShowNavigation && <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />}
-      <main className={`${isChatPage ? '' : 'pt-16'}`}>
+      <main className={`${isChatPage ? '' : 'pt-16'} ${path !== '/chat' ? 'scrollable-container' : ''}`}>
         {children}
       </main>
       {shouldShowNavigation && <BottomNavBar active={getActiveMenu()} />}
