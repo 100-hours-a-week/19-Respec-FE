@@ -9,6 +9,7 @@ import { UserAPI } from '../api';
 import { useAuthStore } from '../stores/useAuthStore';
 import { setAccessToken } from '../utils/token';
 import { getCookie, deleteCookie } from '../utils/cookie';
+import PrivacyDetailModal from '../components/user/PrivacyDetailModal';
 
 const ProfileSetupPage = () => {
   const [nickname, setNickname] = useState('');
@@ -18,6 +19,8 @@ const ProfileSetupPage = () => {
   const [fileError, setFileError] = useState('');
   const [nicknameError, setNicknameError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuthStore();
@@ -36,8 +39,21 @@ const ProfileSetupPage = () => {
     setNicknameError(error);
   };
 
+  const handlePrivacyAgreeChange = () => {
+    setPrivacyAgreed(!privacyAgreed);
+  };
+
+  const handleShowPrivacyDetail = () => {
+    setShowPrivacyModal(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!privacyAgreed) {
+      showToast('개인정보 처리방침에 동의해주세요.', 'error');
+      return;
+    }
 
     if (nicknameError) {
       showToast('입력한 정보를 다시 확인해주세요.', 'error');
@@ -100,6 +116,9 @@ const ProfileSetupPage = () => {
     }
   };
 
+  const isSubmitDisabled =
+    !nickname || nicknameError || !privacyAgreed || isLoading;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-4">
@@ -120,14 +139,38 @@ const ProfileSetupPage = () => {
             required={true}
           />
 
+          {/* 개인정보 이용 동의 */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="privacy-agreement"
+              checked={privacyAgreed}
+              onChange={handlePrivacyAgreeChange}
+              className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            />
+            <label
+              htmlFor="privacy-agreement"
+              className="text-sm text-gray-700"
+            >
+              개인정보 이용 동의
+            </label>
+            <button
+              type="button"
+              onClick={handleShowPrivacyDetail}
+              className="text-sm text-indigo-600 underline hover:text-indigo-700"
+            >
+              약관 상세
+            </button>
+          </div>
+
           <button
             type="submit"
             className={`flex items-center justify-center w-full py-3 text-white transition-colors rounded-md ${
-              nickname && !nicknameError && !isLoading
+              !isSubmitDisabled
                 ? 'bg-indigo-600 hover:bg-indigo-700'
                 : 'bg-indigo-400 cursor-not-allowed'
             }`}
-            disabled={!nickname || nicknameError || isLoading}
+            disabled={isSubmitDisabled}
           >
             {isLoading ? (
               <>
@@ -141,8 +184,19 @@ const ProfileSetupPage = () => {
               </>
             )}
           </button>
+
+          {!privacyAgreed && (
+            <p className="text-sm text-center text-gray-500">
+              회원가입을 위해서는 개인정보 처리방침 동의가 필요합니다.
+            </p>
+          )}
         </form>
       </div>
+
+      <PrivacyDetailModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+      />
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>

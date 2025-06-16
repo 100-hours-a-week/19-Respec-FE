@@ -84,7 +84,7 @@ const MenuList = ({
 
   return (
     <>
-      <div className="px-4 mt-4">
+      <div className="px-4">
         <div className="overflow-hidden bg-white rounded-lg shadow-sm">
           <MenuItem
             icon={Shield}
