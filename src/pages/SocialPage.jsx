@@ -322,7 +322,7 @@ const SocialPage = () => {
         />
 
         {/* 스펙 분석 카드 */}
-        <div className="p-6 pb-2 mb-4 bg-white shadow-sm rounded-2xl">
+        <div className="p-6 pb-2 my-4 bg-white shadow-sm rounded-2xl">
           <h3 className="mb-4 text-lg font-bold">스펙 분석</h3>
           {/* 탭 메뉴 */}
           <div className="flex p-1 mb-3 bg-gray-100 rounded-lg">
