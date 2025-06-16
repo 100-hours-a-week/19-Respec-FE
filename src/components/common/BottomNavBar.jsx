@@ -119,7 +119,7 @@ const BottomNavBar = ({ active, showToast }) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-[390px] h-16 bg-white flex justify-between items-center px-2 border-t border-gray-100">
+    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-[390px] h-16 bg-white flex justify-between items-center px-2 border-t border-gray-300">
       {navItems.map((item) => (
         <a
           key={item.name}
