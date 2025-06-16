@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import { useAuth } from '../context/AuthContext';
@@ -98,6 +98,8 @@ const SpecInputPage = () => {
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   // State for cancel confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [resumeLoading, setResumeLoading] = useState(false); // 이력서 처리 중 상태
+  const fileInputRef = useRef(null); // 파일 입력 참조
   
   // Handlers for cancel confirmation
   const handleCancelAttempt = () => setShowConfirmModal(true);
@@ -576,6 +578,104 @@ const SpecInputPage = () => {
     }
   };
 
+  // 이력서 파일 처리 함수
+  const handleResumeFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // PDF 파일인지 확인
+    if (file.type !== 'application/pdf') {
+      setError('PDF 파일만 업로드 가능합니다.');
+      return;
+    }
+    
+    // 파일 크기 제한 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('파일 크기는 최대 10MB까지 가능합니다.');
+      return;
+    }
+    
+    try {
+      setResumeLoading(true);
+      setError(null);
+      
+      // FormData 생성
+      const formData = new FormData();
+      formData.append('resume', file);
+      
+      console.log('이력서 파일 분석 요청 중...');
+      
+      // API 요청
+      const response = await axiosInstance.post('/api/resume/analysis', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      console.log('이력서 분석 응답:', response.data);
+      
+      if (response.data.isSuccess) {
+        // 응답 데이터로 폼 채우기
+        const resumeData = response.data.data;
+        
+        setFormData(prev => ({
+          ...prev,
+          finalEducation: {
+            institute: resumeData.finalEducation?.institute || '대학교',
+            status: resumeData.finalEducation?.finalStatus || '졸업'
+          },
+          educationDetails: resumeData.educationDetails?.map(edu => ({
+            schoolName: edu.schoolName || '',
+            degree: edu.degree || '학사',
+            major: edu.major || '',
+            gpa: edu.gpa?.toString() || '',
+            maxGpa: edu.maxGpa?.toString() || '4.5'
+          })) || [],
+          workExperiences: resumeData.workExperiences?.map(exp => ({
+            companyName: exp.company || '',
+            position: exp.position || '인턴',
+            period: exp.period?.toString() || ''
+          })) || [],
+          certifications: resumeData.certifications?.map(cert => ({
+            name: cert.name || ''
+          })) || [],
+          languageSkills: resumeData.languageSkills?.map(lang => ({
+            languageTest: lang.name || '',
+            score: lang.score || ''
+          })) || [],
+          activities: resumeData.activities?.map(activity => ({
+            name: activity.name || '',
+            role: activity.role || '',
+            award: activity.award || ''
+          })) || [],
+          jobField: resumeData.jobField || '인터넷_IT'
+        }));
+        
+        // 성공 메시지
+        alert('이력서 분석이 완료되었습니다.');
+      } else {
+        setError('이력서 분석에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('이력서 분석 중 오류 발생:', err);
+      setError('이력서 분석 중 오류가 발생했습니다.');
+    } finally {
+      setResumeLoading(false);
+      // 파일 입력 초기화
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // 이력서 업로드 버튼 클릭 핸들러
+  const handleResumeButtonClick = () => {
+    // 파일 입력 요소 클릭 트리거
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   // 추가/삭제 버튼 컴포넌트
   const AddButton = ({ onClick }) => (
     <button 
@@ -617,6 +717,41 @@ const SpecInputPage = () => {
           <h2 className="mb-4 text-lg font-medium text-center text-blue-600">
             {initialDataLoaded ? (isEditMode ? '스펙 정보를 수정해주세요!' : '당신의 스펙을 입력해주세요!') : '데이터를 불러오는 중...'}
           </h2>
+          
+          {/* 이력서로 빠르게 입력하기 버튼 */}
+          <div className="mb-6">
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleResumeFileChange}
+            />
+            <button
+              type="button"
+              onClick={handleResumeButtonClick}
+              disabled={resumeLoading}
+              className="w-full py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              {resumeLoading ? (
+                <>
+                  <svg className="w-5 h-5 mr-3 -ml-1 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  이력서 분석중...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  이력서로 빠르게 입력하기!
+                </>
+              )}
+            </button>
+          </div>
+          
           <div className="space-y-4">
             {/* 기본 정보 섹션 */}
             <div className="mb-2">
