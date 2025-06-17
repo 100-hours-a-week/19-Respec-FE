@@ -134,12 +134,6 @@ const RankingItem = React.memo(
         return;
       }
 
-      console.log('즐겨찾기 버튼 클릭:', {
-        specId,
-        isBookmarked,
-        action: isBookmarked ? '해제' : '등록',
-      });
-
       try {
         setIsBookmarkLoading(true);
 

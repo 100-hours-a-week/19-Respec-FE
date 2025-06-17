@@ -5,7 +5,7 @@ import { BarChart3, FileText } from 'lucide-react';
 import SocialProfileCard from '../components/user/profile/SocialProfileCard';
 import RadarChart from '../components/spec-analysis/RadarChart';
 import SpecDetailInfo from '../components/spec-analysis/SpecDetailTab';
-import { SpecAPI, UserAPI, BookmarkAPI } from '../api';
+import { SpecAPI, UserAPI, BookmarkAPI, ChatAPI } from '../api';
 import CommentsSection from '../components/comment/CommentsSection';
 
 const SocialPage = () => {
@@ -189,7 +189,6 @@ const SocialPage = () => {
 
         if (userResponse.data.isSuccess) {
           const userInfo = userResponse.data.data.user;
-          console.log('userInfo: ', userInfo);
 
           if (!userInfo.isOpenSpec) {
             console.log('스펙이 비공개 상태입니다.');
@@ -281,8 +280,51 @@ const SocialPage = () => {
     }
   };
 
-  const handleDMClick = () => {
-    console.log('DM 버튼 클릭');
+  const handleDMClick = async () => {
+    if (isMyPage) {
+      console.log('본인과는 채팅할 수 없습니다.');
+      return;
+    }
+
+    const targetUserId = userData?.id;
+
+    if (!targetUserId) {
+      console.error('상대방 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    try {
+      const response = await ChatAPI.getChatParticipations();
+
+      if (response.data.success) {
+        const existingChatroom = response.data.data.chatRooms.find(
+          (room) => room.partnerId === targetUserId
+        );
+
+        sessionStorage.removeItem('chatroomId');
+        sessionStorage.removeItem('partnerId');
+
+        if (existingChatroom) {
+          console.log('기존 채팅방 발견: ', existingChatroom.roomId);
+          sessionStorage.setItem(
+            'chatroomId',
+            existingChatroom.roomId.toString()
+          );
+          sessionStorage.setItem('partnerId', targetUserId.toString());
+        } else {
+          console.log('새 채팅 시작');
+          sessionStorage.setItem('partnerId', targetUserId.toString());
+        }
+      } else {
+        console.log('채팅방 목록 조회 실패, 새 채팅으로 시작');
+      }
+    } catch (error) {
+      console.error('채팅방 확인 중 오류: ', error);
+      sessionStorage.removeItem('chatroomId');
+      sessionStorage.setItem('partnerId', targetUserId.toString());
+    }
+
+    navigate('/chat');
   };
 
   const handleBookmarkChange = useCallback(
