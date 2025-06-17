@@ -470,7 +470,8 @@ const ChatsPage = () => {
         )}
 
         {messages.map((message, index) => {
-          const isMyMessage = message.senderId !== partnerId;
+          // senderId와 현재 로그인한 사용자 ID를 비교하여 내 메시지인지 판단
+          const isMyMessage = message.senderId === user?.id;
 
           return (
             <div
