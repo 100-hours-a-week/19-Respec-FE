@@ -31,6 +31,12 @@ const ChatsPage = () => {
   // 스크롤 위치 기억을 위한 ref
   const scrollPositionRef = useRef(null);
   const lastLoadedMessagesRef = useRef([]);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [wsError, setWsError] = useState(null);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const reconnectTimeoutRef = useRef(null);
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const RECONNECT_DELAY_MS = 2000; // 2초
 
   // 세션 스토리지에서 데이터 가져오기
   useEffect(() => {
@@ -58,12 +64,22 @@ const ChatsPage = () => {
     // 사용자 정보가 없으면 연결하지 않음
     if (!user || !partnerId) return;
 
-    // 환경 변수 이름 출력 (디버깅용)
-    console.log(
-      'All env variables:',
-      Object.keys(process.env).filter((key) => key.startsWith('REACT_APP_'))
-    );
+    // 여러 번 재연결 시도를 막기 위한 클린업 함수
+    const cleanup = () => {
+      if (socketRef.current) {
+        console.log('기존 WebSocket 연결 정리');
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+      
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+    };
 
+    console.log('WebSocket 연결 설정 시작...');
+    
     const socketUrl = process.env.REACT_APP_WEB_SOCKET_URL;
     console.log('Socket URL from env:', socketUrl);
 
@@ -72,81 +88,112 @@ const ChatsPage = () => {
       // 환경 변수를 찾을 수 없는 경우 하드코딩된 값 사용
       const fallbackUrl = 'ws://localhost:8080/ws/chat';
       console.log('Using fallback WebSocket URL:', fallbackUrl);
-      initWebSocket(fallbackUrl);
+      connectWebSocket(fallbackUrl);
     } else {
       // WebSocket 초기화
-      initWebSocket(socketUrl);
+      connectWebSocket(socketUrl);
     }
 
     // 컴포넌트 언마운트 시 WebSocket 연결 종료
-    return () => {
-      if (socketRef.current) {
-        console.log('컴포넌트 언마운트: WebSocket 연결 종료');
-        socketRef.current.close();
-        socketRef.current = null;
-      }
-    };
-  }, [user, partnerId]);
+    return cleanup;
+  }, [user, partnerId, reconnectAttempts]);
 
-  // WebSocket 초기화 함수
-  const initWebSocket = (url) => {
+  // WebSocket 연결 함수
+  const connectWebSocket = (url) => {
     // 기존 연결 닫기
     if (socketRef.current) {
       socketRef.current.close();
     }
 
-    // JWT 토큰 가져오기
-    const token = getAccessToken();
-    if (!token) {
-      console.error('WebSocket 연결 실패: 인증 토큰이 없습니다.');
-      setError('인증 정보가 유효하지 않습니다. 다시 로그인해 주세요.');
+    try {
+      // JWT 토큰 가져오기
+      const token = getAccessToken();
+      if (!token) {
+        console.error('WebSocket 연결 실패: 인증 토큰이 없습니다.');
+        setWsError('인증 정보가 유효하지 않습니다. 다시 로그인해 주세요.');
+        setWsConnected(false);
+        return;
+      }
+
+      // URL에 토큰을 쿼리 파라미터로 추가
+      const tokenParam = encodeURIComponent(token);
+      const wsUrlWithToken = `${url}?token=${tokenParam}`;
+      console.log('토큰이 포함된 WebSocket 연결 시도...');
+
+      // 새 WebSocket 연결
+      socketRef.current = new WebSocket(wsUrlWithToken);
+
+      // 연결 성공 이벤트
+      socketRef.current.onopen = () => {
+        console.log('WebSocket 연결 성공!');
+        setWsConnected(true);
+        setWsError(null);
+        setReconnectAttempts(0); // 연결 성공시 재시도 카운트 초기화
+      };
+
+      // 메시지 수신 이벤트
+      socketRef.current.onmessage = (event) => {
+        try {
+          const receivedMessage = JSON.parse(event.data);
+          console.log('WebSocket 메시지 수신:', receivedMessage);
+
+          // 새 메시지를 상태에 추가
+          setMessages((prevMessages) => [
+            {
+              messageId: receivedMessage.messageId || `temp-${Date.now()}`,
+              senderId: receivedMessage.senderId,
+              content: receivedMessage.content,
+              createdAt: receivedMessage.createdAt || new Date().toISOString(),
+            },
+            ...prevMessages,
+          ]);
+        } catch (error) {
+          console.error('WebSocket 메시지 처리 오류:', error);
+        }
+      };
+
+      // 오류 발생 이벤트
+      socketRef.current.onerror = (error) => {
+        console.error('WebSocket 오류:', error);
+        setWsError('채팅 서버 연결에 문제가 발생했습니다.');
+        setWsConnected(false);
+        handleReconnect();
+      };
+
+      // 연결 종료 이벤트
+      socketRef.current.onclose = (event) => {
+        console.log(`WebSocket 연결이 닫혔습니다. 코드: ${event.code}, 이유: ${event.reason}`);
+        setWsConnected(false);
+        
+        // 정상적인 종료가 아닌 경우에만 재연결 시도
+        if (event.code !== 1000) {
+          setWsError('서버와의 연결이 끊어졌습니다.');
+          handleReconnect();
+        }
+      };
+    } catch (err) {
+      console.error('WebSocket 연결 시도 중 예외 발생:', err);
+      setWsError('채팅 서버 연결에 문제가 발생했습니다.');
+      setWsConnected(false);
+      handleReconnect();
+    }
+  };
+
+  // 재연결 처리 함수
+  const handleReconnect = () => {
+    // 최대 재시도 횟수를 초과하면 재시도 중단
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.log('최대 재연결 시도 횟수에 도달했습니다.');
+      setWsError('채팅 서버에 연결할 수 없습니다. 페이지를 새로고침해 주세요.');
       return;
     }
 
-    // URL에 토큰을 쿼리 파라미터로 추가
-    const tokenParam = encodeURIComponent(token);
-    const wsUrlWithToken = `${url}?token=${tokenParam}`;
-    console.log('토큰이 포함된 WebSocket 연결 URL 생성됨');
-
-    // 새 WebSocket 연결
-    socketRef.current = new WebSocket(wsUrlWithToken);
-
-    // 연결 성공 이벤트
-    socketRef.current.onopen = () => {
-      console.log('WebSocket 연결이 열렸습니다.');
-    };
-
-    // 메시지 수신 이벤트
-    socketRef.current.onmessage = (event) => {
-      try {
-        const receivedMessage = JSON.parse(event.data);
-        console.log('WebSocket 메시지 수신:', receivedMessage);
-
-        // 새 메시지를 상태에 추가
-        setMessages((prevMessages) => [
-          {
-            messageId: receivedMessage.messageId || `temp-${Date.now()}`,
-            senderId: receivedMessage.senderId,
-            content: receivedMessage.content,
-            createdAt: receivedMessage.createdAt || new Date().toISOString(),
-          },
-          ...prevMessages,
-        ]);
-      } catch (error) {
-        console.error('WebSocket 메시지 처리 오류:', error);
-      }
-    };
-
-    // 오류 발생 이벤트
-    socketRef.current.onerror = (error) => {
-      console.error('WebSocket 오류:', error);
-      setError('채팅 서버 연결에 문제가 발생했습니다.');
-    };
-
-    // 연결 종료 이벤트
-    socketRef.current.onclose = () => {
-      console.log('WebSocket 연결이 닫혔습니다.');
-    };
+    console.log(`WebSocket 재연결 시도 중... (${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+    
+    // 재연결 대기 후 시도 횟수 증가
+    reconnectTimeoutRef.current = setTimeout(() => {
+      setReconnectAttempts(prev => prev + 1);
+    }, RECONNECT_DELAY_MS);
   };
 
   // 최초 메시지 로드
@@ -355,7 +402,12 @@ const ChatsPage = () => {
   // 메시지 전송 핸들러
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !socketRef.current || !user || !partnerId) return;
+    if (!newMessage.trim() || !wsConnected || !user || !partnerId) {
+      if (!wsConnected) {
+        setWsError('메시지 전송을 위해 서버에 연결 중입니다. 잠시 후 다시 시도해 주세요.');
+      }
+      return;
+    }
 
     try {
       // 메시지 객체 생성
@@ -388,6 +440,7 @@ const ChatsPage = () => {
       }
     } catch (err) {
       console.error('메시지 전송 오류:', err);
+      setWsError('메시지 전송에 실패했습니다. 연결 상태를 확인해 주세요.');
     }
   };
 
@@ -411,16 +464,26 @@ const ChatsPage = () => {
     );
   }
 
-  // 에러 발생 시
-  if (error) {
+  // 에러 발생 시 에러 메시지와 재연결 버튼 표시
+  if (error || wsError) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-126px)] pt-14 text-gray-500">
-        <p className="text-center text-red-500">{error}</p>
+        <p className="text-center text-red-500 mb-2">
+          {error || wsError}
+        </p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            if (error) {
+              window.location.reload();
+            } else {
+              // WebSocket 오류는 재연결만 시도
+              setWsError(null);
+              setReconnectAttempts(0);
+            }
+          }}
           className="px-4 py-2 mt-4 text-white bg-blue-500 rounded-lg"
         >
-          새로고침
+          {error ? '새로고침' : '재연결'}
         </button>
       </div>
     );
