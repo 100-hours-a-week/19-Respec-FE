@@ -59,11 +59,7 @@ const LoginPage = () => {
 
   const handleLogin = () => {
     const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
-    const frontendBaseUrl = process.env.REACT_APP_FRONTEND_URL;
-
-    const redirectUri = encodeURIComponent(`${frontendBaseUrl}/oauth-redirect`);
-
-    window.location.href = `${apiBaseUrl}/oauth2/authorization/kakao?redirect_uri=${redirectUri}`;
+    window.location.href = `${apiBaseUrl}/oauth2/authorization/kakao`;
   };
 
   return (
