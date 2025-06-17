@@ -101,6 +101,8 @@ const SpecInputPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [resumeLoading, setResumeLoading] = useState(false); // 이력서 처리 중 상태
   const fileInputRef = useRef(null); // 파일 입력 참조
+  const [fileErrorMessage, setFileErrorMessage] = useState(null);
+  const [showFileErrorModal, setShowFileErrorModal] = useState(false);
   
   // Handlers for cancel confirmation
   const handleCancelAttempt = () => setShowConfirmModal(true);
@@ -565,23 +567,28 @@ const SpecInputPage = () => {
     const file = e.target.files[0];
     if (!file) return;
     
+    // 파일 입력 초기화 (이후에 동일 파일 선택 가능하도록)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
     // PDF 파일인지 확인
     if (file.type !== 'application/pdf') {
-      setError('PDF 파일만 업로드 가능합니다.');
+      setFileErrorMessage('PDF 파일만 업로드 가능합니다.');
+      setShowFileErrorModal(true);
       return;
     }
     
     // 파일 크기 제한 (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      setError('파일 크기는 최대 10MB까지 가능합니다.');
+      setFileErrorMessage('파일 크기는 최대 10MB까지 가능합니다. 더 작은 파일을 선택해주세요.');
+      setShowFileErrorModal(true);
       return;
     }
     
     try {
       setResumeLoading(true);
       setError(null);
-      
-      console.log('이력서 파일 분석 요청 중...');
       
       // 이력서 분석 API 호출 (SpecAPI 사용)
       const response = await SpecAPI.analyzeResume(file);
@@ -628,17 +635,16 @@ const SpecInputPage = () => {
         // 성공 메시지
         alert('이력서 분석이 완료되었습니다.');
       } else {
-        setError('이력서 분석에 실패했습니다.');
+        // API 응답이 실패인 경우
+        setFileErrorMessage('이력서 분석에 실패했습니다. 다른 파일을 시도해보세요.');
+        setShowFileErrorModal(true);
       }
     } catch (err) {
       console.error('이력서 분석 중 오류 발생:', err);
-      setError('이력서 분석 중 오류가 발생했습니다.');
+      setFileErrorMessage('이력서 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      setShowFileErrorModal(true);
     } finally {
       setResumeLoading(false);
-      // 파일 입력 초기화
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
   };
 
@@ -724,6 +730,9 @@ const SpecInputPage = () => {
                 </>
               )}
             </button>
+            <p className="mt-2 text-xs text-center text-gray-500">
+              PDF 파일만 업로드 가능합니다. (최대 10MB)
+            </p>
           </div>
           
           <div className="space-y-4">
@@ -1138,6 +1147,38 @@ const SpecInputPage = () => {
                     className="flex-1 py-3 text-center text-gray-700 bg-gray-200 rounded-lg"
                   >
                     아니오
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* 파일 에러 모달 */}
+        {showFileErrorModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+            <div className="w-11/12 max-w-sm p-6 bg-white rounded-lg shadow-lg">
+              <div className="flex justify-end">
+                <button onClick={() => setShowFileErrorModal(false)} className="text-gray-500 hover:text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="p-4 mb-4 bg-red-100 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M12 2a10 10 0 11-0 20 10 10 0 010-20z" />
+                  </svg>
+                </div>
+                <p className="mb-3 text-lg font-semibold text-gray-800">이력서 파일 오류</p>
+                <p className="mb-6 text-sm text-center text-gray-600">{fileErrorMessage}</p>
+                <div className="flex w-full">
+                  <button
+                    onClick={() => setShowFileErrorModal(false)}
+                    className="flex-1 py-3 text-center text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                  >
+                    확인
                   </button>
                 </div>
               </div>
