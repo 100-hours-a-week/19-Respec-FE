@@ -21,8 +21,6 @@ const SocialPage = () => {
   const [specData, setSpecData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [animatedScores, setAnimatedScores] = useState([0, 0, 0, 0, 0]);
   const [activeTab, setActiveTab] = useState('analysis');
   const [currentSpecId, setCurrentSpecId] = useState(null);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -43,42 +41,11 @@ const SocialPage = () => {
     );
   };
 
+  const categoryScores = getActualScores();
+
   useEffect(() => {
     loadPageData();
   }, [specId, userId, currentUser]);
-
-  // 탭이 'analysis'로 변경될 때마다 애니메이션 시작
-  useEffect(() => {
-    if (activeTab === 'analysis') {
-      setIsAnalyzing(true);
-      setAnimatedScores([0, 0, 0, 0, 0]);
-
-      // 레이더 차트 애니메이션
-      const animateRadar = () => {
-        const actualScores = getActualScores();
-        const duration = 2000;
-        const steps = 60;
-        const stepDuration = duration / steps;
-
-        for (let i = 0; i <= steps; i++) {
-          setTimeout(() => {
-            const progress = i / steps;
-            const easeOut = 1 - Math.pow(1 - progress, 3);
-            setAnimatedScores(
-              actualScores.map((score) => Math.floor(score * easeOut))
-            );
-
-            if (i === steps) {
-              setIsAnalyzing(false);
-            }
-          }, i * stepDuration);
-        }
-      };
-
-      const timer = setTimeout(animateRadar, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab]);
 
   // loadPageData 함수에서 타인 페이지 처리 부분에 추가
   const checkBookmarkStatus = async (specId) => {
@@ -349,12 +316,9 @@ const SocialPage = () => {
 
           {/* 탭 콘텐츠 */}
           {activeTab === 'analysis' ? (
-            <div className="flex items-center justify-center pt-8 pb-2">
+            <div className="flex items-center justify-center pt-3 pb-1">
               <div className="w-full max-w-xs">
-                <RadarChart
-                  animatedScores={animatedScores}
-                  isAnalyzing={isAnalyzing}
-                />
+                <RadarChart categoryScores={categoryScores} />
               </div>
             </div>
           ) : (
