@@ -146,7 +146,7 @@ const ProfileCard = ({
       {/* 순위 정보 또는 가입일 */}
       {showRanking ? (
         <div className="p-3 font-semibold rounded-lg bg-gray-50">
-          <div className="flex items-center justify-between text-blue-600">
+          <div className="flex items-center justify-between pb-2 text-blue-600">
             <div className="flex items-center space-x-2">
               <BriefcaseBusiness />
               <span className="text-sm text-blue-600">직무 내 순위</span>
@@ -155,7 +155,7 @@ const ProfileCard = ({
               <span>
                 {jobFieldRank} / {jobFieldUsers}명
               </span>
-              <div className="text-xs">상위 {jobFieldRankPercent}%</div>
+              <div className="mt-1 text-xs">상위 {jobFieldRankPercent}%</div>
             </div>
           </div>
           <div className="flex items-center justify-between mt-2">
@@ -167,7 +167,7 @@ const ProfileCard = ({
               <span className="text-gray-600">
                 {totalRank} / {totalUsers}명
               </span>
-              <div className="text-xs text-gray-500">
+              <div className="mt-1 text-xs text-gray-500">
                 상위 {totalRankPercent}%
               </div>
             </div>
