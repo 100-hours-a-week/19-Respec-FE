@@ -40,16 +40,27 @@ export const getSpecDetail = (specId) => {
   return http.get(`/api/specs/${specId}`);
 };
 
-export const createSpec = (formData) => {
-  return http.post('/api/specs', formData, {
+export const createSpec = (data) => {
+  return http.post('/api/specs', data, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      'Content-Type': 'application/json',
     },
   });
 };
 
-export const updateSpec = (specId, formData) => {
-  return http.put(`/api/specs/${specId}`, formData, {
+export const updateSpec = (specId, data) => {
+  return http.put(`/api/specs/${specId}`, data, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+export const analyzeResume = (resumeFile) => {
+  const formData = new FormData();
+  formData.append('resume', resumeFile);
+  
+  return http.post('/api/resume/analysis', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

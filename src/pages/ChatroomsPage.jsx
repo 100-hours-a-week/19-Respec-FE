@@ -3,46 +3,70 @@ import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { ChatAPI } from '../api';
+import { useAuthStore } from '../stores/useAuthStore';
 
 const ChatroomsPage = () => {
   const navigate = useNavigate();
+  const { user: authUser, loading: authLoading, init } = useAuthStore();
   const [chatrooms, setChatrooms] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // API를 통해 채팅방 목록 가져오기
   useEffect(() => {
     const fetchChatRooms = async () => {
-      try {
-        setLoading(true);
-        const response = await ChatAPI.getChatParticipations();
+      // authUser가 없고 인증 로딩이 완료되었으면 로그인 페이지로 이동
+      if (!authUser && !authLoading) {
+        console.log("사용자가 로그인하지 않았습니다. 로그인 페이지로 이동합니다.");
+        navigate('/login');
+        return;
+      }
+
+      // 인증 로딩 중이면 기다림
+      if (authLoading) {
+        console.log("인증 정보 로딩 중...");
+        return;
+      }
+
+      // authUser가 있을 때만 채팅방 목록 요청
+      if (authUser) {
+        console.log("채팅방 목록을 요청합니다.", authUser.id);
         
-        if (response.data.success) {
-          // API 응답 데이터 형식에 맞게 상태 업데이트
-          setChatrooms(response.data.data.chatRooms.map(room => ({
-            id: room.roomId,
-            username: room.partnerNickname,
-            lastMessage: room.lastMessage,
-            profileImage: room.partnerProfileImageUrl,
-            timestamp: formatTimestamp(room.lastMessageTime),
-            partnerId: room.partnerId
-          })));
-        } else {
+        try {
+          setLoading(true);
+          const response = await ChatAPI.getChatParticipations();
+          console.log("채팅방 목록 응답:", response);
+          
+          if (response.data.success) {
+            // API 응답 데이터 형식에 맞게 상태 업데이트
+            const chatRooms = response.data.data.chatRooms || [];
+            setChatrooms(chatRooms.map(room => ({
+              id: room.roomId,
+              username: room.partnerNickname,
+              lastMessage: room.lastMessage,
+              profileImage: room.partnerProfileImageUrl,
+              timestamp: formatTimestamp(room.lastMessageTime),
+              partnerId: room.partnerId
+            })));
+          } else {
+            setError('채팅방 목록을 불러오는데 실패했습니다.');
+          }
+        } catch (err) {
+          console.error('채팅방 목록 조회 오류:', err);
           setError('채팅방 목록을 불러오는데 실패했습니다.');
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error('채팅방 목록 조회 오류:', err);
-        setError('채팅방 목록을 불러오는데 실패했습니다.');
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchChatRooms();
-  }, []);
+  }, [authUser, authLoading, navigate]);
 
   // 날짜 형식 변환 함수
   const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '알 수 없음';
+    
     try {
       const date = parseISO(timestamp);
       const now = new Date();

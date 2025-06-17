@@ -5,6 +5,7 @@ import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Send } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
+import { getAccessToken } from '../utils/token';
 
 const ChatsPage = () => {
   const navigate = useNavigate();
@@ -94,8 +95,21 @@ const ChatsPage = () => {
       socketRef.current.close();
     }
 
+    // JWT 토큰 가져오기
+    const token = getAccessToken();
+    if (!token) {
+      console.error('WebSocket 연결 실패: 인증 토큰이 없습니다.');
+      setError('인증 정보가 유효하지 않습니다. 다시 로그인해 주세요.');
+      return;
+    }
+
+    // URL에 토큰을 쿼리 파라미터로 추가
+    const tokenParam = encodeURIComponent(token);
+    const wsUrlWithToken = `${url}?token=${tokenParam}`;
+    console.log('토큰이 포함된 WebSocket 연결 URL 생성됨');
+
     // 새 WebSocket 연결
-    socketRef.current = new WebSocket(url);
+    socketRef.current = new WebSocket(wsUrlWithToken);
 
     // 연결 성공 이벤트
     socketRef.current.onopen = () => {
@@ -106,6 +120,7 @@ const ChatsPage = () => {
     socketRef.current.onmessage = (event) => {
       try {
         const receivedMessage = JSON.parse(event.data);
+        console.log('WebSocket 메시지 수신:', receivedMessage);
 
         // 새 메시지를 상태에 추가
         setMessages((prevMessages) => [
@@ -125,6 +140,7 @@ const ChatsPage = () => {
     // 오류 발생 이벤트
     socketRef.current.onerror = (error) => {
       console.error('WebSocket 오류:', error);
+      setError('채팅 서버 연결에 문제가 발생했습니다.');
     };
 
     // 연결 종료 이벤트
@@ -141,9 +157,8 @@ const ChatsPage = () => {
     const fetchInitialMessages = async () => {
       try {
         setLoading(true);
-        const response = await ChatAPI.getChatsByRoom(chatroomId, {
-          limit: 30,
-        });
+        // 매개변수 전달 방식 수정
+        const response = await ChatAPI.getChatsByRoom(chatroomId, 30);
 
         if (response.data.success) {
           setMessages(response.data.data.messages);
@@ -309,10 +324,12 @@ const ChatsPage = () => {
     try {
       setLoadingMore(true);
 
-      const response = await ChatAPI.getChatsByRoomWithCursor(chatroomId, {
-        nextCursor,
-        limit: 20,
-      });
+      // 매개변수 전달 방식 수정
+      const response = await ChatAPI.getChatsByRoomWithCursor(
+        chatroomId, 
+        nextCursor, 
+        20
+      );
 
       if (response.data.success) {
         // 새 메시지 추가
