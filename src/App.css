@@ -37,34 +37,54 @@
   }
 }
 
-/* 전체 페이지 스크롤 제어 - 채팅 페이지에만 적용 */
-.chat-page-only {
-  overflow: hidden;
+/* 기본 스크롤 설정 */
+html,
+body {
   height: 100%;
-  position: fixed;
-  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-/* 스크롤 가능한 컨테이너 */
-.scrollable-container {
-  height: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 채팅 페이지에서 메시지 영역만 스크롤 가능하도록 설정 */
 #root {
   height: 100%;
 }
 
-/* 스크롤바 숨기기 */
-/* Chrome, Safari, Edge */
-::-webkit-scrollbar {
-  display: none;
-  width: 0;
+/* 메인 컨텐츠 영역 */
+main {
+  display: block;
 }
 
-/* Firefox */
+/* ChatsPage 메시지 영역 스크롤 설정 */
+.chats-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding-top: 60px; /* TopBar 높이만큼 여백 */
+  padding-bottom: 60px; /* BottomNavBar 높이만큼 여백 */
+}
+
+.chats-messages-container {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 스크롤바 스타일링 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+/* Firefox 스크롤바 스타일링 */
 * {
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }

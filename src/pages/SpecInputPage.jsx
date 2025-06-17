@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosInstance';
-import { useAuth } from '../context/AuthContext';
+import { UserAPI, SpecAPI } from '../api';
+import { useAuthStore } from '../stores/useAuthStore';
+import { getAccessToken } from '../utils/token';
 
 // 상수 데이터 정의
 const JOB_FIELDS = [
@@ -89,7 +90,7 @@ const LANGUAGE_TESTS = [
 
 const SpecInputPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user: authUser, loading: authLoading, init } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -131,42 +132,33 @@ const SpecInputPage = () => {
       try {
         setLoading(true);
         
-        // Get token from Authorization cookie header
-        const token = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('Authorization='))
-          ?.split('=')[1];
-        
+        const token = getAccessToken();
         if (!token) {
-          setError('인증 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
-          setLoading(false);
+          console.log('토큰이 없어 로그인 페이지로 이동합니다.');
+          navigate('/login');
           return;
         }
 
-        let userId;
-        
-        try {
-          // JWT 토큰 디코딩 (Base64)
-          const payload = token.split('.')[1];
-          const decodedPayload = JSON.parse(atob(payload));
-          userId = decodedPayload.userId;
-          console.log("Decoded userId from token:", userId);
-        } catch (e) {
-          console.error('Failed to decode token:', e);
-        }
-        
-        if (!userId) {
-          setError('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
-          setLoading(false);
+        if (!authUser && token && !authLoading) {
+          console.log('인증 상태를 다시 초기화하는 중...');
+          await init();
           return;
         }
+
+        if (authLoading) {
+          console.log('인증 상태 로딩 중...');
+          return;
+        }
+
+        if (!authUser?.id) {
+          console.error('사용자 정보를 찾을 수 없습니다.');
+          navigate('/login');
+          return;
+        }
+       
         
         // 유저 정보 가져오기
-        const userResponse = await axiosInstance.get(`/api/users/${userId}`, {
-          headers: {
-            'Authorization': token
-          }
-        });
+        const userResponse = await UserAPI.getUserInfo(authUser.id);
         
         if (userResponse.data.isSuccess) {
           const userData = userResponse.data.data.user;
@@ -184,11 +176,7 @@ const SpecInputPage = () => {
             setActiveSpecId(userData.spec.activeSpec);
             
             // 활성화된 스펙 정보 가져오기
-            const specResponse = await axiosInstance.get(`/api/specs/${userData.spec.activeSpec}`, {
-              headers: {
-                'Authorization': token
-              }
-            });
+            const specResponse = await SpecAPI.getSpecDetail(userData.spec.activeSpec);
             
             if (specResponse.data.isSuccess) {
               const specData = specResponse.data.specDetailData;
@@ -519,23 +507,17 @@ const SpecInputPage = () => {
       const submissionData = formatDataForSubmission();
       console.log('전송할 데이터:', submissionData);
       
-      // API 엔드포인트 설정 (수정 모드 여부에 따라)
-      const endpoint = isEditMode ? `/api/specs/${activeSpecId}` : '/api/specs';
+      console.log(`API 요청: ${isEditMode ? 'PUT' : 'POST'} ${isEditMode ? `/api/specs/${activeSpecId}` : '/api/specs'}`);
       
-      // 메소드 설정 (수정 모드 여부에 따라)
-      const method = isEditMode ? 'PUT' : 'POST';
+      let response;
       
-      console.log(`API 요청: ${method} ${endpoint}`);
-      
-      // JSON 형식으로 직접 전송 (multipart/form-data 대신)
-      const response = await axiosInstance({
-        method,
-        url: endpoint,
-        data: submissionData,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      if (isEditMode) {
+        // SpecAPI.updateSpec 함수 사용
+        response = await SpecAPI.updateSpec(activeSpecId, submissionData);
+      } else {
+        // SpecAPI.createSpec 함수 사용
+        response = await SpecAPI.createSpec(submissionData);
+      }
       
       console.log('API 응답:', response);
       
@@ -599,18 +581,10 @@ const SpecInputPage = () => {
       setResumeLoading(true);
       setError(null);
       
-      // FormData 생성
-      const formData = new FormData();
-      formData.append('resume', file);
-      
       console.log('이력서 파일 분석 요청 중...');
       
-      // API 요청
-      const response = await axiosInstance.post('/api/resume/analysis', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      // 이력서 분석 API 호출 (SpecAPI 사용)
+      const response = await SpecAPI.analyzeResume(file);
       
       console.log('이력서 분석 응답:', response.data);
       
