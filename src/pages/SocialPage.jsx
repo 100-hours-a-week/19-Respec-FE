@@ -332,7 +332,12 @@ const SocialPage = () => {
 
         {/* 스펙 분석 카드 */}
         <div className="p-6 pb-2 my-4 bg-white shadow-sm rounded-2xl">
-          <h3 className="mb-4 text-lg font-bold">스펙 분석</h3>
+          <div className="flex items-center mb-4 space-x-2">
+            <h4 className="font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+              AI 기반 상세 스펙
+            </h4>
+          </div>
+
           {/* 탭 메뉴 */}
           <div className="flex p-1 mb-3 bg-gray-100 rounded-lg">
             {tabs.map((tab) => {
