@@ -60,6 +60,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
+
   const { isLoggedIn } = useAuthStore();
   const { toasts, removeToast, showToast } = useToast();
 
@@ -152,6 +153,7 @@ const Layout = ({ children }) => {
         className={`${isChatPage ? '' : 'pt-14 pb-16'} min-h-[calc(100vh-120px)]`}
       >
         <div className="h-full">{children}</div>
+
       </main>
       <BottomNavBar
         active={getActiveMenu()}
@@ -285,3 +287,4 @@ function App() {
 }
 
 export default App;
+

@@ -82,7 +82,7 @@ const ProfileSetupPage = () => {
       if (accessToken && response.data) {
         setAccessToken(accessToken);
         deleteCookie('access');
-        console.log(response.data.message, response.data.data);
+
         login(response.data.data, accessToken);
         showToast('회원가입이 완료되었습니다!', 'success');
 
