@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Award, MessageSquare, Star, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { BookmarkAPI } from '../../api';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { useBookmarkStore } from '../../stores/useBookmarkStore';
 import useToast from '../../hooks/useToast';
 import { ButtonLoadingIndicator } from '../common/LoadingIndicator';
-import { useAuthStore } from '../../stores/useAuthStore';
 import ToastContainer from '../common/ToastContainer';
 
 const RankingItem = React.memo(
@@ -20,7 +20,6 @@ const RankingItem = React.memo(
     usersCountByJobField,
     score,
     jobField,
-    isBookmarked = false,
     commentsCount = 0,
     bookmarksCount = 0,
     onBookmarkChange,
@@ -30,6 +29,11 @@ const RankingItem = React.memo(
     const { showToast, toasts, removeToast } = useToast();
     const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
     const { isLoggedIn, user: currentUser } = useAuthStore();
+    const {
+      isBookmarked,
+      toggleBookmark,
+      loading: bookmarkStoreLoading,
+    } = useBookmarkStore();
 
     const shouldShowBookmarkButton = useMemo(() => {
       if (!isLoggedIn) return false;
@@ -39,6 +43,9 @@ const RankingItem = React.memo(
 
       return true;
     }, [isLoggedIn, currentUser, userId]);
+
+    // 전역 스토어에서 즐겨찾기 상태 가져오기
+    const bookmarked = isBookmarked(parseInt(specId));
 
     const rankingInfo = useMemo(() => {
       const isGlobalFilter = selectedFilter === '전체';
@@ -130,38 +137,28 @@ const RankingItem = React.memo(
         return;
       }
 
-      if (isBookmarkLoading) {
+      if (isBookmarkLoading || bookmarkStoreLoading) {
         return;
       }
 
       try {
         setIsBookmarkLoading(true);
 
-        if (isBookmarked) {
-          const response = await BookmarkAPI.removeBookmark(specId);
+        const result = await toggleBookmark(parseInt(specId));
 
-          if (response.status === 204 || response.data?.isSuccess) {
-            showToast('즐겨찾기가 해제되었습니다.', 'success');
-            onBookmarkChange?.(specId, false, null);
-          } else {
-            showToast(
-              response.data.message || '즐겨찾기 해제에 실패했습니다.',
-              'error'
-            );
-          }
+        if (result.success) {
+          const newBookmarkedState = !bookmarked;
+          showToast(
+            newBookmarkedState
+              ? '즐겨찾기가 등록되었습니다.'
+              : '즐겨찾기가 해제되었습니다.',
+            'success'
+          );
+
+          // 부모 컴포넌트에 상태 변경 알림
+          onBookmarkChange?.(specId, newBookmarkedState, result.bookmarkId);
         } else {
-          const response = await BookmarkAPI.addBookmark(specId);
-
-          if (response.data?.isSuccess) {
-            const newBookmarkId = response.data.data?.bookmarkId;
-            showToast('즐겨찾기가 등록되었습니다.', 'success');
-            onBookmarkChange?.(specId, true, newBookmarkId);
-          } else {
-            showToast(
-              response.data.message || '즐겨찾기 등록에 실패했습니다.',
-              'error'
-            );
-          }
+          showToast(result.message || '즐겨찾기 처리에 실패했습니다.', 'error');
         }
       } catch (error) {
         console.error('즐겨찾기 처리 중 오류: ', error);
@@ -243,11 +240,11 @@ const RankingItem = React.memo(
             {shouldShowBookmarkButton && (
               <button
                 onClick={handleBookmarkClick}
-                disabled={isBookmarkLoading}
-                className={`p-1.5 relative ${isBookmarkLoading ? 'opacity-75' : ''}`}
+                disabled={isBookmarkLoading || bookmarkStoreLoading}
+                className={`p-1.5 relative ${isBookmarkLoading || bookmarkStoreLoading ? 'opacity-75' : ''}`}
                 aria-label="즐겨찾기"
               >
-                {isBookmarkLoading ? (
+                {isBookmarkLoading || bookmarkStoreLoading ? (
                   <div className="flex items-center justify-center w-5 h-5">
                     <ButtonLoadingIndicator />
                   </div>
@@ -255,7 +252,7 @@ const RankingItem = React.memo(
                   <Star
                     size={20}
                     className={
-                      isBookmarked
+                      bookmarked
                         ? 'text-yellow-400 fill-yellow-400'
                         : 'text-yellow-400'
                     }

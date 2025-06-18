@@ -24,6 +24,7 @@ import TopBar from './components/common/TopBar';
 import BottomNavBar from './components/common/BottomNavBar';
 import { useEffect } from 'react';
 import { useAuthStore } from './stores/useAuthStore';
+import { useBookmarkStore } from './stores/useBookmarkStore';
 import OAuthRedirectPage from './pages/OAuthRedirectPage';
 import ToastContainer from './components/common/ToastContainer';
 import useToast from './hooks/useToast';
@@ -153,7 +154,6 @@ const Layout = ({ children }) => {
         className={`${isChatPage ? '' : 'pt-14 pb-16'} min-h-[calc(100vh-120px)]`}
       >
         <div className="h-full">{children}</div>
-
       </main>
       <BottomNavBar
         active={getActiveMenu()}
@@ -167,9 +167,19 @@ const Layout = ({ children }) => {
 
 function App() {
   const init = useAuthStore((s) => s.init);
+  const { isLoggedIn } = useAuthStore();
+  const { initializeBookmarks, initialized } = useBookmarkStore();
+
   useEffect(() => {
     init();
   }, [init]);
+
+  // 로그인 상태가 변경되면 즐겨찾기 초기화
+  useEffect(() => {
+    if (isLoggedIn && !initialized) {
+      initializeBookmarks();
+    }
+  }, [isLoggedIn, initialized, initializeBookmarks]);
 
   return (
     <BrowserRouter>
@@ -287,4 +297,3 @@ function App() {
 }
 
 export default App;
-

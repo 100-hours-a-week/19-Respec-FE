@@ -58,7 +58,6 @@ const BookmarkPage = () => {
                   usersCountByJobField: bookmark.spec.jobFieldUserCount,
                   score: bookmark.spec.score,
                   jobField: bookmark.spec.jobField,
-                  isBookmarked: bookmark.spec.isBookmarked,
                   commentsCount: bookmark.spec.commentsCount,
                   bookmarksCount: bookmark.spec.bookmarksCount,
                 };
@@ -78,7 +77,6 @@ const BookmarkPage = () => {
                   usersCountByJobField: bookmark.spec.jobFieldUserCount,
                   score: bookmark.spec.score,
                   jobField: bookmark.spec.jobField,
-                  isBookmarked: bookmark.spec.isBookmarked,
                   commentsCount: bookmark.spec.commentsCount,
                   bookmarksCount: bookmark.spec.bookmarksCount,
                 };
@@ -130,16 +128,9 @@ const BookmarkPage = () => {
   const handleBookmarkChange = useCallback(
     (specId, isBookmarked, bookmarkId) => {
       if (!isBookmarked) {
+        // 즐겨찾기 해제 시 목록에서 제거
         setBookmarks((prev) => prev.filter((item) => item.specId !== specId));
         showToast('즐겨찾기가 해제되었습니다.', 'success');
-      } else {
-        setBookmarks((prev) =>
-          prev.map((item) =>
-            item.specId === specId
-              ? { ...item, isBookmarked, bookmarkId }
-              : item
-          )
-        );
       }
     },
     [showToast]
@@ -250,7 +241,6 @@ const BookmarkPage = () => {
                   usersCountByJobField={bookmark.usersCountByJobField}
                   score={bookmark.score}
                   jobField={bookmark.jobField}
-                  isBookmarked={bookmark.isBookmarked}
                   commentsCount={bookmark.commentsCount}
                   bookmarksCount={bookmark.bookmarksCount}
                   selectedFilter="전체"

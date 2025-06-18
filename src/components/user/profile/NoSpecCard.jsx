@@ -1,5 +1,8 @@
 import { Send, Star } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
+import { useBookmarkStore } from '../../../stores/useBookmarkStore';
+import useToast from '../../../hooks/useToast';
+import { ButtonLoadingIndicator } from '../../common/LoadingIndicator';
 
 const NoSpecCard = ({
   profileImageUrl,
@@ -9,9 +12,20 @@ const NoSpecCard = ({
   showButtons = false,
   onDMClick,
   onFavoriteClick,
-  isFavorite = false,
   variant = 'default',
 }) => {
+  const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
+  const { showToast } = useToast();
+  const { loading: bookmarkStoreLoading } = useBookmarkStore();
+
+  // 스펙이 없는 사용자는 즐겨찾기할 수 없으므로 항상 false
+  const isFavorite = false;
+
+  const handleFavoriteClick = async () => {
+    // 스펙이 없는 사용자는 즐겨찾기할 수 없음
+    showToast('스펙이 있는 사용자만 즐겨찾기할 수 있습니다.', 'info');
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 max-w-sm">
       {/* 헤더 영역 */}
@@ -47,8 +61,18 @@ const NoSpecCard = ({
             >
               <Send size={18} />
             </button>
-            <button onClick={onFavoriteClick} className="p-2 text-yellow-500">
-              <Star size={18} fill={`${isFavorite ? 'yellow-400' : 'none'}`} />
+            <button
+              onClick={handleFavoriteClick}
+              disabled={isBookmarkLoading || bookmarkStoreLoading}
+              className={`p-2 text-yellow-500 ${isBookmarkLoading || bookmarkStoreLoading ? 'opacity-75' : ''}`}
+            >
+              {isBookmarkLoading || bookmarkStoreLoading ? (
+                <div className="flex items-center justify-center w-[18px] h-[18px]">
+                  <ButtonLoadingIndicator />
+                </div>
+              ) : (
+                <Star size={18} className="text-yellow-400" />
+              )}
             </button>
           </div>
         )}

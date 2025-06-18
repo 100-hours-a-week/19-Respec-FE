@@ -5,7 +5,7 @@ import { BarChart3, FileText } from 'lucide-react';
 import SocialProfileCard from '../components/user/profile/SocialProfileCard';
 import RadarChart from '../components/spec-analysis/RadarChart';
 import SpecDetailInfo from '../components/spec-analysis/SpecDetailTab';
-import { SpecAPI, UserAPI, BookmarkAPI, ChatAPI } from '../api';
+import { SpecAPI, UserAPI, ChatAPI } from '../api';
 import CommentsSection from '../components/comment/CommentsSection';
 
 const SocialPage = () => {
@@ -20,7 +20,6 @@ const SocialPage = () => {
   const [hasSpec, setHasSpec] = useState(false);
   const [specData, setSpecData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [activeTab, setActiveTab] = useState('analysis');
   const [currentSpecId, setCurrentSpecId] = useState(null);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -48,22 +47,6 @@ const SocialPage = () => {
   }, [specId, userId, currentUser]);
 
   // loadPageData 함수에서 타인 페이지 처리 부분에 추가
-  const checkBookmarkStatus = async (specId) => {
-    try {
-      const bookmarkResponse = await BookmarkAPI.getBookmarks({ cursor: null });
-      if (bookmarkResponse.data.isSuccess) {
-        const bookmarks = bookmarkResponse.data.data.bookmarks;
-        return bookmarks.some(
-          (bookmark) => bookmark.spec.id === parseInt(specId)
-        );
-      }
-      return false;
-    } catch (error) {
-      console.error('즐겨찾기 상태 확인 실패:', error);
-      return false;
-    }
-  };
-
   const loadPageData = async () => {
     try {
       setLoading(true);
@@ -228,8 +211,6 @@ const SocialPage = () => {
             }
 
             setUserData(profileData);
-            const bookmarkStatus = await checkBookmarkStatus(specId);
-            setIsBookmarked(bookmarkStatus);
           } else {
             console.error('스펙 정보 조회 실패:', specResponse.data?.message);
             throw new Error('스펙 정보를 불러올 수 없습니다.');
@@ -296,7 +277,7 @@ const SocialPage = () => {
 
   const handleBookmarkChange = useCallback(
     (specId, isBookmarked, bookmarkId) => {
-      setIsBookmarked(isBookmarked);
+      // 전역 스토어에서 상태가 자동으로 업데이트되므로 추가 작업 불필요
     },
     []
   );
@@ -326,7 +307,6 @@ const SocialPage = () => {
           showButtons={!isMyPage}
           onDMClick={handleDMClick}
           onFavoriteClick={handleBookmarkChange}
-          isFavorite={isBookmarked}
           specId={specId}
         />
 

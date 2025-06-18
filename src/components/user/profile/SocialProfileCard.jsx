@@ -8,7 +8,6 @@ const SocialProfileCard = ({
   showButtons,
   onDMClick,
   onFavoriteClick,
-  isFavorite,
   specId,
 }) => {
   // 스펙이 없는 경우
@@ -20,7 +19,6 @@ const SocialProfileCard = ({
         showButtons={showButtons}
         onDMClick={onDMClick}
         onFavoriteClick={onFavoriteClick}
-        isFavorite={isFavorite}
         variant="social"
       />
     );
@@ -43,7 +41,6 @@ const SocialProfileCard = ({
       showButtons={showButtons}
       onDMClick={onDMClick}
       onFavoriteClick={onFavoriteClick}
-      isFavorite={isFavorite}
       specId={specId}
     />
   );
