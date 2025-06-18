@@ -2,7 +2,8 @@ import { BriefcaseBusiness, Send, Star, Users } from 'lucide-react';
 import React, { useState } from 'react';
 import useToast from '../../../hooks/useToast';
 import { ButtonLoadingIndicator } from '../../common/LoadingIndicator';
-import { BookmarkAPI } from '../../../api';
+import { useBookmarkStore } from '../../../stores/useBookmarkStore';
+import ToastContainer from '../../common/ToastContainer';
 
 const ProfileCard = ({
   profileImageUrl,
@@ -21,11 +22,18 @@ const ProfileCard = ({
   showButtons = false,
   onDMClick,
   onFavoriteClick,
-  isFavorite = false,
   specId,
 }) => {
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
-  const { showToast } = useToast();
+  const { showToast, toasts, removeToast } = useToast();
+  const {
+    isBookmarked,
+    toggleBookmark,
+    loading: bookmarkStoreLoading,
+  } = useBookmarkStore();
+
+  // 전역 스토어에서 즐겨찾기 상태 가져오기
+  const isFavorite = specId ? isBookmarked(parseInt(specId)) : false;
 
   const handleFavoriteClick = async () => {
     if (!specId) {
@@ -33,34 +41,26 @@ const ProfileCard = ({
       return;
     }
 
-    if (isBookmarkLoading) return;
+    if (isBookmarkLoading || bookmarkStoreLoading) return;
 
     try {
       setIsBookmarkLoading(true);
 
-      if (isFavorite) {
-        const response = await BookmarkAPI.removeBookmark(specId);
-        if (response.status === 204 || response.data?.isSuccess) {
-          showToast('즐겨찾기가 해제되었습니다.', 'success');
-          onFavoriteClick?.(specId, false, null);
-        } else {
-          showToast(
-            response.data.message || '즐겨찾기 해제에 실패했습니다.',
-            'error'
-          );
-        }
+      const result = await toggleBookmark(parseInt(specId));
+
+      if (result.success) {
+        const newBookmarkedState = !isFavorite;
+        showToast(
+          newBookmarkedState
+            ? '즐겨찾기가 등록되었습니다.'
+            : '즐겨찾기가 해제되었습니다.',
+          'success'
+        );
+
+        // 부모 컴포넌트에 상태 변경 알림
+        onFavoriteClick?.(specId, newBookmarkedState, result.bookmarkId);
       } else {
-        const response = await BookmarkAPI.addBookmark(specId);
-        if (response.data?.isSuccess) {
-          const newBookmarkId = response.data.data?.bookmarkId;
-          showToast('즐겨찾기가 등록되었습니다.', 'success');
-          onFavoriteClick?.(specId, true, newBookmarkId);
-        } else {
-          showToast(
-            response.data.message || '즐겨찾기 등록에 실패했습니다.',
-            'error'
-          );
-        }
+        showToast(result.message || '즐겨찾기 처리에 실패했습니다.', 'error');
       }
     } catch (error) {
       console.error('즐겨찾기 처리 중 오류: ', error);
@@ -181,6 +181,8 @@ const ProfileCard = ({
           </div>
         </div>
       ) : null}
+
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

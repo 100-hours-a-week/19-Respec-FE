@@ -188,7 +188,6 @@ const RankingPage = () => {
         jobField: jobField,
         rankByJobField: 1,
         totalUsersCountByJobField: 50,
-        isBookmarked: true,
         commentsCount: 57,
         bookmarksCount: 243,
       },
@@ -203,7 +202,6 @@ const RankingPage = () => {
         jobField: jobField,
         rankByJobField: 2,
         totalUsersCountByJobField: 50,
-        isBookmarked: false,
         commentsCount: 42,
         bookmarksCount: 120,
       },
@@ -218,7 +216,6 @@ const RankingPage = () => {
         jobField: jobField,
         rankByJobField: 3,
         totalUsersCountByJobField: 50,
-        isBookmarked: true,
         commentsCount: 35,
         bookmarksCount: 98,
       },
@@ -233,7 +230,6 @@ const RankingPage = () => {
         jobField: jobField,
         rankByJobField: 4,
         totalUsersCountByJobField: 50,
-        isBookmarked: false,
         commentsCount: 28,
         bookmarksCount: 76,
       },
@@ -248,7 +244,6 @@ const RankingPage = () => {
         jobField: jobField,
         rankByJobField: 5,
         totalUsersCountByJobField: 50,
-        isBookmarked: true,
         commentsCount: 21,
         bookmarksCount: 65,
       },
@@ -411,11 +406,7 @@ const RankingPage = () => {
   };
 
   const handleBookmarkChange = useCallback((specId, isBookmarked) => {
-    setRankings((prevRankings) =>
-      prevRankings.map((ranking) =>
-        ranking.specId === specId ? { ...ranking, isBookmarked } : ranking
-      )
-    );
+    // 전역 스토어에서 상태가 자동으로 업데이트되므로 추가 작업 불필요
   }, []);
 
   // 초기 랭킹 데이터 로드
@@ -595,7 +586,6 @@ const RankingPage = () => {
                           usersCountByJobField={ranking.usersCountByJobField}
                           score={ranking.score}
                           jobField={ranking.jobField}
-                          isBookmarked={ranking.isBookmarked}
                           commentsCount={ranking.commentsCount}
                           bookmarksCount={ranking.bookmarksCount}
                           onBookmarkChange={handleBookmarkChange}

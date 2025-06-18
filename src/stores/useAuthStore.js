@@ -93,6 +93,14 @@ export const useAuthStore = create((set, get) => ({
     removeAccessToken();
     HttpAPI.setAuthToken(null);
     set({ isLoggedIn: false, user: null, token: null, loading: false });
+
+    // 즐겨찾기 스토어도 초기화
+    try {
+      const { useBookmarkStore } = require('./useBookmarkStore');
+      useBookmarkStore.getState().reset();
+    } catch (error) {
+      console.error('즐겨찾기 스토어 초기화 실패:', error);
+    }
   },
 
   /** 유저 정보 업데이트 */

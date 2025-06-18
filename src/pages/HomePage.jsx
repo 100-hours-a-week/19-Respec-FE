@@ -167,11 +167,7 @@ const HomePage = () => {
   }, []);
 
   const handleBookmarkChange = useCallback((specId, isBookmarked) => {
-    setRankingData((prevData) =>
-      prevData.map((item) =>
-        item.specId === specId ? { ...item, isBookmarked } : item
-      )
-    );
+    // 전역 스토어에서 상태가 자동으로 업데이트되므로 추가 작업 불필요
   }, []);
 
   const handleRetry = () => {
@@ -252,7 +248,6 @@ const HomePage = () => {
               usersCountByJobField={item.usersCountByJobField}
               score={item.score}
               jobField={item.jobField}
-              isBookmarked={item.isBookmarked}
               commentsCount={item.commentsCount}
               bookmarksCount={item.bookmarksCount}
               selectedFilter={selectedFilter}

@@ -125,11 +125,7 @@ const RankingResultPage = () => {
   );
 
   const handleBookmarkChange = useCallback((specId, isBookmarked) => {
-    setSearchResults((prevData) =>
-      prevData.map((item) =>
-        item.specId === specId ? { ...item, isBookmarked } : item
-      )
-    );
+    // 전역 스토어에서 상태가 자동으로 업데이트되므로 추가 작업 불필요
   }, []);
 
   // 컴포넌트 마운트 시 초기 데이터 로드
@@ -259,7 +255,6 @@ const RankingResultPage = () => {
                         usersCountByJobField={result.totalUsersCountByJobField}
                         score={result.score}
                         jobField={result.jobField}
-                        isBookmarked={result.isBookmarked}
                         commentsCount={result.commentsCount}
                         bookmarksCount={result.bookmarksCount}
                         onBookmarkChange={handleBookmarkChange}
