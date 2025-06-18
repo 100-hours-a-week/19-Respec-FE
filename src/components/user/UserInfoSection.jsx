@@ -72,7 +72,7 @@ const UserInfoSection = ({
 
   // 로그인하고 스펙이 있는 경우 AI 분석 포함
   return (
-    <div className="w-full mb-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+    <div className="w-full mb-4 bg-white border border-gray-100 shadow-sm rounded-2xl">
       <div className="p-4">
         <HomeProfileCard
           userData={userData}
@@ -89,8 +89,8 @@ const UserInfoSection = ({
         />
 
         {showInsights && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <AIInsights />
+          <div className="pt-4 mt-6 border-t border-gray-200">
+            <AIInsights assessment={userData?.assessment} />
           </div>
         )}
       </div>

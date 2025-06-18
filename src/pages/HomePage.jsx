@@ -59,6 +59,7 @@ const HomePage = () => {
               const specData = specResponse.data.specDetailData;
               const rankings = specData.rankings?.details;
               const categories = specData.rankings?.categories || [];
+              const assessment = specData.assessment || null;
 
               const scores = [
                 categories.find((category) => category.name === '학력_성적')
@@ -93,6 +94,7 @@ const HomePage = () => {
                 profileData.jobFieldRank = rankings.jobFieldRank;
                 profileData.jobFieldUsers = rankings.jobFieldUserCount;
                 profileData.jobFieldRankPercent = jobFieldRankPercent;
+                profileData.assessment = assessment;
               }
             }
           } catch (specError) {
@@ -180,12 +182,12 @@ const HomePage = () => {
   if (authLoading) {
     return (
       <div className="flex-1 p-4 pb-20">
-        <div className="mb-4 p-6 bg-white rounded-lg shadow">
-          <div className="animate-pulse flex items-center space-x-4">
+        <div className="p-6 mb-4 bg-white rounded-lg shadow">
+          <div className="flex items-center space-x-4 animate-pulse">
             <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div className="w-1/4 h-4 bg-gray-200 rounded"></div>
+              <div className="w-1/2 h-3 bg-gray-200 rounded"></div>
             </div>
           </div>
         </div>
@@ -223,7 +225,7 @@ const HomePage = () => {
               <p className="mb-4 text-gray-600">{error}</p>
               <button
                 onClick={handleRetry}
-                className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 text-white transition-colors bg-blue-500 rounded hover:bg-blue-600"
               >
                 다시 시도
               </button>

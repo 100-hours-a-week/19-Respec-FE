@@ -147,7 +147,7 @@ const Layout = ({ children }) => {
   const isChatPage = path === '/chat';
 
   return (
-    <div className="relative w-full max-w-[390px] mx-auto min-h-screen bg-gray-50">
+    <div className="relative w-full max-w-[390px] mx-auto min-h-screen bg-gray-50 shadow-2xl">
       <TopBar title={getTitleByPath()} backLink={getBackButtonConfig()} />
       <main
         className={`${isChatPage ? '' : 'pt-14 pb-16'} min-h-[calc(100vh-120px)]`}
