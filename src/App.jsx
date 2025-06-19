@@ -130,7 +130,7 @@ const Layout = ({ children }) => {
   const getActiveMenu = () => {
     if (path === '/') return 'home';
     if (path === '/rank' || path === 'ranking-results') return 'rank';
-    if (path === '/chatrooms') return 'dm';
+    if (path === '/chatrooms' || path === '/chat') return 'dm';
     if (path === '/social' || path.startsWith('/social/')) return 'social';
     if (
       path === '/my' ||
