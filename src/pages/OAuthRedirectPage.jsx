@@ -18,13 +18,11 @@ const OAuthRedirectPage = () => {
     }
     if (authorization) {
       login(null, authorization);
-      console.log('authorization 1번');
       deleteCookie('access', '/', DOMAINS.COOKIE_DOMAIN);
-      console.log('authorization 2번');
 
       setTimeout(() => {
         window.location.href = '/';
-      }, 100);
+      }, 200);
 
       return;
     }
