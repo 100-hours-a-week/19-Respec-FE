@@ -187,7 +187,7 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-        <PageLoadingIndicator />
+        <PageLoadingIndicator className="hidden" />
       </div>
     );
   }

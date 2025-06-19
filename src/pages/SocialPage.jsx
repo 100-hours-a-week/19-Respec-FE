@@ -7,6 +7,7 @@ import RadarChart from '../components/spec-analysis/RadarChart';
 import SpecDetailInfo from '../components/spec-analysis/SpecDetailTab';
 import { SpecAPI, UserAPI, ChatAPI } from '../api';
 import CommentsSection from '../components/comment/CommentsSection';
+import { PageLoadingIndicator } from '../components/common/LoadingIndicator';
 
 const SocialPage = () => {
   const { specId } = useParams();
@@ -212,10 +213,12 @@ const SocialPage = () => {
             setUserData(profileData);
           } else {
             console.error('스펙 정보 조회 실패:', specResponse.data?.message);
+            setAccessDenied(true);
             throw new Error('스펙 정보를 불러올 수 없습니다.');
           }
         } else {
           console.error('사용자 정보 조회 실패:', userResponse.data?.message);
+          setAccessDenied(true);
           throw new Error('사용자 정보를 불러올 수 없습니다.');
         }
       }
@@ -283,18 +286,23 @@ const SocialPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">로딩 중...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <PageLoadingIndicator />
       </div>
     );
   }
 
-  if (!userData) {
+  if (accessDenied) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">사용자 정보를 불러올 수 없습니다.</div>
       </div>
     );
+  }
+
+  // userData가 없으면 아무것도 렌더링하지 않음 (로딩 끝났지만 데이터가 없는 경우 방지)
+  if (!userData) {
+    return null;
   }
 
   return (
