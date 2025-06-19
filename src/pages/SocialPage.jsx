@@ -93,7 +93,6 @@ const SocialPage = () => {
               const specResponse = await SpecAPI.getSpecDetail(
                 userInfo.spec.activeSpec
               );
-              console.log('specResponse: ', specResponse);
 
               if (specResponse.data.isSuccess) {
                 const specDetailData = specResponse.data.specDetailData;

@@ -73,30 +73,20 @@ export const useAuthStore = create((set, get) => ({
 
   /** 로그인 성공 후 호출 (헤더에 access 토큰 포함) */
   login: (me, accessToken) => {
-    console.log('useAuthStore login 들어옴');
     if (accessToken) {
-      console.log('accessToken if문 들어옴');
       setAccessToken(accessToken);
-      console.log('📦 [login] accessToken localStorage 저장 완료');
 
       HttpAPI.setAuthToken(accessToken);
-      console.log('🔐 [login] axios 기본 헤더 설정 완료');
-
       HttpAPI.setupInterceptors(
         accessToken,
         (t) => get().setToken(t),
         () => get().logout()
       );
-      console.log('✅ [login] 인터셉터 설정 완료');
 
       get()._startRefreshTimer(accessToken);
-      console.log('⏱️ [login] 토큰 리프레시 타이머 설정 완료');
-
       set({ token: accessToken });
-      console.log('✅ [login] 상태 업데이트 완료 (token)');
     }
     set({ user: me, isLoggedIn: true, loading: false });
-    console.log('✅ [login] 상태 업데이트 완료 (user, isLoggedIn)');
   },
 
   /** 로그아웃 */
