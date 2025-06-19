@@ -1,7 +1,7 @@
 const isLocal = false;
 
 export const DOMAINS = {
-  COOKIE_DOMAIN: isLocal ? 'localhost' : '.dev.specranking.net', // 서브도메인 포함 쿠키용
+  COOKIE_DOMAIN: isLocal ? 'localhost' : '.specranking.net', // 서브도메인 포함 쿠키용
 
   FRONTEND_DOMAIN: isLocal ? 'localhost:3000' : 'dev.specranking.net',
 
