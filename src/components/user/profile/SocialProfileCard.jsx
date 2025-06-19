@@ -10,6 +10,8 @@ const SocialProfileCard = ({
   onFavoriteClick,
   specId,
 }) => {
+  if (!userData) return null;
+
   // 스펙이 없는 경우
   if (!hasSpec) {
     return (

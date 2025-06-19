@@ -233,7 +233,7 @@ const RankingResultPage = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div>
                   {searchResults.map((result, index) => (
                     <div
                       key={`${result.userId}_${index}`}

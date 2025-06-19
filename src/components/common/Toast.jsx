@@ -79,7 +79,7 @@ const Toast = ({
   return (
     <div className={getToastStyles()}>
       {getIcon()}
-      <span className="flex-1 font-medium">{message}</span>
+      <span className="flex-1 font-medium whitespace-pre-line">{message}</span>
       <button
         onClick={handleClose}
         className="flex-shrink-0 ml-3 text-gray-400 transition-colors duration-200 hover:text-gray-600"

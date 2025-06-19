@@ -88,3 +88,8 @@ main {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
+
+/* 레이아웃 컨테이너 그림자 */
+.layout-container {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}

@@ -527,7 +527,7 @@ const RankingPage = () => {
           />
 
           {/* 메타 데이터 (총 사용자 수, 평균 점수) */}
-          <div className="mb-6">
+          <div className="mb-2">
             <div className="flex rounded-lg bg-blue-50">
               <div className="flex-1 p-4 text-center">
                 <div className="mb-1 text-sm text-gray-500">총 사용자</div>
@@ -563,7 +563,7 @@ const RankingPage = () => {
                   <p>랭킹 데이터가 없습니다.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div>
                   {rankings.map((ranking, index) => {
                     return (
                       <div
