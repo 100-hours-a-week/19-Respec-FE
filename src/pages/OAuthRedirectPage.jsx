@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { getCookie, deleteCookie } from '../utils/cookie';
+import { DOMAINS } from '../constants/domains';
 
 const OAuthRedirectPage = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const OAuthRedirectPage = () => {
     }
     if (authorization) {
       login(null, authorization);
-      deleteCookie('access');
+      deleteCookie('access', '/', DOMAINS.COOKIE_DOMAIN);
       window.location.href = '/';
       return;
     }
