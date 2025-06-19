@@ -73,7 +73,9 @@ export const useAuthStore = create((set, get) => ({
 
   /** 로그인 성공 후 호출 (헤더에 access 토큰 포함) */
   login: (me, accessToken) => {
+    console.log('useAuthStore login 들어옴');
     if (accessToken) {
+      console.log('accessToken if문 들어옴');
       setAccessToken(accessToken);
       HttpAPI.setAuthToken(accessToken);
       HttpAPI.setupInterceptors(
