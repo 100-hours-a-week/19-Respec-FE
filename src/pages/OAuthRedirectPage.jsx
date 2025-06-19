@@ -22,7 +22,7 @@ const OAuthRedirectPage = () => {
 
       setTimeout(() => {
         window.location.href = '/';
-      }, 100);
+      }, 200);
 
       return;
     }
