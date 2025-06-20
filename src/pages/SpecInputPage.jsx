@@ -119,25 +119,39 @@ const SpecInputPage = () => {
           return;
         }
 
-        if (!authUser && token && !authLoading) {
-          console.log('인증 상태를 다시 초기화하는 중...');
-          await init();
-          return;
-        }
-
         if (authLoading) {
           console.log('인증 상태 로딩 중...');
           return;
         }
 
-        if (!authUser?.id) {
+        if (!authUser && token) {
+          console.log('인증 상태를 다시 초기화하는 중...');
+          try {
+            await init();
+            // init 완료 후 다시 체크
+            if (!useAuthStore.getState().user?.id) {
+              console.error(
+                '인증 초기화 후에도 사용자 정보를 찾을 수 없습니다.'
+              );
+              navigate('/login');
+              return;
+            }
+          } catch (error) {
+            console.error('인증 초기화 실패:', error);
+            navigate('/login');
+            return;
+          }
+        }
+
+        const currentUser = authUser || useAuthStore.getState().user;
+        if (!currentUser?.id) {
           console.error('사용자 정보를 찾을 수 없습니다.');
           navigate('/login');
           return;
         }
 
         // 유저 정보 가져오기
-        const userResponse = await UserAPI.getUserInfo(authUser.id);
+        const userResponse = await UserAPI.getUserInfo(currentUser.id);
 
         if (userResponse.data.isSuccess) {
           const userData = userResponse.data.data.user;
@@ -233,7 +247,7 @@ const SpecInputPage = () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('pageshow', handlePageShow);
     };
-  }, []);
+  }, [authUser, authLoading]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -702,8 +716,8 @@ const SpecInputPage = () => {
   );
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gray-50 pb-16">
-      <div className="relative flex flex-col flex-1 w-full max-w-md mx-auto bg-white overflow-visible">
+    <div className="flex flex-col w-full min-h-screen pb-16 bg-gray-50">
+      <div className="relative flex flex-col flex-1 w-full max-w-md mx-auto overflow-visible bg-white">
         {/* 성공 메시지 */}
         {/* {success && (
           <div className="fixed left-0 right-0 z-50 max-w-md px-4 py-2 mx-auto text-white bg-green-500 rounded shadow-lg top-16">
@@ -733,7 +747,7 @@ const SpecInputPage = () => {
               type="button"
               onClick={handleResumeButtonClick}
               disabled={resumeLoading}
-              className="w-full py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+              className="flex items-center justify-center w-full py-3 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
             >
               {resumeLoading ? (
                 <>
