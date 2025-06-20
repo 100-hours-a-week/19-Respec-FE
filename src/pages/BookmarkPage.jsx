@@ -15,7 +15,7 @@ const BookmarkPage = () => {
   const [initialized, setInitialized] = useState(false);
   const [hasNext, setHasNext] = useState(true);
   const [nextCursor, setNextCursor] = useState(0);
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn, loading: authLoading } = useAuthStore();
   const { toasts, showToast, removeToast } = useToast();
 
   const loadBookmarks = useCallback(
@@ -146,10 +146,19 @@ const BookmarkPage = () => {
   }, [loadBookmarks]);
 
   React.useEffect(() => {
-    if (!initialized && isLoggedIn) {
+    if (!initialized && isLoggedIn && !authLoading) {
       loadBookmarks(null, true);
     }
-  }, [initialized, isLoggedIn, loadBookmarks]);
+  }, [initialized, isLoggedIn, loadBookmarks, authLoading]);
+
+  // 인증 상태 로딩 중일 때
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <PageLoadingIndicator />
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return (
