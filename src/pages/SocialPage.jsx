@@ -13,7 +13,7 @@ const SocialPage = () => {
   const { specId } = useParams();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, loading: authLoading } = useAuthStore();
   const navigate = useNavigate();
 
   const [isMyPage, setIsMyPage] = useState(false);
@@ -44,8 +44,8 @@ const SocialPage = () => {
   const categoryScores = getActualScores();
 
   useEffect(() => {
-    loadPageData();
-  }, [specId, userId, currentUser]);
+    if (!authLoading) loadPageData();
+  }, [specId, userId, currentUser, authLoading]);
 
   // loadPageData 함수에서 타인 페이지 처리 부분에 추가
   const loadPageData = async () => {
@@ -55,6 +55,13 @@ const SocialPage = () => {
 
       if (!specId || !userId) {
         setIsMyPage(true);
+
+        // 로그인되지 않은 상태라면 로그인 페이지로
+        if (!currentUser) {
+          console.log('로그인이 필요합니다.');
+          navigate('/login');
+          return;
+        }
 
         const currentUserId = currentUser.id;
 
@@ -303,6 +310,15 @@ const SocialPage = () => {
   // userData가 없으면 아무것도 렌더링하지 않음 (로딩 끝났지만 데이터가 없는 경우 방지)
   if (!userData) {
     return null;
+  }
+
+  // 인증 상태가 아직 로딩 중이면 로딩 표시
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <PageLoadingIndicator />
+      </div>
+    );
   }
 
   return (
