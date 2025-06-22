@@ -206,8 +206,8 @@ const ChatsPage = () => {
         setLoading(true);
         // 매개변수 전달 방식 수정
         const response = await ChatAPI.getChatsByRoom(chatroomId, 30);
-
-        if (response.data.success) {
+        
+        if (response.data.isSuccess) {
           setMessages(response.data.data.messages);
           setHasMore(response.data.data.hasNext);
           setNextCursor(response.data.data.nextCursor);
@@ -238,6 +238,7 @@ const ChatsPage = () => {
   const fetchPartnerInfo = async (userId) => {
     try {
       const response = await UserAPI.getUserInfo(userId);
+      
       if (response.data.isSuccess) {
         setPartnerInfo({
           nickname: response.data.data.user.nickname,
@@ -378,7 +379,7 @@ const ChatsPage = () => {
         20
       );
 
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         // 새 메시지 추가
         setMessages((prevMessages) => [
           ...prevMessages,
