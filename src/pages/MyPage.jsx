@@ -56,6 +56,7 @@ const MyPage = () => {
             id: userInfo.id,
             nickname: userInfo.nickname,
             profileImageUrl: userInfo.profileImageUrl,
+            isOpenSpec: userInfo.isOpenSpec,
             jobField: userInfo.jobField || '',
             joinDate: new Date(userInfo.createdAt).toLocaleDateString('ko-KR', {
               year: 'numeric',
@@ -68,7 +69,7 @@ const MyPage = () => {
           setHasSpec(hasActiveSpec);
 
           setIsPublic(
-            userInfo.isPublic !== undefined ? userInfo.isPublic : true
+            userInfo.isOpenSpec !== undefined ? userInfo.isOpenSpec : true
           );
 
           if (hasActiveSpec && userInfo.spec?.activeSpec) {
