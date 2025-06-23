@@ -115,18 +115,11 @@ const RankingItem = React.memo(
 
       // 본인의 스펙인 경우 바로 이동
       if (currentUser && currentUser.id === userId) {
-        navigate(`/social/${specId}?userId=${userId}`);
+        navigate('/social');
         return;
       }
 
-      // 타인의 스펙인 경우 공개 여부 확인
-      if (isOpenSpec) {
-        // 스펙이 공개된 경우 소셜 페이지로 이동
-        navigate(`/social/${specId}?userId=${userId}`);
-      } else {
-        // 스펙이 비공개인 경우 토스트 메시지 표시
-        showToast('비공개 설정된 스펙입니다.', 'info');
-      }
+      navigate(`/social/${specId}?userId=${userId}`);
     };
 
     const handleBookmarkClick = async (e) => {

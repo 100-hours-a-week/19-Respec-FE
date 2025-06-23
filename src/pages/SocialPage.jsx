@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
-import { BarChart3, FileText } from 'lucide-react';
+import { BarChart3, FileText, LockKeyhole } from 'lucide-react';
 import SocialProfileCard from '../components/user/profile/SocialProfileCard';
 import RadarChart from '../components/spec-analysis/RadarChart';
-import SpecDetailInfo from '../components/spec-analysis/SpecDetailTab';
+import SpecDetailInfo from '../components/spec-analysis/SpecDetailInfo';
 import { SpecAPI, UserAPI, ChatAPI } from '../api';
 import CommentsSection from '../components/comment/CommentsSection';
 import { PageLoadingIndicator } from '../components/common/LoadingIndicator';
@@ -13,7 +13,7 @@ const SocialPage = () => {
   const { specId } = useParams();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, loading: authLoading } = useAuthStore();
   const navigate = useNavigate();
 
   const [isMyPage, setIsMyPage] = useState(false);
@@ -24,6 +24,7 @@ const SocialPage = () => {
   const [activeTab, setActiveTab] = useState('analysis');
   const [currentSpecId, setCurrentSpecId] = useState(null);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
 
   const tabs = [
     { id: 'analysis', label: 'AI 분석 결과', icon: BarChart3 },
@@ -44,8 +45,8 @@ const SocialPage = () => {
   const categoryScores = getActualScores();
 
   useEffect(() => {
-    loadPageData();
-  }, [specId, userId, currentUser]);
+    if (!authLoading) loadPageData();
+  }, [specId, userId, currentUser, authLoading]);
 
   // loadPageData 함수에서 타인 페이지 처리 부분에 추가
   const loadPageData = async () => {
@@ -55,6 +56,13 @@ const SocialPage = () => {
 
       if (!specId || !userId) {
         setIsMyPage(true);
+
+        // 로그인되지 않은 상태라면 로그인 페이지로
+        if (!currentUser) {
+          console.log('로그인이 필요합니다.');
+          navigate('/login');
+          return;
+        }
 
         const currentUserId = currentUser.id;
 
@@ -140,30 +148,26 @@ const SocialPage = () => {
         if (userResponse.data.isSuccess) {
           const userInfo = userResponse.data.data.user;
 
-          if (!userInfo.isOpenSpec) {
-            console.log('스펙이 비공개 상태입니다.');
-            setAccessDenied(true);
+          // 기본 사용자 데이터 설정 (타인의 정보)
+          const profileData = {
+            id: userInfo.id,
+            nickname: userInfo.nickname,
+            profileImageUrl: userInfo.profileImageUrl,
+            isOpenSpec: userInfo.isOpenSpec,
+            jobField: userInfo.jobField,
+            joinDate: new Date(userInfo.createdAt).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+          };
 
-            // 기본 사용자 데이터 설정 (타인의 정보)
-            const profileData = {
-              id: userInfo.id,
-              nickname: userInfo.nickname,
-              profileImageUrl: userInfo.profileImageUrl,
-              jobField: userInfo.jobField,
-              joinDate: new Date(userInfo.createdAt).toLocaleDateString(
-                'ko-KR',
-                {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                }
-              ),
-            };
+          const hasActiveSpec = userInfo.spec?.hasActiveSpec || false;
+          setHasSpec(hasActiveSpec);
 
-            setUserData(profileData);
-            setHasSpec(false);
-            return;
-          }
+          setIsPublic(
+            userInfo.isOpenSpec !== undefined ? userInfo.isOpenSpec : true
+          );
 
           const specResponse = await SpecAPI.getSpecDetail(specId);
 
@@ -173,23 +177,6 @@ const SocialPage = () => {
 
             setSpecData(specDetailData);
             setHasSpec(true);
-
-            // 기본 사용자 데이터 설정 (타인의 정보)
-            const profileData = {
-              id: userInfo.id,
-              nickname: userInfo.nickname,
-              profileImageUrl: userInfo.profileImageUrl,
-              isOpenSpec: userInfo.isOpenSpec,
-              jobField: userInfo.jobField,
-              joinDate: new Date(userInfo.createdAt).toLocaleDateString(
-                'ko-KR',
-                {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                }
-              ),
-            };
 
             if (rankings) {
               const totalRankPercent = (
@@ -305,6 +292,15 @@ const SocialPage = () => {
     return null;
   }
 
+  // 인증 상태가 아직 로딩 중이면 로딩 표시
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <PageLoadingIndicator />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="px-4 py-4">
@@ -357,7 +353,16 @@ const SocialPage = () => {
             </div>
           ) : (
             <div className="p-1">
-              <SpecDetailInfo specData={specData} />
+              {isPublic ? (
+                <SpecDetailInfo specData={specData} />
+              ) : (
+                <div className="flex items-center justify-center py-16">
+                  <div className="flex flex-col items-center justify-center space-y-2 text-center text-gray-600">
+                    <LockKeyhole />
+                    <div className="font-medium">비공개 설정된 스펙입니다.</div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
