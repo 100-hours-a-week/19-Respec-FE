@@ -214,7 +214,7 @@ const HomePage = () => {
           <PageLoadingIndicator className="py-20" />
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="text-center">
+            <div className="flex flex-col items-center justify-center text-center">
               <div className="mb-4 text-gray-500">
                 <TriangleAlert />
               </div>
