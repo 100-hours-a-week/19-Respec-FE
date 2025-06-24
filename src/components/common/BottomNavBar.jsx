@@ -29,7 +29,7 @@ const BottomNavBar = ({ active, showToast }) => {
       try {
         const response = await NotificationAPI.getNotifications('footer');
 
-        if (response.data.success) {
+        if (response.data.isSuccess) {
           setNotifications({
             hasUnreadChat: response.data.data.hasUnreadChat,
             hasUnreadComment: response.data.data.hasUnreadComment,

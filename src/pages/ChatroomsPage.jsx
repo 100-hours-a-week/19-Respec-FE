@@ -37,7 +37,7 @@ const ChatroomsPage = () => {
           const response = await ChatAPI.getChatParticipations();
           console.log("채팅방 목록 응답:", response);
           
-          if (response.data.success) {
+          if (response.data.isSuccess) {
             // API 응답 데이터 형식에 맞게 상태 업데이트
             const chatRooms = response.data.data.chatRooms || [];
             setChatrooms(chatRooms.map(room => ({
