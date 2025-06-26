@@ -233,7 +233,7 @@ const SocialPage = () => {
     try {
       const response = await ChatAPI.getChatParticipations();
 
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         const existingChatroom = response.data.data.chatRooms.find(
           (room) => room.partnerId === targetUserId
         );
@@ -261,7 +261,9 @@ const SocialPage = () => {
       sessionStorage.setItem('partnerId', targetUserId.toString());
     }
 
-    navigate('/chat');
+    setTimeout(() => {
+      navigate('/chat');
+    }, 1000);
   };
 
   const handleBookmarkChange = useCallback(
