@@ -84,7 +84,7 @@ const BottomNavBar = ({ active, showToast }) => {
     }
   };
 
-  const handleNavClick = (e, item) => {
+  const handleNavClick = async (e, item) => {
     // 로그인이 필요한 기능인지 확인
     if (!isAuthenticated && (item.name === 'DM' || item.name === 'SOCIAL')) {
       e.preventDefault(); // 기본 링크 동작 방지
@@ -92,12 +92,16 @@ const BottomNavBar = ({ active, showToast }) => {
       return;
     }
 
-    // 로그인된 상태에서 알림 삭제
+    // 알림이 있는 경우에만 기본 동작 방지 및 알림 삭제 처리
     if (isAuthenticated) {
-      if (item.name === 'SOCIAL') {
-        clearSocialNotification();
-      } else if (item.name === 'DM') {
-        clearChatNotification();
+      if (item.name === 'SOCIAL' && notifications.hasUnreadComment) {
+        e.preventDefault(); // 기본 링크 동작 방지
+        await clearSocialNotification();
+        window.location.href = item.path; // 알림 삭제 후 페이지 이동
+      } else if (item.name === 'DM' && notifications.hasUnreadChat) {
+        e.preventDefault(); // 기본 링크 동작 방지
+        await clearChatNotification();
+        window.location.href = item.path; // 알림 삭제 후 페이지 이동
       }
     }
   };
