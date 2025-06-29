@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { getAccessToken } from '../utils/token';
 import useToast from '../hooks/useToast';
 import ToastContainer from '../components/common/ToastContainer';
+import { v4 as uuidv4 } from 'uuid';
 
 // 상수 데이터 정의
 const JOB_FIELDS = [
@@ -79,6 +80,7 @@ const SpecInputPage = () => {
   const fileInputRef = useRef(null); // 파일 입력 참조
   const [fileErrorMessage, setFileErrorMessage] = useState(null);
   const [showFileErrorModal, setShowFileErrorModal] = useState(false);
+  const [idempotentKey, setIdempotentKey] = useState('');
 
   const { toasts, showToast, removeToast } = useToast();
 
@@ -111,6 +113,9 @@ const SpecInputPage = () => {
     const fetchUserAndSpecData = async () => {
       try {
         setLoading(true);
+
+        // 페이지 로드될 때마다 새로운 멱등키 생성
+        setIdempotentKey(uuidv4());
 
         const token = getAccessToken();
         if (!token) {
@@ -387,6 +392,7 @@ const SpecInputPage = () => {
   const formatDataForSubmission = () => {
     // API 명세에 맞게 데이터 변환
     const formattedData = {
+      idempotentKey, // 추가된 멱등키
       finalEducation: {
         institute: formData.finalEducation.institute,
         status: formData.finalEducation.status, // finalStatus가 아닌 status로 사용
