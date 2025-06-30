@@ -118,13 +118,12 @@ const HomePage = () => {
 
       const response = await SpecAPI.getRankings({
         type: 'ranking',
-        jobField: filter,
-        limit: 4,
+        jobField: filter
       });
 
       // 각 랭킹 아이템에 대해 사용자 정보를 조회하여 isOpenSpec 정보 추가
       const rankingsWithUserInfo = await Promise.all(
-        response.data.data.rankings.map(async (item) => {
+        response.data.data.rankings.slice(0, 4).map(async (item) => {
           try {
             const userResponse = await UserAPI.getUserInfo(item.userId);
             if (userResponse.data.isSuccess) {
