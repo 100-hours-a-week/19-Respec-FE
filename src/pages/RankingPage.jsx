@@ -530,7 +530,7 @@ const RankingPage = () => {
           <div className="mb-2">
             <div className="flex rounded-lg bg-blue-50">
               <div className="flex-1 p-4 text-center">
-                <div className="mb-1 text-sm text-gray-500">총 사용자</div>
+                <div className="mb-1 text-sm text-gray-500">랭킹 등록자</div>
                 <div className="text-xl font-bold text-blue-600">
                   {metaData.totalUserCount}명
                 </div>
