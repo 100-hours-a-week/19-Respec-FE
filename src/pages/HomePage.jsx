@@ -56,7 +56,7 @@ const HomePage = () => {
             );
 
             if (specResponse.data.isSuccess) {
-              const specData = specResponse.data.specDetailData;
+              const specData = specResponse.data.specDetail;
               const rankings = specData.rankings?.details;
               const categories = specData.rankings?.categories || [];
               const assessment = specData.assessment || null;

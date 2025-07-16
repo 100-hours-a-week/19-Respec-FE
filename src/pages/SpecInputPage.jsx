@@ -179,7 +179,7 @@ const SpecInputPage = () => {
             );
 
             if (specResponse.data.isSuccess) {
-              const specData = specResponse.data.specDetailData;
+              const specData = specResponse.data.specDetail;
 
               // 가져온 스펙 정보로 폼 데이터 업데이트
               setFormData((prev) => ({
