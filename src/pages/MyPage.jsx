@@ -79,7 +79,7 @@ const MyPage = () => {
               );
 
               if (specResponse.data.isSuccess) {
-                const specData = specResponse.data.specDetailData;
+                const specData = specResponse.data.specDetail;
                 const rankings = specData.rankings?.details;
 
                 if (rankings) {

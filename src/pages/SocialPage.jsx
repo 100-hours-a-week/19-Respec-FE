@@ -104,7 +104,7 @@ const SocialPage = () => {
               );
 
               if (specResponse.data.isSuccess) {
-                const specDetailData = specResponse.data.specDetailData;
+                const specDetailData = specResponse.data.specDetail;
                 const rankings = specDetailData.rankings?.details;
 
                 setSpecData(specDetailData);
@@ -172,7 +172,7 @@ const SocialPage = () => {
           const specResponse = await SpecAPI.getSpecDetail(specId);
 
           if (specResponse.data.isSuccess) {
-            const specDetailData = specResponse.data.specDetailData;
+            const specDetailData = specResponse.data.specDetail;
             const rankings = specDetailData.rankings.details;
 
             setSpecData(specDetailData);
