@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpecAPI, UserAPI } from '../api';
 import { useAuthStore } from '../stores/useAuthStore';
+import AdBanner from '../components/AdBanner';
 import UserInfoSection from '../components/user/UserInfoSection';
 import ServiceIntro from '../components/ServiceIntro';
 import RankingFilters from '../components/ranking/RankingFilters';
@@ -118,7 +119,7 @@ const HomePage = () => {
 
       const response = await SpecAPI.getRankings({
         type: 'ranking',
-        jobField: filter
+        jobField: filter,
       });
 
       // 각 랭킹 아이템에 대해 사용자 정보를 조회하여 isOpenSpec 정보 추가
@@ -193,6 +194,8 @@ const HomePage = () => {
 
   return (
     <div className="flex-1 p-4 pb-20">
+      <AdBanner />
+
       <UserInfoSection
         userData={userData}
         isLoggedIn={isLoggedIn}
